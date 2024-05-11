@@ -1,0 +1,12 @@
+<svg width="339" height="339" viewBox="0 0 339 339" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="logo 1" clip-path="url(#clip0_0_1)">
+<path id="Vector" d="M46.3 13.5H292.4C310.5 13.5 325.2 28.2 325.2 46.3V292.4C325.2 310.5 310.5 325.2 292.4 325.2H46.3C28.2 325.2 13.5 310.5 13.5 292.4V46.3C13.5 28.2 28.2 13.5 46.3 13.5Z" stroke="black" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Subtract" fill-rule="evenodd" clip-rule="evenodd" d="M65 13L273 327H315.5V13H65ZM185.5 114C200.688 114 213 101.688 213 86.5C213 71.3122 200.688 59 185.5 59C170.312 59 158 71.3122 158 86.5C158 101.688 170.312 114 185.5 114Z" fill="black"/>
+<circle id="Ellipse 1" cx="152.5" cy="252.5" r="27.5" fill="black"/>
+</g>
+<defs>
+<clipPath id="clip0_0_1">
+<rect width="338.8" height="338.8" fill="white"/>
+</clipPath>
+</defs>
+</svg>
