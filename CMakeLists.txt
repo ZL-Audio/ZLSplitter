@@ -20,7 +20,7 @@ set(PLUGIN_CODE "Spli")
 # #  set(PROJECT_NAME "MyPlugin_v${MAJOR_VERSION}")
 # Doing so enables major versions to show up in IDEs and DAWs as separate plugins
 # allowing you to change parameters and behavior without breaking existing user projects
-set(PRODUCT_NAME "ZL Split")
+set(PRODUCT_NAME "ZL Splitter")
 
 # Change me! Used for the MacOS bundle name and Installers
 set(COMPANY_NAME "ZL")
@@ -125,11 +125,11 @@ target_compile_definitions(SharedCode
         CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
         VERSION="${CURRENT_VERSION}"
 
-        JUCE_DISPLAY_SPLASH_SCREEN=0
+        # JUCE_DISPLAY_SPLASH_SCREEN=0
 
         # JucePlugin_Name is for some reason doesn't use the nicer PRODUCT_NAME
         PRODUCT_NAME_WITHOUT_VERSION="${PRODUCT_NAME}"
-        #        JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS=1
+        # JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS=1
         JUCE_SILENCE_XCODE_15_LINKER_WARNING=1
 )
 
