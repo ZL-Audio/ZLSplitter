@@ -35,9 +35,11 @@ namespace zlDSP {
                 break;
             }
             case splitType::lhigh: {
+                buffer.clear();
                 break;
             }
             case splitType::ttone: {
+                buffer.clear();
                 break;
             }
         }
