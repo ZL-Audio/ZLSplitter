@@ -82,17 +82,9 @@ namespace zlDSP {
         };
     };
 
-    class lrightMix : public FloatParameters<lrightMix> {
+    class mix : public FloatParameters<mix> {
     public:
-        auto static constexpr ID = "lright_mix";
-        auto static constexpr name = "Mix";
-        inline auto static const range = juce::NormalisableRange<float>(0, 100, .1f);
-        auto static constexpr defaultV = 0.f;
-    };
-
-    class msideMix : public FloatParameters<msideMix> {
-    public:
-        auto static constexpr ID = "mside_mix";
+        auto static constexpr ID = "mix";
         auto static constexpr name = "Mix";
         inline auto static const range = juce::NormalisableRange<float>(0, 100, .1f);
         auto static constexpr defaultV = 0.f;
@@ -100,7 +92,7 @@ namespace zlDSP {
 
     inline juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
-        layout.add(splitType::get(), lrightMix::get(), msideMix::get());
+        layout.add(splitType::get(), mix::get());
         return layout;
     }
 }

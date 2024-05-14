@@ -19,7 +19,8 @@ PluginProcessor::PluginProcessor()
           .withOutput("Output 2", juce::AudioChannelSet::stereo(), true)),
       parameters(*this, nullptr,
                  juce::Identifier("ZLSplitParameters"),
-                 zlDSP::getParameterLayout()) {
+                 zlDSP::getParameterLayout()),
+      controllerAttach(parameters, controller) {
 }
 
 PluginProcessor::~PluginProcessor() {
@@ -87,7 +88,7 @@ void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     const juce::dsp::ProcessSpec spec{
         sampleRate,
         static_cast<juce::uint32>(samplesPerBlock),
-        4
+        2
     };
     doubleBuffer.setSize(4, samplesPerBlock);
     controller.prepare(spec);
@@ -118,7 +119,7 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     juce::ScopedNoDenormals noDenormals;
     for (int chan = 0; chan < 2; ++chan) {
         auto *dest = doubleBuffer.getWritePointer(chan);
-        auto *src = buffer.getReadPointer(chan / 2);
+        auto *src = buffer.getReadPointer(chan);
         for (int i = 0; i < doubleBuffer.getNumSamples(); ++i) {
             dest[i] = src[i];
         }

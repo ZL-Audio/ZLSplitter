@@ -7,11 +7,29 @@
 //
 // You should have received a copy of the GNU General Public License along with ZLSplit. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef DSP_HPP
-#define DSP_HPP
+#ifndef CONTROLLER_ATTACH_HPP
+#define CONTROLLER_ATTACH_HPP
 
 #include "controller.hpp"
-#include "controller_attach.hpp"
-#include "dsp_definitions.hpp"
 
-#endif //DSP_HPP
+namespace zlDSP {
+    class ControllerAttach : private juce::AudioProcessorValueTreeState::Listener {
+    public:
+        explicit ControllerAttach(juce::AudioProcessorValueTreeState &parameters,
+                                  Controller &controller);
+
+        ~ControllerAttach() override;
+
+    private:
+        juce::AudioProcessorValueTreeState &parametersRef;
+        Controller &controllerRef;
+
+        constexpr static std::array IDs{
+            splitType::ID, mix::ID
+        };
+
+        void parameterChanged(const juce::String &parameterID, float newValue) override;
+    };
+} // zlDSP
+
+#endif //CONTROLLER_ATTACH_HPP

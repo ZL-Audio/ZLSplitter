@@ -67,6 +67,7 @@ public:
 
 private:
     zlDSP::Controller controller;
+    zlDSP::ControllerAttach controllerAttach;
 
     juce::AudioBuffer<double> doubleBuffer;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
