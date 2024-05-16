@@ -12,5 +12,6 @@
 
 #include "lright/lr_splitter.hpp"
 #include "mside/ms_splitter.hpp"
+#include "lhigh/lh_splitter.hpp"
 
 #endif //SPLITTER_HPP

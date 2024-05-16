@@ -31,20 +31,20 @@ namespace zlSplitter {
          * split the audio buffer into internal mid buffer and side buffer
          * @param buffer
          */
-        void split(juce::AudioBuffer <FloatType> &buffer);
+        void split(juce::AudioBuffer<FloatType> &buffer);
 
         /**
          * combine the internal mid buffer and side buffer into the audio buffer
          * @param buffer
          */
-        void combine(juce::AudioBuffer <FloatType> &buffer);
+        void combine(juce::AudioBuffer<FloatType> &buffer);
 
         inline juce::AudioBuffer<FloatType> &getMBuffer() { return mBuffer; }
 
         inline juce::AudioBuffer<FloatType> &getSBuffer() { return sBuffer; }
 
     private:
-        juce::AudioBuffer <FloatType> mBuffer, sBuffer;
+        juce::AudioBuffer<FloatType> mBuffer, sBuffer;
     };
 }
 

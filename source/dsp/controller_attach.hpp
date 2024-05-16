@@ -25,7 +25,8 @@ namespace zlDSP {
         Controller &controllerRef;
 
         constexpr static std::array IDs{
-            splitType::ID, mix::ID
+            splitType::ID, mix::ID, swap::ID,
+            lhSlope::ID, lhFreq::ID
         };
 
         void parameterChanged(const juce::String &parameterID, float newValue) override;

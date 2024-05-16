@@ -30,6 +30,12 @@ namespace zlDSP {
             controllerRef.setType(static_cast<splitType::stype>(newValue));
         } else if (parameterID == mix::ID) {
             controllerRef.setMix(static_cast<double>(newValue) / 200.0);
+        } else if (parameterID == swap::ID) {
+            controllerRef.setSwap(static_cast<bool>(newValue));
+        } else if (parameterID == lhSlope::ID) {
+            controllerRef.getLHSplitter().setOrder(lhSlope::orders[static_cast<size_t>(newValue)]);
+        } else if (parameterID == lhFreq::ID) {
+            controllerRef.getLHSplitter().setFreq(static_cast<double>(newValue));
         }
     }
 } // zlDSP

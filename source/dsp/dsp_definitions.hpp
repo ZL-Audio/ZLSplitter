@@ -90,9 +90,38 @@ namespace zlDSP {
         auto static constexpr defaultV = 0.f;
     };
 
+    class swap : public BoolParameters<swap> {
+    public:
+        auto static constexpr ID = "swap";
+        auto static constexpr name = "Swap";
+        auto static constexpr defaultV = false;
+    };
+
+    class lhSlope : public ChoiceParameters<lhSlope> {
+    public:
+        auto static constexpr ID = "lh_slope";
+        auto static constexpr name = "LH Slope";
+        inline auto static const choices = juce::StringArray{
+            "12 dB/oct", "24 dB/oct", "48 dB/oct"
+        };
+
+        int static constexpr defaultI = 1;
+
+        inline static constexpr std::array<size_t, 3> orders{1, 2, 4};
+    };
+
+    class lhFreq : public FloatParameters<lhFreq> {
+    public:
+        auto static constexpr ID = "lh_freq";
+        auto static constexpr name = "LH Freq";
+        inline auto static const range = juce::NormalisableRange<float>(10, 20000, .1f, 0.23064293761596813f);
+        auto static constexpr defaultV = 1000.f;
+    };
+
     inline juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
-        layout.add(splitType::get(), mix::get());
+        layout.add(splitType::get(), mix::get(), swap::get(),
+                   lhSlope::get(), lhFreq::get());
         return layout;
     }
 }

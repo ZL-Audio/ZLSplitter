@@ -13,8 +13,7 @@
 //==============================================================================
 PluginProcessor::PluginProcessor()
     : AudioProcessor(BusesProperties()
-          .withInput("Input", juce::AudioChannelSet::stereo(), true)
-
+          .withInput("Input 1", juce::AudioChannelSet::stereo(), true)
           .withOutput("Output 1", juce::AudioChannelSet::stereo(), true)
           .withOutput("Output 2", juce::AudioChannelSet::stereo(), true)),
       parameters(*this, nullptr,
@@ -103,9 +102,9 @@ bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()) {
         return false;
     }
-    if (layouts.getChannelSet(true, 0) != layouts.getChannelSet(true, 1)) {
-        return false;
-    }
+    // if (layouts.getChannelSet(false, 0) != layouts.getChannelSet(false, 1)) {
+    //     return false;
+    // }
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet()) {
         return false;
     }
@@ -117,15 +116,24 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer,
     juce::ignoreUnused(midiMessages);
 
     juce::ScopedNoDenormals noDenormals;
-    for (int chan = 0; chan < 2; ++chan) {
+    doubleBuffer.setSize(juce::jmin(4, buffer.getNumChannels()),
+                         buffer.getNumSamples(),
+                         false, false, true);
+    for (int chan = 0; chan < doubleBuffer.getNumChannels(); ++chan) {
         auto *dest = doubleBuffer.getWritePointer(chan);
         auto *src = buffer.getReadPointer(chan);
-        for (int i = 0; i < doubleBuffer.getNumSamples(); ++i) {
-            dest[i] = src[i];
+        for (int i = 0; i < buffer.getNumSamples(); ++i) {
+            dest[i] = static_cast<double>(src[i]);
         }
     }
     controller.process(doubleBuffer);
-    buffer.makeCopyOf(doubleBuffer, true);
+    for (int chan = 0; chan < doubleBuffer.getNumChannels(); ++chan) {
+        auto *dest = buffer.getWritePointer(chan);
+        auto *src = doubleBuffer.getReadPointer(chan);
+        for (int i = 0; i < buffer.getNumSamples(); ++i) {
+            dest[i] = static_cast<float>(src[i]);
+        }
+    }
 }
 
 void PluginProcessor::processBlock(juce::AudioBuffer<double> &buffer,

@@ -14,44 +14,52 @@
 #include "dsp_definitions.hpp"
 
 namespace zlDSP {
+    class Controller {
+    public:
+        Controller();
 
-class Controller {
-public:
-    Controller();
+        void reset();
 
-    void reset();
+        void prepare(const juce::dsp::ProcessSpec &spec);
 
-    void prepare(const juce::dsp::ProcessSpec &spec);
+        void process(juce::AudioBuffer<double> &buffer);
 
-    void process(juce::AudioBuffer<double> &buffer);
+        void setType(splitType::stype x) {
+            splitType.store(x);
+        }
 
-    void setType(splitType::stype x) {
-        splitType.store(x);
-    }
+        void setMix(double x) {
+            mix.store(x);
+        }
 
-    void setMix(double x) {
-        mix.store(x);
-    }
+        zlSplitter::LRSplitter<double> &getLRSplitter() {
+            return lrSplitter;
+        }
 
-    zlSplitter::LRSplitter<double>& getLRSplitter() {
-        return lrSplitter;
-    }
+        zlSplitter::MSSplitter<double> &getMSSplitter() {
+            return msSplitter;
+        }
 
-    zlSplitter::MSSplitter<double>& getMSSplitter() {
-        return msSplitter;
-    }
+        zlSplitter::LHSplitter<double> &getLHSplitter() {
+            return lhSplitter;
+        }
 
-private:
-    std::atomic<splitType::stype> splitType;
-    zlSplitter::LRSplitter<double> lrSplitter;
-    zlSplitter::MSSplitter<double> msSplitter;
-    std::atomic<double> mix{0.0};
+        void setSwap(const bool x) { swap.store(x); }
 
-    void processLR(juce::AudioBuffer<double> &buffer);
+    private:
+        std::atomic<splitType::stype> splitType;
+        zlSplitter::LRSplitter<double> lrSplitter;
+        zlSplitter::MSSplitter<double> msSplitter;
+        zlSplitter::LHSplitter<double> lhSplitter;
+        std::atomic<double> mix{0.0};
+        std::atomic<bool> swap{false};
 
-    void processMS(juce::AudioBuffer<double> &buffer);
-};
+        void processLR(juce::AudioBuffer<double> &buffer);
 
+        void processMS(juce::AudioBuffer<double> &buffer);
+
+        void processLH(juce::AudioBuffer<double> &buffer);
+    };
 } // zlDSP
 
 #endif //CONTROLLER_HPP
