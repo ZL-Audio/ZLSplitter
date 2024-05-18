@@ -73,12 +73,12 @@ namespace zlDSP {
         auto static constexpr ID = "split_type";
         auto static constexpr name = "";
         inline auto static const choices = juce::StringArray{
-            "Left Right", "Mid Side", "Low High", "Transient Tone"
+            "Left Right", "Mid Side", "Low High", "Transient Steady"
         };
         int static constexpr defaultI = 0;
 
         enum stype {
-            lright, mside, lhigh, ttone
+            lright, mside, lhigh, tsteady
         };
     };
 

@@ -51,6 +51,7 @@ namespace zlDSP {
         zlSplitter::LRSplitter<double> lrSplitter;
         zlSplitter::MSSplitter<double> msSplitter;
         zlSplitter::LHSplitter<double> lhSplitter;
+        zlSplitter::TSSplitter<double> tsSplitter;
         std::atomic<double> mix{0.0};
         std::atomic<bool> swap{false};
 

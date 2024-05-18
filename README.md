@@ -50,4 +50,6 @@ Font from CMU Open Sans, Font Awesome and MiSans.
 
 ## References
 
-Separation of transient information in musical audio using multiresolution analysis techniques. Chris Duxbury, Mike Davies, and Mark Sandler.
+Redmon, Nigel. *Cascading filters*. (2016).
+
+Fitzgerald, Derry. *Harmonic/percussive separation using median filtering*. (2010).

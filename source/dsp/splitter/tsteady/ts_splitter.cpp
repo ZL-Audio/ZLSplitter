@@ -7,12 +7,13 @@
 //
 // You should have received a copy of the GNU General Public License along with ZLSplit. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef SPLITTER_HPP
-#define SPLITTER_HPP
+#include "ts_splitter.hpp"
 
-#include "lright/lr_splitter.hpp"
-#include "mside/ms_splitter.hpp"
-#include "lhigh/lh_splitter.hpp"
-#include "tsteady/ts_splitter.hpp"
+namespace zlSplitter {
 
-#endif //SPLITTER_HPP
+    template
+    class TSSplitter<float>;
+
+    template
+    class TSSplitter<double>;
+} // zlSplitter

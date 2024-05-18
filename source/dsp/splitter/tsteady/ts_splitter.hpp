@@ -7,12 +7,19 @@
 //
 // You should have received a copy of the GNU General Public License along with ZLSplit. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef SPLITTER_HPP
-#define SPLITTER_HPP
+// Fitzgerald, D. (2010). Harmonic/percussive separation using median filtering.
 
-#include "lright/lr_splitter.hpp"
-#include "mside/ms_splitter.hpp"
-#include "lhigh/lh_splitter.hpp"
-#include "tsteady/ts_splitter.hpp"
+#ifndef TS_SPLITTER_HPP
+#define TS_SPLITTER_HPP
 
-#endif //SPLITTER_HPP
+namespace zlSplitter {
+    /**
+     * a splitter that splits the stereo audio signal input transient signal and steady signal
+     * @tparam FloatType
+     */
+    template<typename FloatType>
+    class TSSplitter {
+    };
+} // zlSplitter
+
+#endif //TS_SPLITTER_HPP
