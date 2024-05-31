@@ -40,7 +40,7 @@ namespace zlDSP {
                 processLH(buffer);
                 break;
             }
-            case splitType::ttone: {
+            case splitType::tsteady: {
                 buffer.clear();
                 break;
             }

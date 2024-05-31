@@ -12,6 +12,9 @@
 #ifndef TS_SPLITTER_HPP
 #define TS_SPLITTER_HPP
 
+#include <numbers>
+#include <juce_dsp/juce_dsp.h>
+
 namespace zlSplitter {
     /**
      * a splitter that splits the stereo audio signal input transient signal and steady signal
@@ -19,6 +22,27 @@ namespace zlSplitter {
      */
     template<typename FloatType>
     class TSSplitter {
+    public:
+        TSSplitter() = default;
+
+        void reset();
+
+        void prepare(const juce::dsp::ProcessSpec &spec);
+
+        /**
+         * split the audio buffer into internal transient buffer and steady buffer
+         * @param buffer
+         */
+        void split(juce::AudioBuffer<FloatType> &buffer);
+
+        /**
+         * split the audio block into internal transient buffer and steady buffer
+         * @param block
+         */
+        void split(juce::dsp::AudioBlock<FloatType> block);
+
+    private:
+        std::array<std::vector<FloatType>, 33> historySpec;
     };
 } // zlSplitter
 
