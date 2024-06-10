@@ -15,6 +15,8 @@
 #include <numbers>
 #include <juce_dsp/juce_dsp.h>
 
+#include "../../median_filter/median_filter.hpp"
+
 namespace zlSplitter {
     /**
      * a splitter that splits the stereo audio signal input transient signal and steady signal
@@ -42,7 +44,8 @@ namespace zlSplitter {
         void split(juce::dsp::AudioBlock<FloatType> block);
 
     private:
-        std::array<std::vector<FloatType>, 33> historySpec;
+        std::vector<zlMedianFilter::HeapFilter<FloatType>> timeMedian{};
+        zlMedianFilter::HeapFilter<FloatType> freqMedian{};
     };
 } // zlSplitter
 

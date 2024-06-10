@@ -10,6 +10,28 @@
 #include "ts_splitter.hpp"
 
 namespace zlSplitter {
+    template<typename FloatType>
+    void TSSplitter<FloatType>::prepare(const juce::dsp::ProcessSpec &spec) {
+        if (spec.sampleRate <= 50000) {
+            timeMedian.resize(2048);
+            for (auto &f : timeMedian) {
+                f.setSize(17);
+            }
+            freqMedian.setSize(17);
+        } else if (spec.sampleRate <= 100000) {
+            timeMedian.resize(4096);
+            for (auto &f : timeMedian) {
+                f.setSize(17);
+            }
+            freqMedian.setSize(17);
+        } else {
+            timeMedian.resize(8192);
+            for (auto &f : timeMedian) {
+                f.setSize(17);
+            }
+            freqMedian.setSize(17);
+        }
+    }
 
     template
     class TSSplitter<float>;
