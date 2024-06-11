@@ -19,23 +19,13 @@
 namespace zlMedianFilter {
     /**
      * a median filter based on min/max heap
-     * @tparam T the type of data
+     * @tparam T type of data
+     * @tparam N size of the filter
      */
-    template<typename T>
+    template<typename T, size_t N>
     class HeapFilter {
     public:
-        HeapFilter() = default;
-
-        /**
-         * call it before processing to set the size of the filter
-         * @param n size of median filter
-         */
-        void setSize(const int n) {
-            N = n;
-            data.resize(N);
-            pos.resize(N);
-            allocatedHeap.resize(N);
-            heap = &allocatedHeap[0] + (N / 2);
+        HeapFilter() {
             clear();
         }
 
@@ -48,8 +38,8 @@ namespace zlMedianFilter {
             maxCt = 0;
             auto nItems = static_cast<int>(N);
             while (nItems--) {
-                pos[nItems] = ((nItems + 1) / 2) * ((nItems & 1) ? -1 : 1);
-                heap[pos[nItems]] = nItems;
+                pos[static_cast<size_t>(nItems)] = ((nItems + 1) / 2) * ((nItems & 1) ? -1 : 1);
+                heap[static_cast<size_t>(centerPos + pos[static_cast<size_t>(nItems)])] = nItems;
             }
         }
 
@@ -103,18 +93,17 @@ namespace zlMedianFilter {
          */
         T getMedian() {
             if (minCt < maxCt) {
-                return (data[heap[0]] + data[heap[-1]]) / 2;
+                return (data[heap[static_cast<size_t>(centerPos)]] + data[heap[static_cast<size_t>(centerPos - 1)]]) / 2;
             } else {
-                return data[heap[0]];
+                return data[heap[static_cast<size_t>(centerPos)]];
             }
         }
 
     private:
-        int N{0};
-        std::vector<T> data;
-        std::vector<int> pos;
-        std::vector<int> allocatedHeap;
-        int *heap{nullptr};
+        std::array<T, N> data;
+        std::array<int, N> pos;
+        std::array<int, N> heap;
+        static constexpr int centerPos = static_cast<int>(N / 2);
         // Position in circular queue
         int idx{0};
         // Count of items in min heap
@@ -124,11 +113,13 @@ namespace zlMedianFilter {
 
         // Swaps items i&j in heap, maintains indexes
         int mmexchange(const int i, const int j) {
-            const auto t = heap[i];
-            heap[i] = heap[j];
-            heap[j] = t;
-            pos[heap[i]] = i;
-            pos[heap[j]] = j;
+            const auto ii = static_cast<size_t>(centerPos + i);
+            const auto jj = static_cast<size_t>(centerPos + j);
+            const auto t = heap[ii];
+            heap[ii] = heap[jj];
+            heap[jj] = t;
+            pos[heap[ii]] = ii;
+            pos[heap[jj]] = jj;
             return 1;
         }
 
@@ -158,7 +149,7 @@ namespace zlMedianFilter {
 
         // Returns 1 if heap[i] < heap[j]
         inline int mmless(const int i, const int j) {
-            return (data[heap[i]] < data[heap[j]]);
+            return (data[heap[static_cast<size_t>(centerPos + i)]] < data[heap[static_cast<size_t>(centerPos + j)]]);
         }
 
         // Swaps items i&j if i<j; returns true if swapped

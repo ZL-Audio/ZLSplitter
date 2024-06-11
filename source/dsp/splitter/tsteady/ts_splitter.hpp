@@ -44,8 +44,8 @@ namespace zlSplitter {
         void split(juce::dsp::AudioBlock<FloatType> block);
 
     private:
-        std::vector<zlMedianFilter::HeapFilter<FloatType>> timeMedian{};
-        zlMedianFilter::HeapFilter<FloatType> freqMedian{};
+        std::vector<zlMedianFilter::HeapFilter<FloatType, 17>> timeMedian{};
+        zlMedianFilter::HeapFilter<FloatType, 17> freqMedian{};
     };
 } // zlSplitter
 
