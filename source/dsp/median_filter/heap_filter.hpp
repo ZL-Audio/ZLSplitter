@@ -30,12 +30,24 @@ namespace zlMedianFilter {
         }
 
         /**
+         *
+         * @return size of data
+         */
+        [[nodiscard]] size_t size() const {
+            return static_cast<size_t>(dataSize);
+        }
+
+        /**
          * clear internal state
          */
         void clear() {
+            std::fill(data.begin(), data.end(), static_cast<T>(0));
+            std::fill(pos.begin(), pos.end(), 0);
+            std::fill(heap.begin(), heap.end(), 0);
             idx = 0;
             minCt = 0;
             maxCt = 0;
+            dataSize = 0;
             auto nItems = static_cast<int>(N);
             while (nItems--) {
                 pos[static_cast<size_t>(nItems)] = ((nItems + 1) / 2) * ((nItems & 1) ? -1 : 1);
@@ -48,6 +60,7 @@ namespace zlMedianFilter {
          * @param v new data
          */
         void insert(T v) {
+            dataSize = (dataSize + 1) % N;
             const int p = pos[idx];
             T old = data[idx];
             data[idx] = v;
@@ -110,6 +123,8 @@ namespace zlMedianFilter {
         int minCt{0};
         // Count of items in max heap
         int maxCt{0};
+        // Count of items
+        int dataSize{0};
 
         // Swaps items i&j in heap, maintains indexes
         int mmexchange(const int i, const int j) {
@@ -118,8 +133,8 @@ namespace zlMedianFilter {
             const auto t = heap[ii];
             heap[ii] = heap[jj];
             heap[jj] = t;
-            pos[heap[ii]] = ii;
-            pos[heap[jj]] = jj;
+            pos[heap[ii]] = i;
+            pos[heap[jj]] = j;
             return 1;
         }
 
