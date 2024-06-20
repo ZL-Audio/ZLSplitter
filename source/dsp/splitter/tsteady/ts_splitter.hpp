@@ -25,7 +25,7 @@ namespace zlSplitter {
     template<typename FloatType>
     class TSSplitter {
     public:
-        TSSplitter() = default;
+        TSSplitter();
 
         void reset();
 
@@ -37,15 +37,51 @@ namespace zlSplitter {
          */
         void split(juce::AudioBuffer<FloatType> &buffer);
 
-        /**
-         * split the audio block into internal transient buffer and steady buffer
-         * @param block
-         */
-        void split(juce::dsp::AudioBlock<FloatType> block);
+        inline juce::AudioBuffer<FloatType> &getTBuffer() { return tBuffer; }
+
+        inline juce::AudioBuffer<FloatType> &getSBuffer() { return sBuffer; }
 
     private:
-        std::vector<zlMedianFilter::HeapFilter<FloatType, 17>> timeMedian{};
-        zlMedianFilter::HeapFilter<FloatType, 17> freqMedian{};
+        static constexpr size_t medianWindowsSize = 17;
+        static constexpr size_t halfMedianWindowsSize = 8;
+        juce::AudioBuffer<FloatType> tBuffer, sBuffer;
+        // FFT parameters
+        std::unique_ptr<juce::dsp::FFT> fft;
+        std::unique_ptr<juce::dsp::WindowingFunction<float> > window;
+        size_t fftOrder = 10;
+        size_t fftSize = 1 << fftOrder;      // 1024 samples
+        size_t numBins = fftSize / 2 + 1;    // 513 bins
+        size_t overlap = 4;                  // 75% overlap
+        size_t hopSize = fftSize / overlap;  // 256 samples
+        // gain correction for using Hann window with 75% overlap.
+        static constexpr float windowCorrection = 2.0f / 3.0f;
+        // counts up until the next hop.
+        size_t count = 0;
+        // write position in input FIFO and read position in output FIFO.
+        size_t pos = 0;
+        // circular buffers for incoming and outgoing audio data.
+        std::vector<float> inputFifo;
+        std::vector<float> transientFifo, steadyFifo;
+        // circular FFT working space which contains interleaved complex numbers.
+        size_t fftDataPos = 0;
+        std::array<std::vector<float>, halfMedianWindowsSize + 1> fftDatas;
+        std::vector<float> magnitude;
+        // median calculators
+        std::vector<zlMedianFilter::HeapFilter<float, medianWindowsSize>> timeMedian{};
+        zlMedianFilter::HeapFilter<float, medianWindowsSize> freqMedian{};
+        // portion holders
+        std::vector<float> mask;
+        // transient and steady spectrum
+        std::vector<float> transientSpec, steadySpec;
+
+
+        void setOrder(size_t order);
+
+        void processFrame();
+
+        void processSpectrum();
+
+        static float calculatePortion(float transientWeight, float steadyWeight);
     };
 } // zlSplitter
 

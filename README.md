@@ -46,6 +46,9 @@ JUCE framework from [JUCE](https://github.com/juce-framework/JUCE)
 
 JUCE template from [pamplejuce](https://github.com/sudara/pamplejuce)
 
+[fft-juce](https://github.com/hollance/fft-juce) from [
+Matthijs Hollemans](https://github.com/hollance)
+
 Font from CMU Open Sans, Font Awesome and MiSans.
 
 ## References

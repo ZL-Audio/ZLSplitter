@@ -60,14 +60,14 @@ namespace zlMedianFilter {
          * @param v new data
          */
         void insert(T v) {
-            dataSize = (dataSize + 1) % N;
-            const int p = pos[idx];
-            T old = data[idx];
-            data[idx] = v;
-            idx = (idx + 1) % N;
+            dataSize = (dataSize + 1) % static_cast<int>(N);
+            const int p = pos[static_cast<size_t>(idx)];
+            T old = data[static_cast<size_t>(idx)];
+            data[static_cast<size_t>(idx)] = v;
+            idx = (idx + 1) % static_cast<int>(N);
             // New item is in minheap
             if (p > 0) {
-                if (minCt < (N - 1) / 2) {
+                if (minCt < static_cast<int>(N - 1) / 2) {
                     minCt++;
                 } else if (v > old) {
                     minSortDown(p);
@@ -79,7 +79,7 @@ namespace zlMedianFilter {
             }
             // New item is in maxheap
             else if (p < 0) {
-                if (maxCt < N / 2) {
+                if (maxCt < static_cast<int>(N) / 2) {
                     maxCt++;
                 } else if (v < old) {
                     maxSortDown(p);
@@ -106,9 +106,9 @@ namespace zlMedianFilter {
          */
         T getMedian() {
             if (minCt < maxCt) {
-                return (data[heap[static_cast<size_t>(centerPos)]] + data[heap[static_cast<size_t>(centerPos - 1)]]) / 2;
+                return (data[static_cast<size_t>(heap[static_cast<size_t>(centerPos)])] + data[static_cast<size_t>(heap[static_cast<size_t>(centerPos - 1)])]) / 2;
             } else {
-                return data[heap[static_cast<size_t>(centerPos)]];
+                return data[static_cast<size_t>(heap[static_cast<size_t>(centerPos)])];
             }
         }
 
@@ -133,8 +133,8 @@ namespace zlMedianFilter {
             const auto t = heap[ii];
             heap[ii] = heap[jj];
             heap[jj] = t;
-            pos[heap[ii]] = i;
-            pos[heap[jj]] = j;
+            pos[static_cast<size_t>(heap[ii])] = i;
+            pos[static_cast<size_t>(heap[jj])] = j;
             return 1;
         }
 
@@ -164,7 +164,7 @@ namespace zlMedianFilter {
 
         // Returns 1 if heap[i] < heap[j]
         inline int mmless(const int i, const int j) {
-            return (data[heap[static_cast<size_t>(centerPos + i)]] < data[heap[static_cast<size_t>(centerPos + j)]]);
+            return (data[static_cast<size_t>(heap[static_cast<size_t>(centerPos + i)])] < data[static_cast<size_t>(heap[static_cast<size_t>(centerPos + j)])]);
         }
 
         // Swaps items i&j if i<j; returns true if swapped
