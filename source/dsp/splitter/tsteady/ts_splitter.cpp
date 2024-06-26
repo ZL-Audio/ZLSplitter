@@ -12,7 +12,7 @@
 namespace zlSplitter {
     template<typename FloatType>
     TSSplitter<FloatType>::TSSplitter() {
-        setOrder(11);
+        setOrder(12);
     }
 
     template<typename FloatType>
@@ -20,11 +20,11 @@ namespace zlSplitter {
         tBuffer.setSize(1, static_cast<int>(spec.maximumBlockSize));
         sBuffer.setSize(1, static_cast<int>(spec.maximumBlockSize));
         if (spec.sampleRate <= 50000) {
-            setOrder(11);
-        } else if (spec.sampleRate <= 100000) {
             setOrder(12);
-        } else {
+        } else if (spec.sampleRate <= 100000) {
             setOrder(13);
+        } else {
+            setOrder(14);
         }
     }
 
@@ -138,6 +138,8 @@ namespace zlSplitter {
         for (size_t i = 0; i < halfMedianWindowsSize; ++i) {
             freqMedian.insert(magnitude[i]);
         }
+        currentFactor1 = factor.load();
+        currentFactor2 = 1 - currentFactor1;
         for (size_t i = 0; i < numBins - halfMedianWindowsSize; ++i) {
             freqMedian.insert(magnitude[i + halfMedianWindowsSize]);
             timeMedian[i].insert(magnitude[i]);
@@ -163,7 +165,9 @@ namespace zlSplitter {
 
     template<typename FloatType>
     float TSSplitter<FloatType>::calculatePortion(const float transientWeight, const float steadyWeight) {
-        return transientWeight / (transientWeight + steadyWeight);
+        const auto tt = transientWeight * transientWeight * transientWeight;
+        const auto ss = steadyWeight * steadyWeight * steadyWeight;
+        return currentFactor1 * tt / (tt + ss) + currentFactor2 * transientWeight / (transientWeight + steadyWeight);
     }
 
     template

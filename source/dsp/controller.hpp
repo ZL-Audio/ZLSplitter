@@ -44,6 +44,10 @@ namespace zlDSP {
             return lhSplitter;
         }
 
+        zlSplitter::TSSplitter<double> &getTSSplitter(const size_t i) {
+            return tsSplitters[i];
+        }
+
         void setSwap(const bool x) { swap.store(x); }
 
     private:
@@ -51,15 +55,19 @@ namespace zlDSP {
         zlSplitter::LRSplitter<double> lrSplitter;
         zlSplitter::MSSplitter<double> msSplitter;
         zlSplitter::LHSplitter<double> lhSplitter;
-        zlSplitter::TSSplitter<double> tsSplitter;
+        std::array<zlSplitter::TSSplitter<double>, 2> tsSplitters;
         std::atomic<double> mix{0.0};
         std::atomic<bool> swap{false};
+
+        juce::AudioBuffer<double> internalBuffer;
 
         void processLR(juce::AudioBuffer<double> &buffer);
 
         void processMS(juce::AudioBuffer<double> &buffer);
 
         void processLH(juce::AudioBuffer<double> &buffer);
+
+        void processTS(juce::AudioBuffer<double> &buffer);
     };
 } // zlDSP
 

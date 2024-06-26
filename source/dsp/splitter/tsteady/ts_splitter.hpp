@@ -41,6 +41,8 @@ namespace zlSplitter {
 
         inline juce::AudioBuffer<FloatType> &getSBuffer() { return sBuffer; }
 
+        inline void setFactor(const float x) { factor.store(x); }
+
     private:
         static constexpr size_t medianWindowsSize = 17;
         static constexpr size_t halfMedianWindowsSize = 8;
@@ -49,10 +51,10 @@ namespace zlSplitter {
         std::unique_ptr<juce::dsp::FFT> fft;
         std::unique_ptr<juce::dsp::WindowingFunction<float> > window;
         size_t fftOrder = 10;
-        size_t fftSize = 1 << fftOrder;      // 1024 samples
-        size_t numBins = fftSize / 2 + 1;    // 513 bins
-        size_t overlap = 4;                  // 75% overlap
-        size_t hopSize = fftSize / overlap;  // 256 samples
+        size_t fftSize = 1 << fftOrder; // 1024 samples
+        size_t numBins = fftSize / 2 + 1; // 513 bins
+        size_t overlap = 4; // 75% overlap
+        size_t hopSize = fftSize / overlap; // 256 samples
         // gain correction for using Hann window with 75% overlap.
         static constexpr float windowCorrection = 2.0f / 3.0f;
         // counts up until the next hop.
@@ -67,13 +69,15 @@ namespace zlSplitter {
         std::array<std::vector<float>, halfMedianWindowsSize + 1> fftDatas;
         std::vector<float> magnitude;
         // median calculators
-        std::vector<zlMedianFilter::HeapFilter<float, medianWindowsSize>> timeMedian{};
+        std::vector<zlMedianFilter::HeapFilter<float, medianWindowsSize> > timeMedian{};
         zlMedianFilter::HeapFilter<float, medianWindowsSize> freqMedian{};
         // portion holders
         std::vector<float> mask;
         // transient and steady spectrum
         std::vector<float> transientSpec, steadySpec;
-
+        // seperation factor
+        std::atomic<float> factor{.5f};
+        float currentFactor1{.5f}, currentFactor2{.5f};
 
         void setOrder(size_t order);
 
@@ -81,7 +85,7 @@ namespace zlSplitter {
 
         void processSpectrum();
 
-        static float calculatePortion(float transientWeight, float steadyWeight);
+        float calculatePortion(float transientWeight, float steadyWeight);
     };
 } // zlSplitter
 

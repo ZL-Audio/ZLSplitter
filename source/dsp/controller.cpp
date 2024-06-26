@@ -10,9 +10,7 @@
 #include "controller.hpp"
 
 namespace zlDSP {
-    Controller::Controller() {
-
-    }
+    Controller::Controller() = default;
 
     void Controller::reset() {
         lrSplitter.reset();
@@ -24,9 +22,14 @@ namespace zlDSP {
         lrSplitter.prepare(spec);
         msSplitter.prepare(spec);
         lhSplitter.prepare(spec);
+        tsSplitters[0].prepare(spec);
+        tsSplitters[1].prepare(spec);
+
+        internalBuffer.setSize(4, static_cast<int>(spec.maximumBlockSize));
     }
 
     void Controller::process(juce::AudioBuffer<double> &buffer) {
+        internalBuffer.setSize(4, buffer.getNumSamples(),false, false, true);
         switch (splitType.load()) {
             case splitType::lright: {
                 processLR(buffer);
@@ -41,69 +44,60 @@ namespace zlDSP {
                 break;
             }
             case splitType::tsteady: {
-                buffer.clear();
+                processTS(buffer);
                 break;
             }
+        }
+        const auto currentMix = mix.load();
+        const juce::dsp::AudioBlock<double> block{buffer};
+        const juce::dsp::AudioBlock<double> internalBlock{internalBuffer};
+        block.getSubsetChannelBlock(0, 2).replaceWithProductOf(
+            internalBlock.getSubsetChannelBlock(0, 2), 1.0 - currentMix);
+        block.getSubsetChannelBlock(0, 2).addProductOf(
+            internalBlock.getSubsetChannelBlock(2, 2), currentMix);
+        if (block.getNumChannels() >= 4) {
+            block.getSubsetChannelBlock(2, 2).replaceWithProductOf(
+            internalBlock.getSubsetChannelBlock(0, 2), currentMix);
+            block.getSubsetChannelBlock(2, 2).addProductOf(
+                internalBlock.getSubsetChannelBlock(2, 2), 1.0 - currentMix);
         }
     }
 
     void Controller::processLR(juce::AudioBuffer<double> &buffer) {
         lrSplitter.split(buffer);
-        const auto currentMix = mix.load();
         const auto lBlock = juce::dsp::AudioBlock<double>(lrSplitter.getLBuffer());
         const auto rBlock = juce::dsp::AudioBlock<double>(lrSplitter.getRBuffer());
-        const auto block = juce::dsp::AudioBlock<double>(buffer);
+        const auto block = juce::dsp::AudioBlock<double>(internalBuffer);
 
-        const auto isSwap = swap.load();
-        if (!isSwap) {
-            block.getSingleChannelBlock(0).replaceWithProductOf(lBlock, 1.0 - currentMix);
-            block.getSingleChannelBlock(1).replaceWithProductOf(rBlock, currentMix);
+        if (!swap.load()) {
+            block.getSingleChannelBlock(0).copyFrom(lBlock);
+            block.getSingleChannelBlock(1).fill(0.);
+            block.getSingleChannelBlock(2).fill(0.);
+            block.getSingleChannelBlock(3).copyFrom(rBlock);
         } else {
-            block.getSingleChannelBlock(0).replaceWithProductOf(lBlock, currentMix);
-            block.getSingleChannelBlock(1).replaceWithProductOf(rBlock, 1.0 - currentMix);
-        }
-        if (buffer.getNumChannels() >= 4) {
-            if (!isSwap) {
-                block.getSingleChannelBlock(2).replaceWithProductOf(lBlock, currentMix);
-                block.getSingleChannelBlock(3).replaceWithProductOf(rBlock, 1.0 - currentMix);
-            } else {
-                block.getSingleChannelBlock(2).replaceWithProductOf(lBlock, 1.0 - currentMix);
-                block.getSingleChannelBlock(3).replaceWithProductOf(rBlock, currentMix);
-            }
+            block.getSingleChannelBlock(0).fill(0.);
+            block.getSingleChannelBlock(1).copyFrom(rBlock);
+            block.getSingleChannelBlock(2).copyFrom(lBlock);
+            block.getSingleChannelBlock(3).fill(0.);
         }
     }
 
     void Controller::processMS(juce::AudioBuffer<double> &buffer) {
         msSplitter.split(buffer);
-        const auto currentMix = mix.load();
         const auto mBlock = juce::dsp::AudioBlock<double>(msSplitter.getMBuffer());
         const auto sBlock = juce::dsp::AudioBlock<double>(msSplitter.getSBuffer());
-        const auto block = juce::dsp::AudioBlock<double>(buffer);
+        const auto block = juce::dsp::AudioBlock<double>(internalBuffer);
 
-        const auto isSwap = swap.load();
-        if (!isSwap) {
-            block.getSingleChannelBlock(0).replaceWithProductOf(mBlock, 1.0 - currentMix);
-            block.getSingleChannelBlock(1).copyFrom(block.getSingleChannelBlock(0));
-            block.getSingleChannelBlock(0).addProductOf(sBlock, -currentMix);
-            block.getSingleChannelBlock(1).addProductOf(sBlock, currentMix);
+        if (!swap.load()) {
+            block.getSingleChannelBlock(0).copyFrom(mBlock);
+            block.getSingleChannelBlock(1).copyFrom(mBlock);
+            block.getSingleChannelBlock(2).copyFrom(sBlock);
+            block.getSingleChannelBlock(3).replaceWithProductOf(sBlock, -1.0);
         } else {
-            block.getSingleChannelBlock(0).replaceWithProductOf(sBlock, 1.0 - currentMix);
-            block.getSingleChannelBlock(1).replaceWithProductOf(sBlock, -(1.0 - currentMix));
-            block.getSingleChannelBlock(0).addProductOf(mBlock, currentMix);
-            block.getSingleChannelBlock(1).addProductOf(mBlock, currentMix);
-        }
-        if (buffer.getNumChannels() >= 4) {
-            if (!isSwap) {
-                block.getSingleChannelBlock(2).replaceWithProductOf(sBlock, 1.0 - currentMix);
-                block.getSingleChannelBlock(3).replaceWithProductOf(sBlock, -(1.0 - currentMix));
-                block.getSingleChannelBlock(2).addProductOf(mBlock, currentMix);
-                block.getSingleChannelBlock(3).addProductOf(mBlock, currentMix);
-            } else {
-                block.getSingleChannelBlock(2).replaceWithProductOf(mBlock, 1.0 - currentMix);
-                block.getSingleChannelBlock(3).copyFrom(block.getSingleChannelBlock(0));
-                block.getSingleChannelBlock(2).addProductOf(sBlock, -currentMix);
-                block.getSingleChannelBlock(3).addProductOf(sBlock, currentMix);
-            }
+            block.getSingleChannelBlock(0).copyFrom(sBlock);
+            block.getSingleChannelBlock(1).replaceWithProductOf(sBlock, -1.0);
+            block.getSingleChannelBlock(2).copyFrom(mBlock);
+            block.getSingleChannelBlock(3).copyFrom(mBlock);
         }
     }
 
@@ -111,24 +105,40 @@ namespace zlDSP {
         lhSplitter.split(buffer);
         const auto lBlock = juce::dsp::AudioBlock<double>(lhSplitter.getLBuffer());
         const auto hBlock = juce::dsp::AudioBlock<double>(lhSplitter.getHBuffer());
-        const auto block = juce::dsp::AudioBlock<double>(buffer);
-        const auto currentMix = mix.load();
-        const auto isSwap = swap.load();
-        if (!isSwap) {
-            block.getSubsetChannelBlock(0, 2).replaceWithProductOf(lBlock, 1.0 - currentMix);
-            block.getSubsetChannelBlock(0, 2).addProductOf(hBlock, currentMix);
+        const auto block = juce::dsp::AudioBlock<double>(internalBuffer);
+        if (!swap.load()) {
+            block.getSubsetChannelBlock(0, 2).copyFrom(lBlock);
+            block.getSubsetChannelBlock(2, 2).copyFrom(hBlock);
         } else {
-            block.getSubsetChannelBlock(0, 2).replaceWithProductOf(hBlock, 1.0 - currentMix);
-            block.getSubsetChannelBlock(0, 2).addProductOf(lBlock, currentMix);
+            block.getSubsetChannelBlock(0, 2).copyFrom(hBlock);
+            block.getSubsetChannelBlock(2, 2).copyFrom(lBlock);
         }
-        if (buffer.getNumChannels() >= 4) {
-            if (!isSwap) {
-                block.getSubsetChannelBlock(2, 2).replaceWithProductOf(hBlock, 1.0 - currentMix);
-                block.getSubsetChannelBlock(2, 2).addProductOf(lBlock, currentMix);
-            } else {
-                block.getSubsetChannelBlock(2, 2).replaceWithProductOf(lBlock, 1.0 - currentMix);
-                block.getSubsetChannelBlock(2, 2).addProductOf(hBlock, currentMix);
-            }
+    }
+
+    void Controller::processTS(juce::AudioBuffer<double> &buffer) {
+        juce::AudioBuffer<double> lBuffer{buffer.getArrayOfWritePointers(), 1, buffer.getNumSamples()};
+        juce::AudioBuffer<double> rBuffer{buffer.getArrayOfWritePointers() + 1, 1, buffer.getNumSamples()};
+        tsSplitters[0].split(lBuffer);
+        tsSplitters[1].split(rBuffer);
+
+        const auto block = juce::dsp::AudioBlock<double>(internalBuffer);
+
+        const auto lTransientBlock = juce::dsp::AudioBlock<double>(tsSplitters[0].getTBuffer());
+        const auto lSteadyBlock = juce::dsp::AudioBlock<double>(tsSplitters[0].getSBuffer());
+
+        const auto rTransientBlock = juce::dsp::AudioBlock<double>(tsSplitters[1].getTBuffer());
+        const auto rSteadyBlock = juce::dsp::AudioBlock<double>(tsSplitters[1].getSBuffer());
+
+        if (!swap.load()) {
+            block.getSingleChannelBlock(0).copyFrom(lTransientBlock);
+            block.getSingleChannelBlock(1).copyFrom(rTransientBlock);
+            block.getSingleChannelBlock(2).copyFrom(lSteadyBlock);
+            block.getSingleChannelBlock(3).copyFrom(rSteadyBlock);
+        } else {
+            block.getSingleChannelBlock(0).copyFrom(lSteadyBlock);
+            block.getSingleChannelBlock(1).copyFrom(rSteadyBlock);
+            block.getSingleChannelBlock(2).copyFrom(lTransientBlock);
+            block.getSingleChannelBlock(3).copyFrom(rTransientBlock);
         }
     }
 } // zlDSP

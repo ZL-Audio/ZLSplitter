@@ -36,6 +36,9 @@ namespace zlDSP {
             controllerRef.getLHSplitter().setOrder(lhSlope::orders[static_cast<size_t>(newValue)]);
         } else if (parameterID == lhFreq::ID) {
             controllerRef.getLHSplitter().setFreq(static_cast<double>(newValue));
+        } else if (parameterID == tsSeperation::ID) {
+            controllerRef.getTSSplitter(0).setFactor(newValue / 100.f);
+            controllerRef.getTSSplitter(1).setFactor(newValue / 100.f);
         }
     }
 } // zlDSP

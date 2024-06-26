@@ -118,10 +118,18 @@ namespace zlDSP {
         auto static constexpr defaultV = 1000.f;
     };
 
+    class tsSeperation : public FloatParameters<tsSeperation> {
+    public:
+        auto static constexpr ID = "ts_seperation";
+        auto static constexpr name = "Seperation";
+        inline auto static const range = juce::NormalisableRange<float>(0, 100, .1f);
+        auto static constexpr defaultV = 50.f;
+    };
+
     inline juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(splitType::get(), mix::get(), swap::get(),
-                   lhSlope::get(), lhFreq::get());
+                   lhSlope::get(), lhFreq::get(), tsSeperation::get());
         return layout;
     }
 }
