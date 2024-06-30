@@ -19,7 +19,7 @@ PluginProcessor::PluginProcessor()
       parameters(*this, nullptr,
                  juce::Identifier("ZLSplitParameters"),
                  zlDSP::getParameterLayout()),
-      controllerAttach(parameters, controller) {
+      controllerAttach(*this, parameters, controller) {
 }
 
 PluginProcessor::~PluginProcessor() {

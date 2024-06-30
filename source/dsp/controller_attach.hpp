@@ -13,16 +13,21 @@
 #include "controller.hpp"
 
 namespace zlDSP {
-    class ControllerAttach : private juce::AudioProcessorValueTreeState::Listener {
+    class ControllerAttach : private juce::AudioProcessorValueTreeState::Listener,
+    private::juce::AsyncUpdater {
     public:
-        explicit ControllerAttach(juce::AudioProcessorValueTreeState &parameters,
+        explicit ControllerAttach(juce::AudioProcessor &processor,
+                                  juce::AudioProcessorValueTreeState &parameters,
                                   Controller &controller);
 
         ~ControllerAttach() override;
 
     private:
+        juce::AudioProcessor &processorRef;
         juce::AudioProcessorValueTreeState &parametersRef;
         Controller &controllerRef;
+
+        std::atomic<splitType::stype> sType{splitType::lright};
 
         constexpr static std::array IDs{
             splitType::ID, mix::ID, swap::ID,
@@ -30,6 +35,8 @@ namespace zlDSP {
         };
 
         void parameterChanged(const juce::String &parameterID, float newValue) override;
+
+        void handleAsyncUpdate() override;
     };
 } // zlDSP
 

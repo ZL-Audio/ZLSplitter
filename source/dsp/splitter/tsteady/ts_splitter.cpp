@@ -12,7 +12,7 @@
 namespace zlSplitter {
     template<typename FloatType>
     TSSplitter<FloatType>::TSSplitter() {
-        setOrder(12);
+        setOrder(11);
     }
 
     template<typename FloatType>
@@ -20,11 +20,11 @@ namespace zlSplitter {
         tBuffer.setSize(1, static_cast<int>(spec.maximumBlockSize));
         sBuffer.setSize(1, static_cast<int>(spec.maximumBlockSize));
         if (spec.sampleRate <= 50000) {
-            setOrder(12);
+            setOrder(11);
         } else if (spec.sampleRate <= 100000) {
-            setOrder(13);
+            setOrder(12);
         } else {
-            setOrder(14);
+            setOrder(13);
         }
     }
 
@@ -35,6 +35,7 @@ namespace zlSplitter {
         fftSize = 1 << fftOrder;
         numBins = fftSize / 2 + 1;
         hopSize = fftSize / overlap;
+        latency.store(static_cast<int>(fftSize + hopSize * timeHalfMedianWindowsSize));
         fft = std::make_unique<juce::dsp::FFT>(fftOrder);
         window = std::make_unique<juce::dsp::WindowingFunction<float> >(
             fftSize + 1, juce::dsp::WindowingFunction<float>::WindowingMethod::hann, false);
@@ -132,26 +133,26 @@ namespace zlSplitter {
         }
         // calculate median and masks
         freqMedian.clear();
-        for (size_t i = 0; i < halfMedianWindowsSize; ++i) {
-            freqMedian.insert(0.f);
+        for (size_t i = 0; i < freqHalfMedianWindowsSize; ++i) {
+            freqMedian.insert(magnitude[0]);
         }
-        for (size_t i = 0; i < halfMedianWindowsSize; ++i) {
+        for (size_t i = 0; i < freqHalfMedianWindowsSize; ++i) {
             freqMedian.insert(magnitude[i]);
         }
         currentFactor1 = factor.load();
-        currentFactor2 = 1 - currentFactor1;
-        for (size_t i = 0; i < numBins - halfMedianWindowsSize; ++i) {
-            freqMedian.insert(magnitude[i + halfMedianWindowsSize]);
+        currentFactor2 = 1.f - currentFactor1;
+        for (size_t i = 0; i < numBins - freqHalfMedianWindowsSize; ++i) {
+            freqMedian.insert(magnitude[i + freqHalfMedianWindowsSize]);
             timeMedian[i].insert(magnitude[i]);
             mask[i] = calculatePortion(freqMedian.getMedian(), timeMedian[i].getMedian());
         }
-        for (size_t i = numBins - halfMedianWindowsSize; i < numBins; ++i) {
-            freqMedian.insert(0.f);
+        for (size_t i = numBins - freqHalfMedianWindowsSize; i < numBins; ++i) {
+            freqMedian.insert(magnitude[numBins - 1]);
             timeMedian[i].insert(magnitude[i]);
             mask[i] = calculatePortion(freqMedian.getMedian(), timeMedian[i].getMedian());
         }
         // retrieve fft data
-        fftDataPos = (fftDataPos + 1) % (halfMedianWindowsSize + 1);
+        fftDataPos = (fftDataPos + 1) % (timeHalfMedianWindowsSize + 1);
         // apply masks
         for (size_t i = 0; i < numBins; ++i) {
             const auto i1 = i * 2;
@@ -165,9 +166,11 @@ namespace zlSplitter {
 
     template<typename FloatType>
     float TSSplitter<FloatType>::calculatePortion(const float transientWeight, const float steadyWeight) {
-        const auto tt = transientWeight * transientWeight * transientWeight;
-        const auto ss = steadyWeight * steadyWeight * steadyWeight;
-        return currentFactor1 * tt / (tt + ss) + currentFactor2 * transientWeight / (transientWeight + steadyWeight);
+        const auto t = std::max(transientWeight, .000001f);
+        const auto s = std::max(steadyWeight, .000001f);
+        const auto tt = t * t;
+        const auto ss = s * s;
+        return currentFactor1 * tt / (tt + ss) + currentFactor2 * t / (t + s);
     }
 
     template

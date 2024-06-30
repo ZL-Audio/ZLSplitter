@@ -43,9 +43,13 @@ namespace zlSplitter {
 
         inline void setFactor(const float x) { factor.store(x); }
 
+        inline int getLatency() const { return latency.load(); }
+
     private:
-        static constexpr size_t medianWindowsSize = 17;
-        static constexpr size_t halfMedianWindowsSize = 8;
+        static constexpr size_t freqMedianWindowsSize = 11;
+        static constexpr size_t freqHalfMedianWindowsSize = freqMedianWindowsSize / 2;
+        static constexpr size_t timeMedianWindowsSize = 21;
+        static constexpr size_t timeHalfMedianWindowsSize = timeMedianWindowsSize / 2;
         juce::AudioBuffer<FloatType> tBuffer, sBuffer;
         // FFT parameters
         std::unique_ptr<juce::dsp::FFT> fft;
@@ -66,11 +70,11 @@ namespace zlSplitter {
         std::vector<float> transientFifo, steadyFifo;
         // circular FFT working space which contains interleaved complex numbers.
         size_t fftDataPos = 0;
-        std::array<std::vector<float>, halfMedianWindowsSize + 1> fftDatas;
+        std::array<std::vector<float>, timeHalfMedianWindowsSize + 1> fftDatas;
         std::vector<float> magnitude;
         // median calculators
-        std::vector<zlMedianFilter::HeapFilter<float, medianWindowsSize> > timeMedian{};
-        zlMedianFilter::HeapFilter<float, medianWindowsSize> freqMedian{};
+        std::vector<zlMedianFilter::HeapFilter<float, timeMedianWindowsSize> > timeMedian{};
+        zlMedianFilter::HeapFilter<float, freqMedianWindowsSize> freqMedian{};
         // portion holders
         std::vector<float> mask;
         // transient and steady spectrum
@@ -78,6 +82,8 @@ namespace zlSplitter {
         // seperation factor
         std::atomic<float> factor{.5f};
         float currentFactor1{.5f}, currentFactor2{.5f};
+        // latency
+        std::atomic<int> latency{0};
 
         void setOrder(size_t order);
 
