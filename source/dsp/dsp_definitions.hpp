@@ -122,8 +122,8 @@ namespace zlDSP {
     public:
         auto static constexpr ID = "ts_seperation";
         auto static constexpr name = "Seperation";
-        inline auto static const range = juce::NormalisableRange<float>(0, 100, .1f);
-        auto static constexpr defaultV = 50.f;
+        inline auto static const range = juce::NormalisableRange<float>(0.25, 4, .01f);
+        auto static constexpr defaultV = 1.f;
     };
 
     inline juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout() {

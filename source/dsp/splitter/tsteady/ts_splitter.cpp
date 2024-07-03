@@ -20,11 +20,11 @@ namespace zlSplitter {
         tBuffer.setSize(1, static_cast<int>(spec.maximumBlockSize));
         sBuffer.setSize(1, static_cast<int>(spec.maximumBlockSize));
         if (spec.sampleRate <= 50000) {
-            setOrder(11);
+            setOrder(10);
         } else if (spec.sampleRate <= 100000) {
-            setOrder(12);
+            setOrder(11);
         } else {
-            setOrder(13);
+            setOrder(12);
         }
     }
 
@@ -60,6 +60,7 @@ namespace zlSplitter {
         // resize median calculators
         timeMedian.resize(numBins);
         mask.resize(numBins);
+        previousMask.resize(numBins);
     }
 
     template<typename FloatType>
@@ -144,12 +145,14 @@ namespace zlSplitter {
         for (size_t i = 0; i < numBins - freqHalfMedianWindowsSize; ++i) {
             freqMedian.insert(magnitude[i + freqHalfMedianWindowsSize]);
             timeMedian[i].insert(magnitude[i]);
-            mask[i] = calculatePortion(freqMedian.getMedian(), timeMedian[i].getMedian());
+            const auto currentMask = calculatePortion(freqMedian.getMedian(), timeMedian[i].getMedian());
+            mask[i] = std::max(mask[i] * 0.9f, currentMask);
         }
         for (size_t i = numBins - freqHalfMedianWindowsSize; i < numBins; ++i) {
             freqMedian.insert(magnitude[numBins - 1]);
             timeMedian[i].insert(magnitude[i]);
-            mask[i] = calculatePortion(freqMedian.getMedian(), timeMedian[i].getMedian());
+            const auto currentMask = calculatePortion(freqMedian.getMedian(), timeMedian[i].getMedian());
+            mask[i] = std::max(mask[i] * 0.9f, currentMask);
         }
         // retrieve fft data
         fftDataPos = (fftDataPos + 1) % (timeHalfMedianWindowsSize + 1);
@@ -166,11 +169,13 @@ namespace zlSplitter {
 
     template<typename FloatType>
     float TSSplitter<FloatType>::calculatePortion(const float transientWeight, const float steadyWeight) {
-        const auto t = std::max(transientWeight, .000001f);
-        const auto s = std::max(steadyWeight, .000001f);
+        const auto t = transientWeight * currentFactor1;
+        const auto s = steadyWeight;
         const auto tt = t * t;
         const auto ss = s * s;
-        return currentFactor1 * tt / (tt + ss) + currentFactor2 * t / (t + s);
+        return tt / std::max(tt + ss, 0.00000001f);
+        // return currentFactor1 * tt / (tt + ss) + currentFactor2 * t / (t + s);
+        // return static_cast<float> (t / s > currentFactor1);
     }
 
     template

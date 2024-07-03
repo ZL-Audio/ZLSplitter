@@ -48,7 +48,7 @@ namespace zlSplitter {
     private:
         static constexpr size_t freqMedianWindowsSize = 11;
         static constexpr size_t freqHalfMedianWindowsSize = freqMedianWindowsSize / 2;
-        static constexpr size_t timeMedianWindowsSize = 21;
+        static constexpr size_t timeMedianWindowsSize = 11;
         static constexpr size_t timeHalfMedianWindowsSize = timeMedianWindowsSize / 2;
         juce::AudioBuffer<FloatType> tBuffer, sBuffer;
         // FFT parameters
@@ -76,7 +76,7 @@ namespace zlSplitter {
         std::vector<zlMedianFilter::HeapFilter<float, timeMedianWindowsSize> > timeMedian{};
         zlMedianFilter::HeapFilter<float, freqMedianWindowsSize> freqMedian{};
         // portion holders
-        std::vector<float> mask;
+        std::vector<float> mask, previousMask;
         // transient and steady spectrum
         std::vector<float> transientSpec, steadySpec;
         // seperation factor
