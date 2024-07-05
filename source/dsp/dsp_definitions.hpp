@@ -118,18 +118,35 @@ namespace zlDSP {
         auto static constexpr defaultV = 1000.f;
     };
 
-    class tsSeperation : public FloatParameters<tsSeperation> {
+    class tsBalance : public FloatParameters<tsBalance> {
     public:
-        auto static constexpr ID = "ts_seperation";
-        auto static constexpr name = "Seperation";
-        inline auto static const range = juce::NormalisableRange<float>(0.25, 4, .01f);
-        auto static constexpr defaultV = 1.f;
+        auto static constexpr ID = "ts_balance";
+        auto static constexpr name = "Balance";
+        inline auto static const range = juce::NormalisableRange<float>(-50.f, 50.f, .1f);
+        auto static constexpr defaultV = 0.f;
+
+        inline static float formatV(const float x) {
+            return x / 100.f + .5f;
+        }
+    };
+
+    class tsHold : public FloatParameters<tsHold> {
+    public:
+        auto static constexpr ID = "ts_hold";
+        auto static constexpr name = "Hold";
+        inline auto static const range = juce::NormalisableRange<float>(0.f, 100.f, .1f);
+        auto static constexpr defaultV = 50.f;
+
+        inline static float formatV(const float x) {
+            return x / 100.f;
+        }
     };
 
     inline juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(splitType::get(), mix::get(), swap::get(),
-                   lhSlope::get(), lhFreq::get(), tsSeperation::get());
+                   lhSlope::get(), lhFreq::get(),
+                   tsBalance::get(), tsHold::get());
         return layout;
     }
 }

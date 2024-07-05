@@ -140,19 +140,19 @@ namespace zlSplitter {
         for (size_t i = 0; i < freqHalfMedianWindowsSize; ++i) {
             freqMedian.insert(magnitude[i]);
         }
-        currentFactor1 = factor.load();
-        currentFactor2 = 1.f - currentFactor1;
+        currentBalance = balance.load();
+        currentHold = hold.load();
         for (size_t i = 0; i < numBins - freqHalfMedianWindowsSize; ++i) {
             freqMedian.insert(magnitude[i + freqHalfMedianWindowsSize]);
             timeMedian[i].insert(magnitude[i]);
             const auto currentMask = calculatePortion(freqMedian.getMedian(), timeMedian[i].getMedian());
-            mask[i] = std::max(mask[i] * 0.9f, currentMask);
+            mask[i] = std::max(mask[i] * currentHold, currentMask);
         }
         for (size_t i = numBins - freqHalfMedianWindowsSize; i < numBins; ++i) {
             freqMedian.insert(magnitude[numBins - 1]);
             timeMedian[i].insert(magnitude[i]);
             const auto currentMask = calculatePortion(freqMedian.getMedian(), timeMedian[i].getMedian());
-            mask[i] = std::max(mask[i] * 0.9f, currentMask);
+            mask[i] = std::max(mask[i] * currentHold, currentMask);
         }
         // retrieve fft data
         fftDataPos = (fftDataPos + 1) % (timeHalfMedianWindowsSize + 1);
@@ -169,13 +169,11 @@ namespace zlSplitter {
 
     template<typename FloatType>
     float TSSplitter<FloatType>::calculatePortion(const float transientWeight, const float steadyWeight) {
-        const auto t = transientWeight * currentFactor1;
+        const auto t = transientWeight * currentBalance;
         const auto s = steadyWeight;
         const auto tt = t * t;
         const auto ss = s * s;
         return tt / std::max(tt + ss, 0.00000001f);
-        // return currentFactor1 * tt / (tt + ss) + currentFactor2 * t / (t + s);
-        // return static_cast<float> (t / s > currentFactor1);
     }
 
     template

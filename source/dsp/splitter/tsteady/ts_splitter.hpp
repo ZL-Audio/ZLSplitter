@@ -41,7 +41,13 @@ namespace zlSplitter {
 
         inline juce::AudioBuffer<FloatType> &getSBuffer() { return sBuffer; }
 
-        inline void setFactor(const float x) { factor.store(x); }
+        inline void setBalance(const float x) {
+            balance.store(std::pow(8.f, x - 0.5f));
+        }
+
+        inline void setHold(const float x) {
+            hold.store((32.f - std::pow(32.f, 1.f - x)) / 31.f * 0.75f + 0.24f);
+        }
 
         inline int getLatency() const { return latency.load(); }
 
@@ -80,8 +86,8 @@ namespace zlSplitter {
         // transient and steady spectrum
         std::vector<float> transientSpec, steadySpec;
         // seperation factor
-        std::atomic<float> factor{.5f};
-        float currentFactor1{.5f}, currentFactor2{.5f};
+        std::atomic<float> balance{1.f}, hold{0.9f};
+        float currentBalance, currentHold;
         // latency
         std::atomic<int> latency{0};
 
