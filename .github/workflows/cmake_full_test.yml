@@ -36,23 +36,28 @@ jobs:
             pluginval-binary: ./pluginval
             boost_platform_version: "22.04"
             boost_toolset: "gcc"
+            plugin_os_format: "VST3"
+            checkout_branch: "main"
           - name: macOS
             os: macos-14
             pluginval-binary: pluginval.app/Contents/MacOS/pluginval
             boost_platform_version: "11"
             boost_toolset: "clang"
+            plugin_os_format: "AU"
+            checkout_branch: "main"
           - name: Windows
             os: windows-latest
             pluginval-binary: ./pluginval.exe
             boost_platform_version: "2022"
-            boost_toolset: "mingw"
+            boost_toolset: "msvc"
+            plugin_os_format: "VST3"
+            checkout_branch: "main"
 
     steps:
       - name: Set up MSVC Developer Command Prompt (Windows)
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      # This is just easier than debugging different compilers on different platforms
       - name: Set up Clang (Linux)
         if: runner.os == 'Linux'
         uses: egor-tensin/setup-clang@v1
@@ -107,7 +112,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          submodules: true # Get JUCE populated
+          submodules: true
+          ref: ${{ matrix.checkout_branch }}
+          fetch-depth: 0
+
+      - name: Checkout JUCE 7 (Linux)
+        if: ${{ matrix.name == 'Linux' }}
+        shell: bash
+        run: |
+          cd JUCE
+          git checkout 7.0.12
 
       - name: Install boost
         uses: MarkusJx/install-boost@v2.4.5
@@ -119,7 +133,7 @@ jobs:
           link: "static"
 
       - name: Cache the build
-        uses: mozilla-actions/sccache-action@v0.0.4
+        uses: mozilla-actions/sccache-action@v0.0.5
 
       - name: Import Certificates (macOS)
         uses: apple-actions/import-codesign-certs@v3 # only exists as a tag right now
@@ -135,6 +149,7 @@ jobs:
         run: cmake -B ${{ env.BUILD_DIR }} -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DCMAKE_C_COMPILER_LAUNCHER=${{ matrix.ccache }} -DCMAKE_CXX_COMPILER_LAUNCHER=${{ matrix.ccache }} -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" .
         env:
           BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+          PLUGIN_OS_FORMAT: ${{ matrix.plugin_os_format }}
 
       - name: Build
         shell: bash
@@ -157,8 +172,7 @@ jobs:
           echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
           echo "VST3_PATH=$ARTIFACTS_PATH/VST3/${{ env.PRODUCT_NAME }}.vst3" >> $GITHUB_ENV
           echo "AU_PATH=$ARTIFACTS_PATH/AU/${{ env.PRODUCT_NAME }}.component" >> $GITHUB_ENV
-          echo "AUV3_PATH=$ARTIFACTS_PATH/AUv3/${{ env.PRODUCT_NAME }}.appex" >> $GITHUB_ENV
-          echo "STANDALONE_PATH=$ARTIFACTS_PATH/Standalone/${{ env.PRODUCT_NAME }}.app" >> $GITHUB_ENV
+          echo "LV2_PATH=$ARTIFACTS_PATH/LV2/${{ env.PRODUCT_NAME }}.lv2" >> $GITHUB_ENV
           echo "ARTIFACT_NAME=${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-${{ matrix.name }}" >> $GITHUB_ENV
 
       - name: Pluginval setup
@@ -198,21 +212,12 @@ jobs:
           REPEAT: 2
           RANDOM_SEED: "${{ steps.current-time.outputs.formattedTime }}"
 
-      - name: Codesign (macOS)
-        if: ${{ matrix.name == 'macOS' &&  (env.DEVELOPER_ID_APPLICATION != '')}}
-        run: |
-          # Each plugin must be code signed
-          codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.VST3_PATH }}" --deep --strict --options=runtime --timestamp
-          codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.AU_PATH }}" --deep --strict --options=runtime --timestamp
-        env:
-          DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION}}
-
-      - name: Create Individual Packages (macOS)
+      - name: Codesign and Create Individual Packages (macOS)
         if: ${{ matrix.name == 'macOS' }}
         run: |
-          pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components" "${{ env.BUILD_DIR }}/${{ env.PRODUCT_NAME }}.au.pkg"
-          pkgbuild --identifier "${{ env.BUNDLE_ID }}.vst3.pkg" --version $VERSION --component "${{ env.VST3_PATH }}" --install-location "/Library/Audio/Plug-Ins/VST3" "${{ env.BUILD_DIR }}/${{ env.PRODUCT_NAME }}.vst3.pkg"
-          python3 -u packaging/generator.py
+          python3 -u packaging/packager_macOS.py
+        env:
+          DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
 
       - name: Sign Final Package (macOS)
         if: ${{ (matrix.name == 'macOS') && (env.APPLE_INSTALLER_DEV != '') }}
@@ -234,14 +239,27 @@ jobs:
         env:
           NOTARIZATION_USERNAME: ${{ secrets.NOTARIZATION_USERNAME }}
 
-      - name: Generate Package (macOS)
+      - name: Create DMG (macOS)
         if: ${{ matrix.name == 'macOS' }}
-        run: tar -czf "${{ env.ARTIFACT_NAME }}.tgz" "${{ env.ARTIFACT_NAME }}.pkg"
+        run: |
+          mkdir "${{ env.ARTIFACTS_PATH }}/dmgtmp"
+          mv "${{ env.ARTIFACT_NAME }}.pkg" "${{ env.ARTIFACTS_PATH }}/dmgtmp"
+          hdiutil create "${{ env.ARTIFACTS_PATH }}/tmp.dmg" -ov -volname "${{ env.ARTIFACT_NAME }}" -fs HFS+ -srcfolder "${{ env.ARTIFACTS_PATH }}/dmgtmp"
+          hdiutil convert "${{ env.ARTIFACTS_PATH }}/tmp.dmg" -format UDZO -o "${{ env.ARTIFACT_NAME }}.dmg"
 
-      - name: Generate Zip (Linux)
-        if: ${{ matrix.name == 'Linux' }}
-        working-directory: ${{ env.ARTIFACTS_PATH }}
-        run: 7z a -tzip "${{ env.ARTIFACT_NAME }}.zip" "-xr!lib${{ env.PRODUCT_NAME }}_SharedCode.a" .
+      - name: Upload DMG (macOS)
+        if: ${{ matrix.name == 'macOS' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}.dmg
+          path: "${{ env.ARTIFACT_NAME }}.dmg"
+
+      - name: Generate InnoScript (Windows)
+        if: ${{ matrix.name == 'Windows' }}
+        shell: bash
+        run: |
+          python3 -u packaging/packager_Windows.py
+          cat "packaging\installer.iss"
 
       - name: Generate Installer (Windows)
         if: ${{ matrix.name == 'Windows' }}
@@ -257,16 +275,14 @@ jobs:
           name: ${{ env.ARTIFACT_NAME }}.exe
           path: "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.exe"
 
+      - name: Generate Zip (Linux)
+        if: ${{ matrix.name == 'Linux' }}
+        working-directory: ${{ env.ARTIFACTS_PATH }}
+        run: 7z a -tzip "${{ env.ARTIFACT_NAME }}.zip" "-xr!lib${{ env.PRODUCT_NAME }}_SharedCode.a" .
+
       - name: Upload Zip (Linux)
         if: ${{ matrix.name == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}.zip
           path: "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip"
-
-      - name: Upload Tar Archive (MacOS)
-        if: ${{ matrix.name == 'macOS' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}.tgz
-          path: "${{ env.ARTIFACT_NAME }}.tgz"

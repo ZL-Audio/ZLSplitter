@@ -27,7 +27,7 @@ namespace zlReverseIIR {
         void updateFromBiquad(const std::array<double, 3> &a, const std::array<double, 3> &b) {
             as[0] = -static_cast<SampleType>(a[1] / 2);
             bs[0] = -static_cast<SampleType>(std::sqrt(a[2] - a[1] * a[1] / 4));
-            
+
         }
 
     private:
