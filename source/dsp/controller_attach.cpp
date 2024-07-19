@@ -41,7 +41,10 @@ namespace zlDSP {
         } else if (parameterID == tsBalance::ID) {
             controllerRef.getTSSplitter(0).setBalance(tsBalance::formatV(newValue));
             controllerRef.getTSSplitter(1).setBalance(tsBalance::formatV(newValue));
-        } else if (parameterID == tsHold::ID) {
+        } else if (parameterID == tsSeperation::ID) {
+            controllerRef.getTSSplitter(0).setSeperation(tsSeperation::formatV(newValue));
+            controllerRef.getTSSplitter(1).setSeperation(tsSeperation::formatV(newValue));
+        }else if (parameterID == tsHold::ID) {
             controllerRef.getTSSplitter(0).setHold(tsHold::formatV(newValue));
             controllerRef.getTSSplitter(1).setHold(tsHold::formatV(newValue));
         }

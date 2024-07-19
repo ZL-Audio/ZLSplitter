@@ -130,6 +130,18 @@ namespace zlDSP {
         }
     };
 
+    class tsSeperation : public FloatParameters<tsSeperation> {
+    public:
+        auto static constexpr ID = "ts_seperation";
+        auto static constexpr name = "Seperation";
+        inline auto static const range = juce::NormalisableRange<float>(0.f, 100.f, .1f);
+        auto static constexpr defaultV = 0.f;
+
+        inline static float formatV(const float x) {
+            return x / 100.f;
+        }
+    };
+
     class tsHold : public FloatParameters<tsHold> {
     public:
         auto static constexpr ID = "ts_hold";
@@ -146,7 +158,7 @@ namespace zlDSP {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(splitType::get(), mix::get(), swap::get(),
                    lhSlope::get(), lhFreq::get(),
-                   tsBalance::get(), tsHold::get());
+                   tsBalance::get(), tsSeperation::get(), tsHold::get());
         return layout;
     }
 }

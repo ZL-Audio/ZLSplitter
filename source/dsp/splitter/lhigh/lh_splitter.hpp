@@ -12,6 +12,7 @@
 
 #include <numbers>
 #include <juce_dsp/juce_dsp.h>
+#include "../../reverse_iir_filter/reverse_iir_filter.hpp"
 
 namespace zlSplitter {
     /**

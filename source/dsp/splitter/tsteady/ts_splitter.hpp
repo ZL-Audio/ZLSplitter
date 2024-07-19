@@ -45,6 +45,10 @@ namespace zlSplitter {
             balance.store(std::pow(8.f, x - 0.5f));
         }
 
+        inline void setSeperation(const float x) {
+            seperation.store(x * 4.f + 1.f);
+        }
+
         inline void setHold(const float x) {
             hold.store((32.f - std::pow(32.f, 1.f - x)) / 31.f * 0.75f + 0.24f);
         }
@@ -86,8 +90,8 @@ namespace zlSplitter {
         // transient and steady spectrum
         std::vector<float> transientSpec, steadySpec;
         // seperation factor
-        std::atomic<float> balance{1.f}, hold{0.9f};
-        float currentBalance, currentHold;
+        std::atomic<float> balance{1.f}, seperation{1.f}, hold{0.9f};
+        float currentBalance, currentSeperation, currentHold;
         // latency
         std::atomic<int> latency{0};
 

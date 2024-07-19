@@ -141,6 +141,7 @@ namespace zlSplitter {
             freqMedian.insert(magnitude[i]);
         }
         currentBalance = balance.load();
+        currentSeperation = seperation.load();
         currentHold = hold.load();
         for (size_t i = 0; i < numBins - freqHalfMedianWindowsSize; ++i) {
             freqMedian.insert(magnitude[i + freqHalfMedianWindowsSize]);
@@ -173,7 +174,8 @@ namespace zlSplitter {
         const auto s = steadyWeight;
         const auto tt = t * t;
         const auto ss = s * s;
-        return tt / std::max(tt + ss, 0.00000001f);
+        const auto p = tt / std::max(tt + ss, 0.00000001f);
+        return juce::jlimit(-.5f, .5f, (p - 0.5f) * currentSeperation) + .5f;
     }
 
     template
