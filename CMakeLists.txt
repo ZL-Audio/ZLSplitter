@@ -11,7 +11,7 @@ include(PamplejuceVersion)
 # This is the internal name of the project and the name of JUCE's shared code "target"
 # Note: This cannot have spaces (it may be 2023, but you can't have it all!)
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is DAWs display)
-set(PROJECT_NAME "ZLSplit")
+set(PROJECT_NAME "ZLSplitter")
 set(PLUGIN_CODE "Spli")
 
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs will display)
@@ -37,9 +37,29 @@ project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 # Change me! Set the plugin formats you want built
 # Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(FORMATS AU VST3)
+    if (DEFINED ENV{PLUGIN_OS_FORMAT})
+        set(FORMATS "$ENV{PLUGIN_OS_FORMAT}")
+    else ()
+        set(FORMATS AU VST3 AAX)
+    endif()
+    if (DEFINED ENV{GITHUB_TOKEN})
+        set(JUCE_AAX_COPY_DIR "/Users/runner/Library/Audio/Plug-Ins/AAX")
+    else ()
+        set(JUCE_AAX_COPY_DIR "/Library/Application Support/Avid/Audio/Plug-Ins")
+    endif ()
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    if (DEFINED ENV{PLUGIN_OS_FORMAT})
+        set(FORMATS "$ENV{PLUGIN_OS_FORMAT}")
+    else ()
+        set(FORMATS LV2 VST3 AAX)
+    endif()
+    set(JUCE_AAX_COPY_DIR "C:/Program Files/Common Files/Avid/Audio/Plug-Ins")
 else ()
-    set(FORMATS LV2 VST3)
+    if (DEFINED ENV{PLUGIN_OS_FORMAT})
+        set(FORMATS "$ENV{PLUGIN_OS_FORMAT}")
+    else()
+        set(FORMATS LV2 VST3)
+    endif ()
 endif ()
 
 # include boost for this project
@@ -58,7 +78,7 @@ include(JUCEDefaults)
 add_subdirectory(JUCE)
 
 # Add any other modules you want modules here, before the juce_add_plugin call
-# juce_add_module("${CMAKE_CURRENT_LIST_DIR}/modules/friz/Source/friz")
+juce_add_module("${CMAKE_CURRENT_LIST_DIR}/modules/friz/Source/friz")
 
 # See `docs/CMake API.md` in the JUCE repo for all config options
 juce_add_plugin("${PROJECT_NAME}"
@@ -71,6 +91,7 @@ juce_add_plugin("${PROJECT_NAME}"
 
         # On MacOS, plugin is copied to ~/Users/yourname/Library/Audio/Plug-Ins/
         COPY_PLUGIN_AFTER_BUILD TRUE
+        AAX_COPY_DIR "${JUCE_AAX_COPY_DIR}"
 
         # Change me!
         # A four-character plugin id
@@ -84,6 +105,10 @@ juce_add_plugin("${PROJECT_NAME}"
         FORMATS "${FORMATS}"
         LV2URI "${LV2URI}"
 
+        AU_MAIN_TYPE kAudioUnitType_Effect
+        VST3_CATEGORIES Fx
+        AAX_CATEGORY AAX_EPlugInCategory_Effect
+
         # The name of your final executable
         # This is how it's listed in the DAW
         # This can be different from PROJECT_NAME and can have spaces!
@@ -96,7 +121,7 @@ add_library(SharedCode INTERFACE)
 
 # C++20, please
 # Use cxx_std_23 for C++23 (as of CMake v 3.20)
-target_compile_features(SharedCode INTERFACE cxx_std_20)
+include(SharedCodeDefaults)
 
 # Manually list all .h and .cpp files for the plugin
 # If you are like me, you'll use globs for your sanity.
@@ -125,11 +150,11 @@ target_compile_definitions(SharedCode
         CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
         VERSION="${CURRENT_VERSION}"
 
-        # JUCE_DISPLAY_SPLASH_SCREEN=0
+        #        JUCE_DISPLAY_SPLASH_SCREEN=0
 
         # JucePlugin_Name is for some reason doesn't use the nicer PRODUCT_NAME
         PRODUCT_NAME_WITHOUT_VERSION="${PRODUCT_NAME}"
-        # JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS=1
+        #        JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS=1
         JUCE_SILENCE_XCODE_15_LINKER_WARNING=1
 )
 
@@ -149,6 +174,7 @@ target_link_libraries(SharedCode
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
+        friz
         Boost::boost)
 
 # Link the JUCE plugin targets our SharedCode target
@@ -156,9 +182,6 @@ target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
 
 # IPP support, comment out to disable
 include(PamplejuceIPP)
-
-# Everything related to the tests target
-# include(Tests)
 
 # A separate target keeps the Tests target fast!
 # include(Benchmarks)
