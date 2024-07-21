@@ -27,8 +27,6 @@ namespace zlSplitter {
     public:
         TSSplitter();
 
-        void reset();
-
         void prepare(const juce::dsp::ProcessSpec &spec);
 
         /**

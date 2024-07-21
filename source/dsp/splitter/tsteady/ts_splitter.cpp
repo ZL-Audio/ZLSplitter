@@ -36,7 +36,7 @@ namespace zlSplitter {
         numBins = fftSize / 2 + 1;
         hopSize = fftSize / overlap;
         latency.store(static_cast<int>(fftSize + hopSize * timeHalfMedianWindowsSize));
-        fft = std::make_unique<juce::dsp::FFT>(fftOrder);
+        fft = std::make_unique<juce::dsp::FFT>(static_cast<int>(fftOrder));
         window = std::make_unique<juce::dsp::WindowingFunction<float> >(
             fftSize + 1, juce::dsp::WindowingFunction<float>::WindowingMethod::hann, false);
         // set fifo

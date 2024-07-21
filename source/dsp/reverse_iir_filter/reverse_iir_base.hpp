@@ -27,13 +27,19 @@ namespace zlReverseIIR {
         void updateFromBiquad(const std::array<double, 3> &a, const std::array<double, 3> &b) {
             as[0] = -static_cast<SampleType>(a[1] / 2);
             bs[0] = -static_cast<SampleType>(std::sqrt(a[2] - a[1] * a[1] / 4));
-
+            for (size_t i = 1; i < numStage; ++i) {
+                const auto ii = i - 1;
+                as[i] = as[ii] * as[ii] - bs[ii] * bs[ii];
+                bs[i] = 2 * as[ii] * bs[ii];
+            }
+            zeros = b;
         }
 
     private:
         size_t numStage = 10;
         std::vector<juce::dsp::DelayLine<SampleType>> delays;
         std::vector<SampleType> u, v, as, bs;
+        std::array<SampleType, 3> zeros{};
     };
 }
 
