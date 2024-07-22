@@ -7,13 +7,19 @@
 //
 // You should have received a copy of the GNU General Public License along with ZLEqualizer. If not, see <https://www.gnu.org/licenses/>.
 
-#include "compact_combobox.hpp"
+#include "compact_figure_combobox.hpp"
 
 namespace zlInterface {
-    CompactCombobox::CompactCombobox(const juce::StringArray &choices,
-                                     UIBase &base)
+    CompactFigureCombobox::CompactFigureCombobox(const juce::StringArray &choices,
+                                                 const std::vector<juce::Drawable *> &icons,
+                                                 UIBase &base)
         : uiBase(base), boxLookAndFeel(base), animator{} {
-        comboBox.addItemList(choices, 1);
+        const auto menu = comboBox.getRootMenu();
+        for (size_t i = 0; i < icons.size(); ++i) {
+            menu->addItem(static_cast<int>(i + 1), "", true, false, icons[i]->createCopy());
+        }
+        boxLookAndFeel.setImages(icons);
+
         comboBox.setScrollWheelEnabled(false);
         comboBox.setInterceptsMouseClicks(false, false);
         comboBox.setLookAndFeel(&boxLookAndFeel);
@@ -23,31 +29,31 @@ namespace zlInterface {
     }
 
 
-    CompactCombobox::~CompactCombobox() {
+    CompactFigureCombobox::~CompactFigureCombobox() {
         animator.cancelAllAnimations(false);
         comboBox.setLookAndFeel(nullptr);
     }
 
-    void CompactCombobox::resized() {
+    void CompactFigureCombobox::resized() {
         auto bound = getLocalBounds().toFloat();
         bound = bound.withSizeKeepingCentre(bound.getWidth(), juce::jmin(bound.getHeight(),
                                                                          uiBase.getFontSize() * 2.f));
         comboBox.setBounds(bound.toNearestInt());
     }
 
-    void CompactCombobox::mouseUp(const juce::MouseEvent &event) {
+    void CompactFigureCombobox::mouseUp(const juce::MouseEvent &event) {
         comboBox.mouseUp(event);
     }
 
-    void CompactCombobox::mouseDown(const juce::MouseEvent &event) {
+    void CompactFigureCombobox::mouseDown(const juce::MouseEvent &event) {
         comboBox.mouseDown(event);
     }
 
-    void CompactCombobox::mouseDrag(const juce::MouseEvent &event) {
+    void CompactFigureCombobox::mouseDrag(const juce::MouseEvent &event) {
         comboBox.mouseDrag(event);
     }
 
-    void CompactCombobox::mouseEnter(const juce::MouseEvent &event) {
+    void CompactFigureCombobox::mouseEnter(const juce::MouseEvent &event) {
         comboBox.mouseEnter(event);
         animator.cancelAnimation(animationId, false);
         if (animator.getAnimation(animationId) != nullptr)
@@ -63,7 +69,7 @@ namespace zlInterface {
         animator.addAnimation(std::move(effect));
     }
 
-    void CompactCombobox::mouseExit(const juce::MouseEvent &event) {
+    void CompactFigureCombobox::mouseExit(const juce::MouseEvent &event) {
         comboBox.mouseExit(event);
         animator.cancelAnimation(animationId, false);
         if (animator.getAnimation(animationId) != nullptr)
@@ -79,7 +85,7 @@ namespace zlInterface {
         animator.addAnimation(std::move(effect));
     }
 
-    void CompactCombobox::mouseMove(const juce::MouseEvent &event) {
+    void CompactFigureCombobox::mouseMove(const juce::MouseEvent &event) {
         comboBox.mouseMove(event);
     }
 }

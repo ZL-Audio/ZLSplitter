@@ -7,19 +7,21 @@
 //
 // You should have received a copy of the GNU General Public License along with ZLEqualizer. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef COMPACT_COMBOBOX_H
-#define COMPACT_COMBOBOX_H
+#ifndef COMPACT_FIGURE_COMBOBOX_H
+#define COMPACT_FIGURE_COMBOBOX_H
 
 #include <friz/friz.h>
 
-#include "compact_combobox_look_and_feel.hpp"
+#include "compact_figure_combobox_look_and_feel.hpp"
 
 namespace zlInterface {
-    class CompactCombobox final : public juce::Component {
+    class CompactFigureCombobox final : public juce::Component {
     public:
-        CompactCombobox(const juce::StringArray &choices, UIBase &base);
+        CompactFigureCombobox(const juce::StringArray &choices,
+                              const std::vector<juce::Drawable *> &icons,
+                              UIBase &base);
 
-        ~CompactCombobox() override;
+        ~CompactFigureCombobox() override;
 
         void resized() override;
 
@@ -42,11 +44,11 @@ namespace zlInterface {
 
         inline juce::ComboBox &getBox() { return comboBox; }
 
-        inline CompactComboboxLookAndFeel &getLAF() { return boxLookAndFeel; }
+        inline CompactFigureComboboxLookAndFeel &getLAF() { return boxLookAndFeel; }
 
     private:
         zlInterface::UIBase &uiBase;
-        CompactComboboxLookAndFeel boxLookAndFeel;
+        CompactFigureComboboxLookAndFeel boxLookAndFeel;
         juce::ComboBox comboBox;
 
         friz::Animator animator;
@@ -55,4 +57,4 @@ namespace zlInterface {
 }
 
 
-#endif //COMPACT_COMBOBOX_H
+#endif //COMPACT_FIGURE_COMBOBOX_H

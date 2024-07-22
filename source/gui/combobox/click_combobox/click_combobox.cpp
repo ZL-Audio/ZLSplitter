@@ -11,7 +11,7 @@
 
 namespace zlInterface {
     ClickCombobox::ClickCombobox(const juce::String &labelText, const juce::StringArray &choices, UIBase &base)
-        : compactBox("", choices, base),
+        : compactBox(choices, base),
           label("", juce::DrawableButton::ButtonStyle::ImageFitted),
           labelLAF(base, labelText) {
         addAndMakeVisible(compactBox);

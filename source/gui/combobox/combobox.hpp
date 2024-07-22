@@ -11,6 +11,7 @@
 #define ZLINTERFACE_COMBOBOX_H
 
 #include "compact_combobox/compact_combobox.hpp"
+#include "compact_figure_combobox/compact_figure_combobox.hpp"
 #include "left_right_combobox/left_right_combobox.hpp"
 #include "click_combobox/click_combobox.hpp"
 

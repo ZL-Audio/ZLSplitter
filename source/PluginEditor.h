@@ -12,6 +12,8 @@
 #include "PluginProcessor.h"
 #include "BinaryData.h"
 
+#include "gui/gui.hpp"
+
 //==============================================================================
 class PluginEditor : public juce::AudioProcessorEditor {
 public:
