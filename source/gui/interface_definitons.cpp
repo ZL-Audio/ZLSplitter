@@ -127,7 +127,7 @@ namespace zlInterface {
 
     juce::Rectangle<float> UIBase::getShadowEllipseArea(juce::Rectangle<float> boxBounds, float cornerSize,
                                                         const fillShadowEllipseArgs &margs) {
-        auto radius = juce::jmax(juce::roundToInt(cornerSize * 0.75f), 1);
+        const auto radius = juce::jmax(juce::roundToInt(cornerSize * 0.75f), 1);
         if (margs.fit) {
             boxBounds = boxBounds.withSizeKeepingCentre(
                 boxBounds.getWidth() - static_cast<float>(radius) - 1.5f * cornerSize,
@@ -197,7 +197,7 @@ namespace zlInterface {
                                                              float cornerSize,
                                                              const fillShadowEllipseArgs &margs) {
         juce::ignoreUnused(margs);
-        auto radius = juce::jmax(juce::roundToInt(cornerSize * 1.5f), 1);
+        const auto radius = juce::jmax(juce::roundToInt(cornerSize * 1.5f), 1);
         boxBounds = boxBounds.withSizeKeepingCentre(
             boxBounds.getWidth() - 0.75f * static_cast<float>(radius),
             boxBounds.getHeight() - 0.75f * static_cast<float>(radius));
@@ -248,22 +248,6 @@ namespace zlInterface {
         backShadow.drawForPath(g, path);
         g.restoreState();
         return boxBounds;
-    }
-
-    juce::Colour UIBase::getColourByIdx(const colourIdx idx) const {
-        if (styleID.load() < 2) {
-            switch (idx) {
-                case textColour:
-                case backgroundColour:
-                case shadowColour:
-                case glowColour:
-                case colourNum:
-                default:
-                    return juce::Colours::white;
-            }
-        } else {
-            return customColours[static_cast<size_t>(idx)];
-        }
     }
 
     void UIBase::loadFromAPVTS() {

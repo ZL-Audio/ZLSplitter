@@ -33,11 +33,6 @@ namespace zlInterface {
     static constexpr size_t ColorMap2Size = 6;
 
     struct UIColors {
-        juce::Colour TextColor = juce::Colour(87, 96, 110);
-        juce::Colour BackgroundColor = juce::Colour(214, 223, 236);
-        juce::Colour TextLightColor = juce::Colour(191, 200, 216);
-        juce::Colour DarkShadowColor = juce::Colour(168, 172, 178);
-        juce::Colour BrightShadowColor = juce::Colour(237, 246, 255);
         juce::Colour ExtraColor1 = juce::Colour(139, 0, 0);
         std::array<juce::Colour, ColorMap1Size> ColorMap1 = {
             juce::Colour(31, 119, 180),
@@ -65,11 +60,6 @@ namespace zlInterface {
         {
             {},
             {
-                .TextColor = juce::Colour(255 - 8, 255 - 9, 255 - 11),
-                .BackgroundColor = juce::Colour((255 - 214) / 2, (255 - 223) / 2, (255 - 236) / 2),
-                .TextLightColor = juce::Colour(137, 125, 109),
-                .DarkShadowColor = juce::Colour(0, 0, 0),
-                .BrightShadowColor = juce::Colour(70, 66, 63),
                 .ExtraColor1 = juce::Colour(255 - 139, 255, 255),
                 .ColorMap1 = {
                     juce::Colour(224, 136, 75),
@@ -163,34 +153,20 @@ namespace zlInterface {
     class UIBase {
     public:
         explicit UIBase(juce::AudioProcessorValueTreeState &apvts)
-            : state(apvts), fontSize{0.f}, styleID{1} {
+            : state(apvts), fontSize{0.f} {
         }
 
-        UIBase(const float fSize, const size_t idx, juce::AudioProcessorValueTreeState &apvts)
+        UIBase(const float fSize, juce::AudioProcessorValueTreeState &apvts)
             : state(apvts) {
             fontSize.store(fSize);
-            styleID.store(idx);
-            mainID.store(std::min(static_cast<size_t>(1), idx));
         }
 
         void setFontSize(const float fSize) { fontSize.store(fSize); }
 
         inline float getFontSize() const { return fontSize.load(); }
 
-        void setStyle(const size_t idx) {
-            styleID.store(idx);
-            mainID.store(std::min(static_cast<size_t>(1), idx));
-        }
-
-        inline size_t getStyle() const { return styleID.load(); }
-
         inline juce::Colour getTextColor() const {
-            const auto currentStyleID = styleID.load();
-            if (currentStyleID < 2) {
-                return styleColors[currentStyleID].TextColor;
-            } else {
-                return customColours[static_cast<size_t>(textColour)];
-            }
+            return customColours[static_cast<size_t>(textColour)];
         }
 
         inline juce::Colour getTextInactiveColor() const { return getTextColor().withAlpha(0.5f); }
@@ -198,12 +174,7 @@ namespace zlInterface {
         inline juce::Colour getTextHideColor() const { return getTextColor().withAlpha(0.25f); }
 
         inline juce::Colour getBackgroundColor() const {
-            const auto currentStyleID = styleID.load();
-            if (currentStyleID < 2) {
-                return styleColors[currentStyleID].BackgroundColor;
-            } else {
-                return customColours[static_cast<size_t>(backgroundColour)];
-            }
+            return customColours[static_cast<size_t>(backgroundColour)];
         }
 
         inline juce::Colour getBackgroundInactiveColor() const { return getBackgroundColor().withAlpha(0.8f); }
@@ -211,31 +182,21 @@ namespace zlInterface {
         inline juce::Colour getBackgroundHideColor() const { return getBackgroundColor().withAlpha(0.5f); }
 
         inline juce::Colour getDarkShadowColor() const {
-            const auto currentStyleID = styleID.load();
-            if (currentStyleID < 2) {
-                return styleColors[currentStyleID].DarkShadowColor;
-            } else {
-                return customColours[static_cast<size_t>(shadowColour)];
-            }
+            return customColours[static_cast<size_t>(shadowColour)];
         }
 
         inline juce::Colour getBrightShadowColor() const {
-            const auto currentStyleID = styleID.load();
-            if (currentStyleID < 2) {
-                return styleColors[currentStyleID].BrightShadowColor;
-            } else {
-                return customColours[static_cast<size_t>(glowColour)];
-            }
+            return customColours[static_cast<size_t>(glowColour)];
         }
 
-        inline juce::Colour getExtraColor1() const { return styleColors[mainID.load()].ExtraColor1; }
+        inline juce::Colour getExtraColor1() const { return styleColors[1].ExtraColor1; }
 
         inline juce::Colour getColorMap1(const size_t idx) const {
-            return styleColors[std::max(static_cast<size_t>(1), mainID.load())].ColorMap1[idx % ColorMap1Size];
+            return styleColors[1].ColorMap1[idx % ColorMap1Size];
         }
 
         inline juce::Colour getColorMap2(const size_t idx) const {
-            return styleColors[mainID.load()].ColorMap2[idx % ColorMap2Size];
+            return styleColors[1].ColorMap2[idx % ColorMap2Size];
         }
 
         static juce::Rectangle<float> getRoundedShadowRectangleArea(juce::Rectangle<float> boxBounds,
@@ -270,7 +231,9 @@ namespace zlInterface {
                                                       float cornerSize,
                                                       const fillShadowEllipseArgs &margs) const;
 
-        juce::Colour getColourByIdx(colourIdx idx) const;
+        juce::Colour getColourByIdx(const colourIdx idx) const {
+            return customColours[static_cast<size_t>(idx)];
+        }
 
         void setColourByIdx(const colourIdx idx, const juce::Colour colour) {
             customColours[static_cast<size_t>(idx)] = colour;
@@ -311,7 +274,6 @@ namespace zlInterface {
     private:
         juce::AudioProcessorValueTreeState &state;
         std::atomic<float> fontSize{0};
-        std::atomic<size_t> styleID{1}, mainID{1};
         std::array<juce::Colour, colourNum> customColours;
         std::array<float, 2> wheelSensitivity{1.f, 0.12f};
         size_t rotaryStyleId{0};

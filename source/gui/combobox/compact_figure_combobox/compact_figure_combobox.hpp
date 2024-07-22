@@ -17,9 +17,7 @@
 namespace zlInterface {
     class CompactFigureCombobox final : public juce::Component {
     public:
-        CompactFigureCombobox(const juce::StringArray &choices,
-                              const std::vector<juce::Drawable *> &icons,
-                              UIBase &base);
+        CompactFigureCombobox(const std::vector<juce::Drawable *> &icons, UIBase &base);
 
         ~CompactFigureCombobox() override;
 

@@ -10,9 +10,7 @@
 #include "compact_figure_combobox.hpp"
 
 namespace zlInterface {
-    CompactFigureCombobox::CompactFigureCombobox(const juce::StringArray &choices,
-                                                 const std::vector<juce::Drawable *> &icons,
-                                                 UIBase &base)
+    CompactFigureCombobox::CompactFigureCombobox(const std::vector<juce::Drawable *> &icons, UIBase &base)
         : uiBase(base), boxLookAndFeel(base), animator{} {
         const auto menu = comboBox.getRootMenu();
         for (size_t i = 0; i < icons.size(); ++i) {
