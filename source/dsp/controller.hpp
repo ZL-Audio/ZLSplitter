@@ -51,6 +51,10 @@ namespace zlDSP {
 
         void setSwap(const bool x) { swap.store(x); }
 
+        zlMeter::SingleMeter<double> &getMeter1() { return meter1; }
+
+        zlMeter::SingleMeter<double> &getMeter2() { return meter2; }
+
     private:
         std::atomic<splitType::stype> splitType;
         zlSplitter::LRSplitter<double> lrSplitter;

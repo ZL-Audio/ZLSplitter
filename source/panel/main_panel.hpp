@@ -10,6 +10,8 @@
 #ifndef MAIN_PANEL_HPP
 #define MAIN_PANEL_HPP
 
+#include "meter_panel.hpp"
+
 namespace zlPanel {
 
 class MainPanel {

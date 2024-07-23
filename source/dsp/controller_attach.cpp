@@ -55,6 +55,7 @@ namespace zlDSP {
             case splitType::lright:
             case splitType::mside:
             case splitType::lhigh: {
+                processorRef.setLatencySamples(0);
                 break;
             }
             case splitType::tsteady: {

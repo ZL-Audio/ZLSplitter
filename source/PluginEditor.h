@@ -12,7 +12,7 @@
 #include "PluginProcessor.h"
 #include "BinaryData.h"
 
-#include "gui/gui.hpp"
+#include "panel/main_panel.hpp"
 
 //==============================================================================
 class PluginEditor : public juce::AudioProcessorEditor {

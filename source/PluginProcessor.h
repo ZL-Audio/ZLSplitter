@@ -16,10 +16,12 @@
 #endif
 
 #include "dsp/dsp.hpp"
+#include "state/state.hpp"
 
 class PluginProcessor : public juce::AudioProcessor {
 public:
-    juce::AudioProcessorValueTreeState parameters;
+    zlState::DummyProcessor dummyProcessor;
+    juce::AudioProcessorValueTreeState parameters, state;
 
     PluginProcessor();
 
@@ -65,10 +67,12 @@ public:
 
     bool supportsDoublePrecisionProcessing() const override { return true; }
 
+    zlDSP::Controller &getController() { return controller; }
+
 private:
     zlDSP::Controller controller;
     zlDSP::ControllerAttach controllerAttach;
 
     juce::AudioBuffer<double> doubleBuffer;
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
 };

@@ -32,7 +32,7 @@ namespace zlDSP {
     }
 
     void Controller::process(juce::AudioBuffer<double> &buffer) {
-        internalBuffer.setSize(4, buffer.getNumSamples(),false, false, true);
+        internalBuffer.setSize(4, buffer.getNumSamples(), false, false, true);
         switch (splitType.load()) {
             case splitType::lright: {
                 processLR(buffer);
@@ -54,16 +54,21 @@ namespace zlDSP {
         const auto currentMix = mix.load();
         const juce::dsp::AudioBlock<double> block{buffer};
         const juce::dsp::AudioBlock<double> internalBlock{internalBuffer};
+
         block.getSubsetChannelBlock(0, 2).replaceWithProductOf(
             internalBlock.getSubsetChannelBlock(0, 2), 1.0 - currentMix);
         block.getSubsetChannelBlock(0, 2).addProductOf(
             internalBlock.getSubsetChannelBlock(2, 2), currentMix);
+
         if (block.getNumChannels() >= 4) {
             block.getSubsetChannelBlock(2, 2).replaceWithProductOf(
-            internalBlock.getSubsetChannelBlock(0, 2), currentMix);
+                internalBlock.getSubsetChannelBlock(0, 2), currentMix);
             block.getSubsetChannelBlock(2, 2).addProductOf(
                 internalBlock.getSubsetChannelBlock(2, 2), 1.0 - currentMix);
         }
+
+        meter1.process(block.getSubsetChannelBlock(0, 2));
+        meter2.process(block.getSubsetChannelBlock(2, 2));
     }
 
     void Controller::processLR(juce::AudioBuffer<double> &buffer) {
