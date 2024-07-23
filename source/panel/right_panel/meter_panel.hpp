@@ -12,9 +12,9 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include "../PluginProcessor.h"
-#include "../dsp/dsp.hpp"
-#include "../gui/gui.hpp"
+#include "../../PluginProcessor.h"
+#include "../../dsp/dsp.hpp"
+#include "../../gui/gui.hpp"
 #include "meter_panel/single_meter_panel.hpp"
 
 namespace zlPanel {
