@@ -10,4 +10,9 @@
 #include "top_panel.hpp"
 
 namespace zlPanel {
+    TopPanel::TopPanel(PluginProcessor &processor, zlInterface::UIBase &base)
+        : logoPanel(processor.state, base),
+          swapButton("", base),
+          splitBox({}, base) {
+    }
 } // zlPanel

@@ -10,12 +10,23 @@
 #ifndef TOP_PANEL_HPP
 #define TOP_PANEL_HPP
 
+#include "../../gui/gui.hpp"
+#include "../../PluginProcessor.h"
+
 #include "logo_panel.hpp"
 
 namespace zlPanel {
 
-class TopPanel {
+class TopPanel final : public juce::Component {
+public:
+    explicit TopPanel (PluginProcessor &processor, zlInterface::UIBase &base);
 
+    void resized() override;
+
+private:
+    LogoPanel logoPanel;
+    zlInterface::CompactButton swapButton;
+    zlInterface::CompactFigureCombobox splitBox;
 };
 
 } // zlPanel
