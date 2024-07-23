@@ -25,6 +25,9 @@ namespace zlDSP {
         tsSplitters[0].prepare(spec);
         tsSplitters[1].prepare(spec);
 
+        meter1.prepare(spec);
+        meter2.prepare(spec);
+
         internalBuffer.setSize(4, static_cast<int>(spec.maximumBlockSize));
     }
 

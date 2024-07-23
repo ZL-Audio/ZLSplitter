@@ -11,6 +11,7 @@
 #define CONTROLLER_HPP
 
 #include "splitter/splitter.hpp"
+#include "meter/meter.hpp"
 #include "dsp_definitions.hpp"
 
 namespace zlDSP {
@@ -58,6 +59,8 @@ namespace zlDSP {
         std::array<zlSplitter::TSSplitter<double>, 2> tsSplitters;
         std::atomic<double> mix{0.0};
         std::atomic<bool> swap{false};
+
+        zlMeter::SingleMeter<double> meter1, meter2;
 
         juce::AudioBuffer<double> internalBuffer;
 
