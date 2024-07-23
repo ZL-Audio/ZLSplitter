@@ -51,20 +51,35 @@ namespace zlDSP {
                 break;
             }
         }
-        const auto currentMix = mix.load();
+
         const juce::dsp::AudioBlock<double> block{buffer};
         const juce::dsp::AudioBlock<double> internalBlock{internalBuffer};
 
-        block.getSubsetChannelBlock(0, 2).replaceWithProductOf(
-            internalBlock.getSubsetChannelBlock(0, 2), 1.0 - currentMix);
-        block.getSubsetChannelBlock(0, 2).addProductOf(
-            internalBlock.getSubsetChannelBlock(2, 2), currentMix);
+        switch (splitType.load()) {
+            case splitType::lright:
+            case splitType::mside:
+            case splitType::lhigh: {
+                const auto currentMix = mix.load();
+                block.getSubsetChannelBlock(0, 2).replaceWithProductOf(
+                    internalBlock.getSubsetChannelBlock(0, 2), 1.0 - currentMix);
+                block.getSubsetChannelBlock(0, 2).addProductOf(
+                    internalBlock.getSubsetChannelBlock(2, 2), currentMix);
 
-        if (block.getNumChannels() >= 4) {
-            block.getSubsetChannelBlock(2, 2).replaceWithProductOf(
-                internalBlock.getSubsetChannelBlock(0, 2), currentMix);
-            block.getSubsetChannelBlock(2, 2).addProductOf(
-                internalBlock.getSubsetChannelBlock(2, 2), 1.0 - currentMix);
+                if (block.getNumChannels() >= 4) {
+                    block.getSubsetChannelBlock(2, 2).replaceWithProductOf(
+                        internalBlock.getSubsetChannelBlock(0, 2), currentMix);
+                    block.getSubsetChannelBlock(2, 2).addProductOf(
+                        internalBlock.getSubsetChannelBlock(2, 2), 1.0 - currentMix);
+                }
+            }
+            case splitType::tsteady: {
+                block.getSubsetChannelBlock(0, 2).copyFrom(
+                    internalBlock.getSubsetChannelBlock(0, 2));
+                if (block.getNumChannels() >= 4) {
+                    block.getSubsetChannelBlock(2, 2).copyFrom(
+                        internalBlock.getSubsetChannelBlock(2, 2));
+                }
+            }
         }
 
         meter1.process(block.getSubsetChannelBlock(0, 2));

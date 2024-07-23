@@ -14,7 +14,7 @@
 
 namespace zlDSP {
     class ControllerAttach : private juce::AudioProcessorValueTreeState::Listener,
-    private::juce::AsyncUpdater {
+                             private::juce::AsyncUpdater {
     public:
         explicit ControllerAttach(juce::AudioProcessor &processor,
                                   juce::AudioProcessorValueTreeState &parameters,
@@ -32,12 +32,21 @@ namespace zlDSP {
         constexpr static std::array IDs{
             splitType::ID, mix::ID, swap::ID,
             lhSlope::ID, lhFreq::ID,
-            tsBalance::ID, tsSeperation::ID, tsHold::ID
+            tsBalance::ID, tsSeperation::ID, tsHold::ID, tsSmooth::ID
+        };
+
+        constexpr static std::array defaultVs{
+            static_cast<float>(splitType::defaultI),
+            mix::defaultV, static_cast<float>(swap::defaultV),
+            static_cast<float>(lhSlope::defaultI), lhFreq::defaultV,
+            tsBalance::defaultV, tsSeperation::defaultV, tsHold::defaultV, tsSmooth::defaultV
         };
 
         void parameterChanged(const juce::String &parameterID, float newValue) override;
 
         void handleAsyncUpdate() override;
+
+        void initDefaults();
     };
 } // zlDSP
 

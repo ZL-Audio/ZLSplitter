@@ -14,6 +14,7 @@ namespace zlDSP {
                                        Controller &controller)
         : processorRef(processor), parametersRef(parameters),
           controllerRef(controller) {
+        initDefaults();
         for (auto &ID: IDs) {
             parametersRef.addParameterListener(ID, this);
         }
@@ -44,9 +45,12 @@ namespace zlDSP {
         } else if (parameterID == tsSeperation::ID) {
             controllerRef.getTSSplitter(0).setSeperation(tsSeperation::formatV(newValue));
             controllerRef.getTSSplitter(1).setSeperation(tsSeperation::formatV(newValue));
-        }else if (parameterID == tsHold::ID) {
+        } else if (parameterID == tsHold::ID) {
             controllerRef.getTSSplitter(0).setHold(tsHold::formatV(newValue));
             controllerRef.getTSSplitter(1).setHold(tsHold::formatV(newValue));
+        } else if (parameterID == tsSmooth::ID) {
+            controllerRef.getTSSplitter(0).setSmooth(tsSmooth::formatV(newValue));
+            controllerRef.getTSSplitter(1).setSmooth(tsSmooth::formatV(newValue));
         }
     }
 
@@ -61,6 +65,12 @@ namespace zlDSP {
             case splitType::tsteady: {
                 processorRef.setLatencySamples(controllerRef.getTSSplitter(0).getLatency());
             }
+        }
+    }
+
+    void ControllerAttach::initDefaults() {
+        for (size_t j = 0; j < defaultVs.size(); ++j) {
+            parameterChanged(IDs[j], defaultVs[j]);
         }
     }
 } // zlDSP

@@ -7,19 +7,7 @@
 //
 // You should have received a copy of the GNU General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef MAIN_PANEL_HPP
-#define MAIN_PANEL_HPP
-
-#include "right_panel/meter_panel.hpp"
-#include "top_panel/top_panel.hpp"
-#include "control_panel/control_panel.hpp"
+#include "control_panel.hpp"
 
 namespace zlPanel {
-
-class MainPanel {
-
-};
-
 } // zlPanel
-
-#endif //MAIN_PANEL_HPP

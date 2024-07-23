@@ -156,15 +156,18 @@ namespace zlSplitter {
             mask[i] = std::max(mask[i] * currentHold, currentMask);
         }
         // retrieve fft data
+        currentSmooth = smooth.load();
+        const auto allMask = std::reduce(mask.begin(), mask.end()) / static_cast<float>(mask.size());
         fftDataPos = (fftDataPos + 1) % (timeHalfMedianWindowsSize + 1);
         // apply masks
         for (size_t i = 0; i < numBins; ++i) {
             const auto i1 = i * 2;
             const auto i2 = i1 + 1;
-            transientSpec[i1] = fftDatas[fftDataPos][i1] * mask[i];
-            transientSpec[i2] = fftDatas[fftDataPos][i2] * mask[i];
-            steadySpec[i1] = fftDatas[fftDataPos][i1] * (1.f - mask[i]);
-            steadySpec[i2] = fftDatas[fftDataPos][i2] * (1.f - mask[i]);
+            const auto binMask = allMask * currentSmooth + mask[i] * (1.f - currentSmooth);
+            transientSpec[i1] = fftDatas[fftDataPos][i1] * binMask;
+            transientSpec[i2] = fftDatas[fftDataPos][i2] * binMask;
+            steadySpec[i1] = fftDatas[fftDataPos][i1] * (1.f - binMask);
+            steadySpec[i2] = fftDatas[fftDataPos][i2] * (1.f - binMask);
         }
     }
 
