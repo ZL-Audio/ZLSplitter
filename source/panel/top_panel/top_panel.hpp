@@ -12,6 +12,7 @@
 
 #include "../../gui/gui.hpp"
 #include "../../PluginProcessor.h"
+#include "../panel_definitons.hpp"
 
 #include "logo_panel.hpp"
 
@@ -25,8 +26,14 @@ public:
 
 private:
     LogoPanel logoPanel;
+
+    const std::unique_ptr<juce::Drawable> lrIcon, msIcon, lhIcon, tsIcon;
+
     zlInterface::CompactButton swapButton;
     zlInterface::CompactFigureCombobox splitBox;
+
+    juce::OwnedArray<juce::AudioProcessorValueTreeState::ButtonAttachment> buttonAttachments;
+    juce::OwnedArray<juce::AudioProcessorValueTreeState::ComboBoxAttachment> boxAttachments;
 };
 
 } // zlPanel

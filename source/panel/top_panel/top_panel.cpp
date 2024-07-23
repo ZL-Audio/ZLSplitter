@@ -12,7 +12,45 @@
 namespace zlPanel {
     TopPanel::TopPanel(PluginProcessor &processor, zlInterface::UIBase &base)
         : logoPanel(processor.state, base),
+          lrIcon(juce::Drawable::createFromImageData(BinaryData::leftright_svg,
+                                                     BinaryData::leftright_svgSize)),
+          msIcon(juce::Drawable::createFromImageData(BinaryData::midside_svg,
+                                                     BinaryData::midside_svgSize)),
+          lhIcon(juce::Drawable::createFromImageData(BinaryData::lowhigh_svg,
+                                                     BinaryData::lowhigh_svgSize)),
+          tsIcon(juce::Drawable::createFromImageData(BinaryData::transientsteady_svg,
+                                                     BinaryData::transientsteady_svgSize)),
           swapButton("", base),
-          splitBox({}, base) {
+          splitBox({lrIcon.get(), msIcon.get(), lhIcon.get(), tsIcon.get()}, base) {
+
+        attach({&swapButton.getButton()}, {zlDSP::swap::ID}, processor.parameters, buttonAttachments);
+        attach({&splitBox.getBox()}, {zlDSP::splitType::ID}, processor.parameters, boxAttachments);
+
+        addAndMakeVisible(logoPanel);
+
+        swapButton.getLAF().enableShadow(false);
+        addAndMakeVisible(swapButton);
+
+        addAndMakeVisible(splitBox);
+    }
+
+    void TopPanel::resized() {
+        juce::Grid grid;
+        using Track = juce::Grid::TrackInfo;
+        using Fr = juce::Grid::Fr;
+
+        grid.templateRows = {Track(Fr(1))};
+        grid.templateColumns = {
+            Track(Fr(2)), Track(Fr(1)), Track(Fr(1))
+        };
+        grid.items = {
+            juce::GridItem(logoPanel).withArea(1, 1),
+            juce::GridItem(swapButton).withArea(1, 2),
+            juce::GridItem(splitBox).withArea(1, 3),
+        };
+
+        const auto bound = getLocalBounds();
+        // bound = uiBase.getRoundedShadowRectangleArea(bound, 0.5f * uiBase.getFontSize(), {});
+        grid.performLayout(bound.toNearestInt());
     }
 } // zlPanel

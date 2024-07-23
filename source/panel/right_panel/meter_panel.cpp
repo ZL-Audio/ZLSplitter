@@ -20,11 +20,15 @@ namespace zlPanel {
           vblank(this, [this]() { repaintCallBack(); }) {
         label1.setLookAndFeel(&labelLAF);
         label2.setLookAndFeel(&labelLAF);
+        addAndMakeVisible(label1);
+        addAndMakeVisible(label2);
         splitType.store(static_cast<int>(processor.parameters.getRawParameterValue(zlDSP::splitType::ID)->load()));
         swap.store(static_cast<bool>(processor.parameters.getRawParameterValue(zlDSP::swap::ID)->load()));
         handleAsyncUpdate();
         processorRef.parameters.addParameterListener(zlDSP::splitType::ID, this);
         processorRef.parameters.addParameterListener(zlDSP::swap::ID, this);
+        addAndMakeVisible(meterP1);
+        addAndMakeVisible(meterP2);
     }
 
     MeterPanel::~MeterPanel() {
