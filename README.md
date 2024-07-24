@@ -10,7 +10,7 @@
 
 ZLSplitter is a splitter plugin.
 
-<!-- <img src="Docs/screenshot.png" width=94%> -->
+<a href=""><img src="https://drive.google.com/uc?export=view&id=1tIUlmsWHyQXsIKHtnVANe4cnloAgyXp5" style="width: 280px; max-width: 100%; height: auto" title="Click to enlarge picture" />
  
 ## Usage
 
