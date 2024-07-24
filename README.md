@@ -38,7 +38,7 @@ See the releases for the latest version.
 
 ## License
 
-ZLEqualizer is licensed under GPLv3, as found in the [LICENSE.md](LICENSE.md) file.
+ZLSplitter is licensed under GPLv3, as found in the [LICENSE.md](LICENSE.md) file.
 
 Copyright (c) 2024 - [zsliu98](https://github.com/zsliu98)
 
@@ -46,12 +46,20 @@ JUCE framework from [JUCE](https://github.com/juce-framework/JUCE)
 
 JUCE template from [pamplejuce](https://github.com/sudara/pamplejuce)
 
-[fft-juce](https://github.com/hollance/fft-juce) from [
+[fft-juce](https://github.com/hollance/fft-juce) by [
 Matthijs Hollemans](https://github.com/hollance)
+
+[median-filter](https://github.com/suomela/median-filter) by [suomela](https://github.com/suomela)
+
+[Friz](https://github.com/bgporter/animator) by [bgporter](https://github.com/bgporter)
+
+[RemixIcon](https://github.com/Remix-Design/RemixIcon) by [Remix Design](https://github.com/Remix-Design)
 
 Font from CMU Open Sans, Font Awesome and MiSans.
 
 ## References
+
+Vicanek, Martin. *A New Reverse IIR Filtering Algorithm*. (2022).
 
 Redmon, Nigel. *Cascading filters*. (2016).
 
