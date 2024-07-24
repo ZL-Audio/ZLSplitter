@@ -156,7 +156,8 @@ namespace zlSplitter {
         }
         // retrieve fft data
         currentSmooth = smooth.load();
-        const auto allMask = std::reduce(mask.begin(), mask.end()) / static_cast<float>(mask.size());
+        auto allMask = std::reduce(mask.begin(), mask.end()) / static_cast<float>(mask.size());
+        allMask = juce::jlimit(-.5f, .5f, (allMask - 0.5f) * std::sqrt(currentSeperation)) + .5f;
         fftDataPos = (fftDataPos + 1) % (timeHalfMedianWindowsSize + 1);
         // apply masks
         for (size_t i = 0; i < numBins; ++i) {
