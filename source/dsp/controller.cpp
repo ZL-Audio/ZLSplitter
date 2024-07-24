@@ -85,7 +85,9 @@ namespace zlDSP {
         }
 
         meter1.process(block.getSubsetChannelBlock(0, 2));
-        meter2.process(block.getSubsetChannelBlock(2, 2));
+        if (block.getNumChannels() >= 4) {
+            meter2.process(block.getSubsetChannelBlock(2, 2));
+        }
     }
 
     void Controller::processLR(juce::AudioBuffer<double> &buffer) {
