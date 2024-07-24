@@ -21,7 +21,7 @@ namespace zlPanel {
         bound.removeFromTop(uiBase.getFontSize() * 1.25f);
         auto startDB = juce::roundToInt(maxDB);
         const auto intervalDB = juce::roundToInt((maxDB - minDB) / static_cast<float>(numScales));
-        g.setFont(uiBase.getFontSize() * 1.125f);
+        g.setFont(uiBase.getFontSize() * 1.f);
         const auto thickness = uiBase.getFontSize() * .125f;
         for (size_t i = 0; i < numScales; ++i) {
             const auto portion = (static_cast<float>(startDB) - minDB) / (maxDB - minDB);
@@ -29,7 +29,7 @@ namespace zlPanel {
             const auto fontBound = juce::Rectangle<float>(bound.getX(), y - uiBase.getFontSize(),
                 bound.getWidth(), 2 * uiBase.getFontSize());
             if (!ignoreFirst || i != 0) {
-                g.setColour(uiBase.getTextColor());
+                g.setColour(uiBase.getTextColor().withAlpha(.66f));
                 g.drawText(juce::String(-startDB), fontBound, juce::Justification::centred);
                 g.drawLine(fontBound.getCentreX() - .55f * uiBase.getFontSize(), y,
                     fontBound.getCentreX() - .875f * uiBase.getFontSize(), y,
