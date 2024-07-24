@@ -18,7 +18,7 @@ namespace zlPanel {
 
     void MeterScalePanel::paint(juce::Graphics &g) {
         auto bound = getLocalBounds().toFloat();
-        bound.removeFromTop(bound.getHeight() * labelPortion);
+        bound.removeFromTop(uiBase.getFontSize() * 1.25f);
         auto startDB = juce::roundToInt(maxDB);
         const auto intervalDB = juce::roundToInt((maxDB - minDB) / static_cast<float>(numScales));
         g.setFont(uiBase.getFontSize() * 1.125f);

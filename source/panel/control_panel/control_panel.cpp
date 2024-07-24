@@ -12,9 +12,9 @@
 namespace zlPanel {
     ControlPanel::ControlPanel(PluginProcessor &processor, zlInterface::UIBase &base)
         : processorRef(processor), uiBase(base),
-          lrPanel(processor.parameters, base),
-          lhPanel(processor.parameters, base),
-          tsPanel(processor.parameters, base) {
+          lrPanel(processor.parameters, uiBase),
+          lhPanel(processor.parameters, uiBase),
+          tsPanel(processor.parameters, uiBase) {
         addChildComponent(lrPanel);
         addChildComponent(lhPanel);
         addChildComponent(tsPanel);
@@ -34,7 +34,9 @@ namespace zlPanel {
     }
 
     void ControlPanel::parameterChanged(const juce::String &parameterID, float newValue) {
+        juce::ignoreUnused(parameterID);
         splitType.store(static_cast<int>(newValue));
+        triggerAsyncUpdate();
     }
 
     void ControlPanel::handleAsyncUpdate() {
@@ -44,16 +46,19 @@ namespace zlPanel {
                 lhPanel.setVisible(false);
                 tsPanel.setVisible(false);
                 lrPanel.setVisible(true);
+                break;
             }
             case zlDSP::splitType::lhigh: {
                 tsPanel.setVisible(false);
                 lrPanel.setVisible(false);
                 lhPanel.setVisible(true);
+                break;
             }
             case zlDSP::splitType::tsteady: {
                 lrPanel.setVisible(false);
                 lhPanel.setVisible(false);
                 tsPanel.setVisible(true);
+                break;
             }
         }
     }

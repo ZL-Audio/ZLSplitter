@@ -10,34 +10,57 @@
 #include "PluginEditor.h"
 
 PluginEditor::PluginEditor(PluginProcessor &p)
-        : AudioProcessorEditor(&p), processorRef(p) {
-    juce::ignoreUnused(processorRef);
+    : AudioProcessorEditor(&p), processorRef(p), property(p.state), mainPanel(p) {
+    for (auto &ID: IDs) {
+        processorRef.state.addParameterListener(ID, this);
+    }
+    // set font
+    const auto sourceCodePro = juce::Typeface::createSystemTypefaceFor(
+        BinaryData::MiSansLatinMedium_ttf, BinaryData::MiSansLatinMedium_ttfSize);
+    juce::LookAndFeel::getDefaultLookAndFeel().setDefaultSansSerifTypeface(sourceCodePro);
 
-    addAndMakeVisible(inspectButton);
+    // set size & size listener
+    setResizeLimits(static_cast<int>(zlState::windowW::minV),
+                    static_cast<int>(zlState::windowH::minV),
+                    static_cast<int>(zlState::windowW::maxV),
+                    static_cast<int>(zlState::windowH::maxV));
+    getConstrainer()->setFixedAspectRatio(
+        zlState::windowW::defaultV / zlState::windowH::defaultV);
+    setResizable(true, p.wrapperType != PluginProcessor::wrapperType_AudioUnitv3);
+    lastUIWidth.referTo(p.state.getParameterAsValue(zlState::windowW::ID));
+    lastUIHeight.referTo(p.state.getParameterAsValue(zlState::windowH::ID));
+    setSize(lastUIWidth.getValue(), lastUIHeight.getValue());
 
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    setSize(400, 300);
+    // add main panel
+    addAndMakeVisible(mainPanel);
 }
 
 PluginEditor::~PluginEditor() {
+    for (auto &ID: IDs) {
+        processorRef.state.removeParameterListener(ID, this);
+    }
 }
 
 void PluginEditor::paint(juce::Graphics &g) {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-
-    auto area = getLocalBounds();
-    g.setColour(juce::Colours::white);
-    g.setFont(16.0f);
-    auto helloWorld = juce::String("Hello from ") + PRODUCT_NAME_WITHOUT_VERSION + " v"
-    VERSION + " running in " + CMAKE_BUILD_TYPE;
-    g.drawText(helloWorld, area.removeFromTop(150), juce::Justification::centred, false);
+    juce::ignoreUnused(g);
 }
 
 void PluginEditor::resized() {
     // layout the positions of your child components here
-    auto area = getLocalBounds();
-    area.removeFromBottom(50);
-    inspectButton.setBounds(getLocalBounds().withSizeKeepingCentre(100, 50));
+    mainPanel.setBounds(getLocalBounds());
+    lastUIWidth = getWidth();
+    lastUIHeight = getHeight();
+}
+
+void PluginEditor::parameterChanged(const juce::String &parameterID, float newValue) {
+    juce::ignoreUnused(parameterID, newValue);
+    isSizeChanged.store(parameterID == zlState::windowH::ID || parameterID == zlState::windowW::ID);
+    triggerAsyncUpdate();
+}
+
+void PluginEditor::handleAsyncUpdate() {
+    property.saveAPVTS(processorRef.state);
+    if (!isSizeChanged.exchange(false)) {
+        sendLookAndFeelChange();
+    }
 }

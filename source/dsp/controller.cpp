@@ -71,6 +71,7 @@ namespace zlDSP {
                     block.getSubsetChannelBlock(2, 2).addProductOf(
                         internalBlock.getSubsetChannelBlock(2, 2), 1.0 - currentMix);
                 }
+                break;
             }
             case splitType::tsteady: {
                 block.getSubsetChannelBlock(0, 2).copyFrom(
@@ -79,6 +80,7 @@ namespace zlDSP {
                     block.getSubsetChannelBlock(2, 2).copyFrom(
                         internalBlock.getSubsetChannelBlock(2, 2));
                 }
+                break;
             }
         }
 

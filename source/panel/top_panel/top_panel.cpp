@@ -12,6 +12,8 @@
 namespace zlPanel {
     TopPanel::TopPanel(PluginProcessor &processor, zlInterface::UIBase &base)
         : logoPanel(processor.state, base),
+          swapIcon(juce::Drawable::createFromImageData(BinaryData::arrowlr_svg,
+                                                       BinaryData::arrowlr_svgSize)),
           lrIcon(juce::Drawable::createFromImageData(BinaryData::leftright_svg,
                                                      BinaryData::leftright_svgSize)),
           msIcon(juce::Drawable::createFromImageData(BinaryData::midside_svg,
@@ -22,15 +24,16 @@ namespace zlPanel {
                                                      BinaryData::transientsteady_svgSize)),
           swapButton("", base),
           splitBox({lrIcon.get(), msIcon.get(), lhIcon.get(), tsIcon.get()}, base) {
-
         attach({&swapButton.getButton()}, {zlDSP::swap::ID}, processor.parameters, buttonAttachments);
         attach({&splitBox.getBox()}, {zlDSP::splitType::ID}, processor.parameters, boxAttachments);
 
         addAndMakeVisible(logoPanel);
 
         swapButton.getLAF().enableShadow(false);
+        swapButton.getLAF().setDrawable(swapIcon.get());
         addAndMakeVisible(swapButton);
 
+        splitBox.getLAF().setImageScale(.66f);
         addAndMakeVisible(splitBox);
     }
 

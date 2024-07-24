@@ -11,7 +11,8 @@
 
 namespace zlPanel {
     TSPanel::TSPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base)
-        : separationS("Separation", base),
+        : uiBase(base),
+          separationS("Separation", base),
           balanceS("Balance", base),
           holdS("Hold", base),
           smoothS("Smooth", base) {
@@ -19,11 +20,16 @@ namespace zlPanel {
                {zlDSP::tsSeperation::ID, zlDSP::tsBalance::ID, zlDSP::tsHold::ID, zlDSP::tsSmooth::ID},
                parameter, sliderAttachments);
         for (auto &s: {&separationS, &balanceS, &holdS, &smoothS}) {
+            s->setFontScale(1.125f, 1.125f);
             addAndMakeVisible(s);
         }
     }
 
     void TSPanel::resized() {
+        for (auto &s: {&separationS, &balanceS, &holdS, &smoothS}) {
+            s->setPadding(uiBase.getFontSize() * 1.f, uiBase.getFontSize() * .5f);
+        }
+
         juce::Grid grid;
         using Track = juce::Grid::TrackInfo;
         using Fr = juce::Grid::Fr;

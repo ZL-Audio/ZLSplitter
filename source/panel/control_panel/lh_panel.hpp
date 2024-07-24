@@ -22,6 +22,7 @@ namespace zlPanel {
         void resized() override;
 
     private:
+        zlInterface::UIBase &uiBase;
         zlInterface::CompactLinearSlider mixS;
         zlInterface::TwoValueRotarySlider freqS;
         zlInterface::CompactCombobox slopeC;

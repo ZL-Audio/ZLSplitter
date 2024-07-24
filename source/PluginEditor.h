@@ -14,22 +14,37 @@
 
 #include "panel/main_panel.hpp"
 
-//==============================================================================
-class PluginEditor : public juce::AudioProcessorEditor {
+class PluginEditor : public juce::AudioProcessorEditor,
+                     private juce::AudioProcessorValueTreeState::Listener,
+                     private juce::AsyncUpdater {
 public:
     explicit PluginEditor(PluginProcessor &);
 
     ~PluginEditor() override;
 
-    //==============================================================================
     void paint(juce::Graphics &) override;
 
     void resized() override;
 
 private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
     PluginProcessor &processorRef;
-    juce::TextButton inspectButton{"Inspect the UI"};
+    zlState::Property property;
+    std::atomic<bool> isSizeChanged{false};
+
+    zlPanel::MainPanel mainPanel;
+
+    juce::Value lastUIWidth, lastUIHeight;
+
+    constexpr const static std::array IDs{
+        zlState::windowW::ID,
+        zlState::windowH::ID,
+        zlState::wheelSensitivity::ID, zlState::wheelFineSensitivity::ID,
+        zlState::rotaryStyle::ID, zlState::rotaryDragSensitivity::ID
+    };
+
+    void parameterChanged(const juce::String &parameterID, float newValue) override;
+
+    void handleAsyncUpdate() override;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

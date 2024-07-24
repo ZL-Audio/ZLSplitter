@@ -38,7 +38,7 @@ namespace zlPanel {
 
     void MeterPanel::resized() {
         auto bound = getLocalBounds().toFloat();
-        auto labelBound = bound.removeFromTop(uiBase.getFontSize() * 2.f);
+        auto labelBound = bound.removeFromTop(uiBase.getFontSize() * 1.25f);
         label1.setBounds(labelBound.removeFromLeft(labelBound.getWidth() * .5f).toNearestInt());
         label2.setBounds(labelBound.toNearestInt());
         meterP1.setBounds(bound.removeFromLeft(bound.getWidth() * .5f).toNearestInt());
@@ -75,8 +75,8 @@ namespace zlPanel {
                 break;
             }
             case zlDSP::splitType::stype::tsteady: {
-                text1 = "Tran";
-                text2 = "Stea";
+                text1 = "Transient";
+                text2 = "Steay";
                 break;
             }
         }
@@ -87,6 +87,8 @@ namespace zlPanel {
             label2.setText(text1, juce::sendNotification);
             label1.setText(text2, juce::sendNotification);
         }
+        processorRef.getController().getMeter1().reset();
+        processorRef.getController().getMeter2().reset();
     }
 
     void MeterPanel::repaintCallBack() {

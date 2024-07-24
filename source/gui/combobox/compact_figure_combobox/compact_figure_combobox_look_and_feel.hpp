@@ -34,23 +34,25 @@ namespace zlInterface {
                 g.fillRoundedRectangle(boxBounds, cornerSize);
             } else {
                 uiBase.fillRoundedInnerShadowRectangle(g, boxBounds, cornerSize,
-                                                        {
-                                                            .blurRadius = 0.45f, .flip = true,
-                                                            .mainColour = uiBase.getBackgroundColor().
-                                                            withMultipliedAlpha(
-                                                                juce::jlimit(.25f, .5f, boxAlpha.load())),
-                                                            .darkShadowColor = uiBase.getDarkShadowColor().
-                                                            withMultipliedAlpha(boxAlpha.load()),
-                                                            .brightShadowColor = uiBase.getBrightShadowColor().
-                                                            withMultipliedAlpha(boxAlpha.load()),
-                                                            .changeMain = true, .changeDark = true, .changeBright = true
-                                                        });
+                                                       {
+                                                           .blurRadius = 0.45f, .flip = true,
+                                                           .mainColour = uiBase.getBackgroundColor().
+                                                           withMultipliedAlpha(
+                                                               juce::jlimit(.25f, .5f, boxAlpha.load())),
+                                                           .darkShadowColor = uiBase.getDarkShadowColor().
+                                                           withMultipliedAlpha(boxAlpha.load()),
+                                                           .brightShadowColor = uiBase.getBrightShadowColor().
+                                                           withMultipliedAlpha(boxAlpha.load()),
+                                                           .changeMain = true, .changeDark = true, .changeBright = true
+                                                       });
             }
             const auto imageId = static_cast<size_t>(box.getSelectedItemIndex());
             if (imageId < images.size() && images[imageId] != nullptr) {
                 const auto tempDrawable = images[imageId]->createCopy();
                 tempDrawable->replaceColour(juce::Colour(0, 0, 0), uiBase.getTextColor());
-                const auto imageBound = boxBounds.withSizeKeepingCentre(boxBounds.getWidth(), uiBase.getFontSize() * fontScale);
+                const auto imageBound = boxBounds.withSizeKeepingCentre(
+                    boxBounds.getWidth() * imageScale.load(),
+                    uiBase.getFontSize() * fontScale * imageScale.load());
                 const auto opacity = editable.load() ? 1.f : .5f;
                 tempDrawable->drawWithin(g, imageBound, juce::RectanglePlacement::Flags::centred, opacity);
             }
@@ -91,7 +93,8 @@ namespace zlInterface {
                 opacity = .5f;
             }
             const auto imageBound = area.toFloat().withSizeKeepingCentre(
-                static_cast<float>(area.getWidth()), uiBase.getFontSize() * fontScale);
+                static_cast<float>(area.getWidth()) * imageScale.load(),
+                uiBase.getFontSize() * fontScale * imageScale.load());
             const auto tempDrawable = icon->createCopy();
             tempDrawable->replaceColour(juce::Colour(0, 0, 0), uiBase.getTextColor());
             tempDrawable->drawWithin(g, imageBound, juce::RectanglePlacement::Flags::centred, opacity);
@@ -113,14 +116,16 @@ namespace zlInterface {
 
         inline float getBoxAlpha() const { return boxAlpha.load(); }
 
-        inline void setImages(const std::vector<juce::Drawable*>& x) { images = x; }
+        inline void setImages(const std::vector<juce::Drawable *> &x) { images = x; }
+
+        inline void setImageScale(const float x) { imageScale.store(x); }
 
     private:
         std::atomic<bool> editable = true;
-        std::atomic<float> boxAlpha, fontScale = 1.5f;
+        std::atomic<float> boxAlpha, fontScale = 1.5f, imageScale{1.f};
 
         UIBase &uiBase;
-        std::vector<juce::Drawable*> images;
+        std::vector<juce::Drawable *> images;
     };
 }
 

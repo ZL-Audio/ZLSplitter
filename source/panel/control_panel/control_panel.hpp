@@ -17,8 +17,6 @@
 #include "ts_panel.hpp"
 
 namespace zlPanel {
-
-
     class ControlPanel final : public juce::Component,
                                private juce::AudioProcessorValueTreeState::Listener,
                                private juce::AsyncUpdater {
@@ -42,7 +40,6 @@ namespace zlPanel {
         void parameterChanged(const juce::String &parameterID, float newValue) override;
 
         void handleAsyncUpdate() override;
-
     };
 } // zlPanel
 

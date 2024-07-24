@@ -66,6 +66,12 @@ namespace zlInterface {
 
         inline bool getEditable() const { return editable.load(); }
 
+        inline void setFontScale(const float x1, const float x2) {
+            labelLookAndFeel.setFontScale(x1);
+            labelLookAndFeel1.setFontScale(x2);
+            labelLookAndFeel2.setFontScale(x2);
+        }
+
     private:
         UIBase &uiBase;
 

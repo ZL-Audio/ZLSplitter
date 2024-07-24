@@ -15,11 +15,20 @@
 #include "control_panel/control_panel.hpp"
 
 namespace zlPanel {
+    class MainPanel final : public juce::Component {
+    public:
+        explicit MainPanel(PluginProcessor &processor);
 
-class MainPanel {
+        void paint(juce::Graphics &g) override;
 
-};
+        void resized() override;
 
+    private:
+        zlInterface::UIBase uiBase;
+        TopPanel topPanel;
+        ControlPanel controlPanel;
+        MeterPanel meterPanel;
+    };
 } // zlPanel
 
 #endif //MAIN_PANEL_HPP

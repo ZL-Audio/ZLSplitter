@@ -11,14 +11,17 @@
 
 namespace zlPanel {
     LRPanel::LRPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base)
-        : mixS("Mix", base) {
+        : uiBase(base),
+          mixS("Mix", base) {
         attach({&mixS.getSlider()}, {zlDSP::mix::ID}, parameter, sliderAttachments);
+        mixS.setFontScale(1.125f, 1.125f);
         addAndMakeVisible(mixS);
     }
 
     void LRPanel::resized() {
         auto bound = getLocalBounds().toFloat();
         bound = bound.removeFromTop(bound.getHeight() * .25f);
+        mixS.setPadding(uiBase.getFontSize() * 1.f, uiBase.getFontSize() * .5f);
         mixS.setBounds(bound.toNearestInt());
     }
 } // zlPanel

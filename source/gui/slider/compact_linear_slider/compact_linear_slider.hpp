@@ -41,7 +41,9 @@ namespace zlInterface {
 
         void mouseWheelMove(const juce::MouseEvent &event, const juce::MouseWheelDetails &wheel) override;
 
-        inline juce::Slider& getSlider() {return slider;}
+        inline juce::Slider &getSlider() { return slider; }
+
+        inline NameLookAndFeel &getLabelLAF() { return nameLookAndFeel; }
 
         inline void setEditable(const bool x) {
             nameLookAndFeel.setEditable(x);
@@ -52,6 +54,11 @@ namespace zlInterface {
         inline void setPadding(const float lr, const float ub) {
             lrPad.store(lr);
             ubPad.store(ub);
+        }
+
+        inline void setFontScale(const float x1, const float x2) {
+            nameLookAndFeel.setFontScale(x1);
+            textLookAndFeel.setFontScale(x2);
         }
 
     private:

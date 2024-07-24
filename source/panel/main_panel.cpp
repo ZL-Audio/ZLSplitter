@@ -10,4 +10,31 @@
 #include "main_panel.hpp"
 
 namespace zlPanel {
+    MainPanel::MainPanel(PluginProcessor &processor)
+        : uiBase(processor.state),
+          topPanel(processor, uiBase),
+          controlPanel(processor, uiBase),
+          meterPanel(processor, uiBase) {
+        uiBase.loadFromAPVTS();
+        addAndMakeVisible(topPanel);
+        addAndMakeVisible(controlPanel);
+        addAndMakeVisible(meterPanel);
+    }
+
+    void MainPanel::paint(juce::Graphics &g) {
+        g.fillAll(uiBase.getBackgroundColor());
+        const auto bound = getLocalBounds().toFloat();
+        uiBase.fillRoundedShadowRectangle(g, bound, 0.5f * uiBase.getFontSize(), {.blurRadius = 0.25f});
+    }
+
+    void MainPanel::resized() {
+        auto bound = getLocalBounds().toFloat();
+        uiBase.setFontSize(bound.getWidth() * 0.06767659574468085f);
+
+        bound = uiBase.getRoundedShadowRectangleArea(bound, 0.5f * uiBase.getFontSize(), {.blurRadius = 0.25f});
+
+        topPanel.setBounds(bound.removeFromTop(bound.getHeight() * .2f).toNearestInt());
+        controlPanel.setBounds(bound.removeFromLeft(bound.getWidth() * .5f).toNearestInt());
+        meterPanel.setBounds(bound.toNearestInt());
+    }
 } // zlPanel

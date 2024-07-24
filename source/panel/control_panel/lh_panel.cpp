@@ -13,7 +13,8 @@
 
 namespace zlPanel {
     LHPanel::LHPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base)
-        : mixS("Mix", base),
+        : uiBase(base),
+          mixS("Mix", base),
           freqS("Freq", base),
           slopeC(zlDSP::lhSlope::choices, base) {
         freqS.setShowSlider2(false);
@@ -21,14 +22,18 @@ namespace zlPanel {
                {zlDSP::mix::ID, zlDSP::lhFreq::ID},
                parameter, sliderAttachments);
         attach({&slopeC.getBox()}, {zlDSP::lhSlope::ID}, parameter, boxAttachments);
+        mixS.setFontScale(1.125f, 1.125f);
         addAndMakeVisible(mixS);
+        slopeC.getLAF().setFontScale(1.125f);
         addAndMakeVisible(slopeC);
+        freqS.setFontScale(1.125f, 1.125f);
         addAndMakeVisible(freqS);
     }
 
     void LHPanel::resized() {
         auto bound = getLocalBounds().toFloat();
         const auto height = bound.getHeight() * .25f;
+        mixS.setPadding(uiBase.getFontSize() * 1.f, uiBase.getFontSize() * .5f);
         mixS.setBounds(bound.removeFromTop(height).toNearestInt());
         slopeC.setBounds(bound.removeFromTop(height).toNearestInt());
         freqS.setBounds(bound.toNearestInt());

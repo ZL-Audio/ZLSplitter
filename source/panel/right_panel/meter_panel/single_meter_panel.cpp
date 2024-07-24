@@ -26,7 +26,7 @@ namespace zlPanel {
         const auto &maxPeak = m.getmaxPeak();
         const auto &bufferPeak = m.getBufferPeak();
         auto rectBound = getLocalBounds().toFloat();
-        auto labelBound = rectBound.removeFromTop(rectBound.getHeight() * labelPortion);
+        const auto labelBound = rectBound.removeFromTop(uiBase.getFontSize() * 1.25f);
         const auto width = rectBound.getWidth() / static_cast<float>(maxPeak.size());
         // draw max peak labels
         g.setFont(uiBase.getFontSize() * 1.125f);

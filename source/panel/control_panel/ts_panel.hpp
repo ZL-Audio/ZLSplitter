@@ -21,6 +21,7 @@ namespace zlPanel {
 
         void resized() override;
     private:
+        zlInterface::UIBase &uiBase;
         zlInterface::CompactLinearSlider separationS, balanceS, holdS, smoothS;
         juce::OwnedArray<juce::AudioProcessorValueTreeState::SliderAttachment> sliderAttachments;
     };

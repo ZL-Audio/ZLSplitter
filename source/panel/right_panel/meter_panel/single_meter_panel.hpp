@@ -33,7 +33,7 @@ private:
     zlInterface::UIBase &uiBase;
     constexpr static float maxDB = 0.f, minDB = -60.f;
     constexpr static size_t numScales = 5;
-    constexpr static float labelPortion = .075f, paddingPortion = .2f;
+    constexpr static float paddingPortion = .2f;
 
     MeterScalePanel scalePanel;
 
