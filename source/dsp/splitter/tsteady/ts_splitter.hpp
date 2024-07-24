@@ -44,7 +44,7 @@ namespace zlSplitter {
         }
 
         inline void setSeperation(const float x) {
-            seperation.store(x * 10.f);
+            seperation.store(std::exp(x * 4.f) - 1.f);
         }
 
         inline void setHold(const float x) {
@@ -58,9 +58,9 @@ namespace zlSplitter {
         inline int getLatency() const { return latency.load(); }
 
     private:
-        static constexpr size_t freqMedianWindowsSize = 11;
+        static constexpr size_t freqMedianWindowsSize = 5;
         static constexpr size_t freqHalfMedianWindowsSize = freqMedianWindowsSize / 2;
-        static constexpr size_t timeMedianWindowsSize = 11;
+        static constexpr size_t timeMedianWindowsSize = 5;
         static constexpr size_t timeHalfMedianWindowsSize = timeMedianWindowsSize / 2;
         juce::AudioBuffer<FloatType> tBuffer, sBuffer;
         // FFT parameters
@@ -88,12 +88,12 @@ namespace zlSplitter {
         std::vector<zlMedianFilter::HeapFilter<float, timeMedianWindowsSize> > timeMedian{};
         zlMedianFilter::HeapFilter<float, freqMedianWindowsSize> freqMedian{};
         // portion holders
-        std::vector<float> mask, previousMask;
+        std::vector<float> mask;
         // transient and steady spectrum
         std::vector<float> transientSpec, steadySpec;
         // seperation factor
         std::atomic<float> balance{5.f}, seperation{1.f}, hold{0.9f}, smooth{.5f};
-        float currentBalance, currentSeperation, currentHold, currentSmooth;
+        float currentBalance{0.f}, currentSeperation{0.f}, currentHold{0.f}, currentSmooth{0.f};
         // latency
         std::atomic<int> latency{0};
 

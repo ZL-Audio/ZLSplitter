@@ -10,4 +10,51 @@
 #include "control_panel.hpp"
 
 namespace zlPanel {
+    ControlPanel::ControlPanel(PluginProcessor &processor, zlInterface::UIBase &base)
+        : processorRef(processor), uiBase(base),
+          lrPanel(processor.parameters, base),
+          lhPanel(processor.parameters, base),
+          tsPanel(processor.parameters, base) {
+        addChildComponent(lrPanel);
+        addChildComponent(lhPanel);
+        addChildComponent(tsPanel);
+        splitType.store(static_cast<int>(processorRef.parameters.getRawParameterValue(zlDSP::splitType::ID)->load()));
+        handleAsyncUpdate();
+        processorRef.parameters.addParameterListener(zlDSP::splitType::ID, this);
+    }
+
+    ControlPanel::~ControlPanel() {
+        processorRef.parameters.removeParameterListener(zlDSP::splitType::ID, this);
+    }
+
+    void ControlPanel::resized() {
+        lrPanel.setBounds(getLocalBounds());
+        lhPanel.setBounds(getLocalBounds());
+        tsPanel.setBounds(getLocalBounds());
+    }
+
+    void ControlPanel::parameterChanged(const juce::String &parameterID, float newValue) {
+        splitType.store(static_cast<int>(newValue));
+    }
+
+    void ControlPanel::handleAsyncUpdate() {
+        switch (static_cast<zlDSP::splitType::stype>(splitType.load())) {
+            case zlDSP::splitType::lright:
+            case zlDSP::splitType::mside: {
+                lhPanel.setVisible(false);
+                tsPanel.setVisible(false);
+                lrPanel.setVisible(true);
+            }
+            case zlDSP::splitType::lhigh: {
+                tsPanel.setVisible(false);
+                lrPanel.setVisible(false);
+                lhPanel.setVisible(true);
+            }
+            case zlDSP::splitType::tsteady: {
+                lrPanel.setVisible(false);
+                lhPanel.setVisible(false);
+                tsPanel.setVisible(true);
+            }
+        }
+    }
 } // zlPanel

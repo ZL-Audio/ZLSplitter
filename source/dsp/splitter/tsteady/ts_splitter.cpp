@@ -60,7 +60,6 @@ namespace zlSplitter {
         // resize median calculators
         timeMedian.resize(numBins);
         mask.resize(numBins);
-        previousMask.resize(numBins);
     }
 
     template<typename FloatType>

@@ -102,7 +102,7 @@ namespace zlDSP {
         auto static constexpr ID = "lh_slope";
         auto static constexpr name = "LH Slope";
         inline auto static const choices = juce::StringArray{
-            "12 dB/oct", "24 dB/oct", "48 dB/oct"
+            "12 dB", "24 dB", "48 dB"
         };
 
         int static constexpr defaultI = 1;

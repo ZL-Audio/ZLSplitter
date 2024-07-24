@@ -11,8 +11,10 @@
 #define CONTROL_PANEL_HPP
 
 #include "../../PluginProcessor.h"
-#include "../../dsp/dsp.hpp"
-#include "../../gui/gui.hpp"
+
+#include "lr_panel.hpp"
+#include "lh_panel.hpp"
+#include "ts_panel.hpp"
 
 namespace zlPanel {
 
@@ -31,9 +33,11 @@ namespace zlPanel {
         PluginProcessor &processorRef;
         zlInterface::UIBase &uiBase;
 
-        std::atomic<int> splitType;
+        LRPanel lrPanel;
+        LHPanel lhPanel;
+        TSPanel tsPanel;
 
-        zlInterface::CompactLinearSlider mixS;
+        std::atomic<int> splitType;
 
         void parameterChanged(const juce::String &parameterID, float newValue) override;
 
