@@ -40,7 +40,7 @@ namespace zlSplitter {
         inline juce::AudioBuffer<FloatType> &getSBuffer() { return sBuffer; }
 
         inline void setBalance(const float x) {
-            balance.store(std::pow(8.f, x - 0.5f));
+            balance.store(std::pow(16.f, x - 0.75f));
         }
 
         inline void setSeperation(const float x) {
