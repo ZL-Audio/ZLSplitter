@@ -97,6 +97,17 @@ namespace zlDSP {
         auto static constexpr defaultV = false;
     };
 
+    class lhFilterType : public ChoiceParameters<lhFilterType> {
+    public:
+        auto static constexpr ID = "lh_filter_type";
+        auto static constexpr name = "LH Filter Type";
+        inline auto static const choices = juce::StringArray{
+            "IIR", "FIR"
+        };
+
+        int static constexpr defaultI = 0;
+    };
+
     class lhSlope : public ChoiceParameters<lhSlope> {
     public:
         auto static constexpr ID = "lh_slope";

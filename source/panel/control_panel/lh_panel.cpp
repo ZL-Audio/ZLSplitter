@@ -26,7 +26,7 @@ namespace zlPanel {
         addAndMakeVisible(mixS);
         slopeC.getLAF().setFontScale(1.125f);
         addAndMakeVisible(slopeC);
-        freqS.setFontScale(1.125f, 1.125f);
+        freqS.setFontScale(1.25f, 1.25f);
         addAndMakeVisible(freqS);
     }
 

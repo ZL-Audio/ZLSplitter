@@ -12,16 +12,15 @@
 namespace zlPanel {
     LRPanel::LRPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base)
         : uiBase(base),
-          mixS("Mix", base) {
-        attach({&mixS.getSlider()}, {zlDSP::mix::ID}, parameter, sliderAttachments);
-        mixS.setFontScale(1.125f, 1.125f);
+          mixS("Mix", uiBase) {
+        attach({&mixS.getSlider1()}, {zlDSP::mix::ID}, parameter, sliderAttachments);
+        mixS.setFontScale(1.25f, 1.25f);
         addAndMakeVisible(mixS);
     }
 
     void LRPanel::resized() {
         auto bound = getLocalBounds().toFloat();
-        bound = bound.removeFromTop(bound.getHeight() * .25f);
-        mixS.setPadding(uiBase.getFontSize() * 1.f, uiBase.getFontSize() * .5f);
+        bound = bound.withSizeKeepingCentre(bound.getWidth(), bound.getHeight() * .5f);
         mixS.setBounds(bound.toNearestInt());
     }
 } // zlPanel

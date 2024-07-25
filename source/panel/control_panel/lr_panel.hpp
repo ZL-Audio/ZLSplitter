@@ -23,7 +23,7 @@ namespace zlPanel {
 
     private:
         zlInterface::UIBase &uiBase;
-        zlInterface::CompactLinearSlider mixS;
+        zlInterface::TwoValueRotarySlider mixS;
         juce::OwnedArray<juce::AudioProcessorValueTreeState::SliderAttachment> sliderAttachments;
     };
 } // zlPanel
