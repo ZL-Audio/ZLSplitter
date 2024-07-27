@@ -13,6 +13,7 @@
 #include "lright/lr_splitter.hpp"
 #include "mside/ms_splitter.hpp"
 #include "lhigh/lh_splitter.hpp"
+#include "lhigh/lh_linear_splitter.hpp"
 #include "tsteady/ts_splitter.hpp"
 
 #endif //SPLITTER_HPP

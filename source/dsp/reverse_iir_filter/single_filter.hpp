@@ -10,7 +10,7 @@
 #ifndef REVERSE_IIR_SINGLE_FILTER_HPP
 #define REVERSE_IIR_SINGLE_FILTER_HPP
 
-#include "reverse_pole_base.hpp"
+#include "reverse_iir_base.hpp"
 
 namespace zlReverseIIR {
 
