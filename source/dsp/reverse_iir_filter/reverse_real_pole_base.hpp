@@ -23,6 +23,7 @@ namespace zlReverseIIR {
         }
 
         void reset() {
+            std::fill(cs.begin(), cs.end(), SampleType(0));
             for (auto &delay: delays) {
                 for (auto &d: delay) {
                     d.reset();
@@ -41,6 +42,7 @@ namespace zlReverseIIR {
                     numDelay *= 2;
                 }
             }
+            reset();
         }
 
         void process(juce::AudioBuffer<SampleType> &buffer) {

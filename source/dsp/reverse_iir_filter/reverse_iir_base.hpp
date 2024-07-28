@@ -21,7 +21,7 @@ namespace zlReverseIIR {
         void reset() {
             reversePole.reset();
             for (auto &state : states) {
-                std::fill(state.begin(), state.end(), 0);
+                std::fill(state.begin(), state.end(), SampleType(0));
             }
         }
 

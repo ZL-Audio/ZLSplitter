@@ -25,11 +25,11 @@ namespace zlReverseIIR {
 
         void reset() {
             for (auto &buffer : us) {
-                std::fill(buffer.begin(), buffer.end(), 0);
+                std::fill(buffer.begin(), buffer.end(), SampleType(0));
             }
 
             for (auto &buffer : vs) {
-                std::fill(buffer.begin(), buffer.end(), 0);
+                std::fill(buffer.begin(), buffer.end(), SampleType(0));
             }
 
             for (auto &delay : uDelays) {
@@ -64,7 +64,6 @@ namespace zlReverseIIR {
                 delay.resize(numStage + 1);
                 for (size_t i = 0; i < numStage + 1; ++i) {
                     delay[i].setMaximumDelayInSamples(static_cast<size_t>(numDelay));
-                    // delay[i].prepare(spec);
                     delay[i].setDelay(static_cast<size_t>(numDelay));
                     numDelay *= 2;
                 }
@@ -75,11 +74,11 @@ namespace zlReverseIIR {
                 delay.resize(numStage + 1);
                 for (size_t i = 0; i < numStage + 1; ++i) {
                     delay[i].setMaximumDelayInSamples(static_cast<size_t>(numDelay));
-                    // delay[i].prepare(spec);
                     delay[i].setDelay(static_cast<size_t>(numDelay));
                     numDelay *= 2;
                 }
             }
+            reset();
         }
 
         void process(juce::AudioBuffer<SampleType> &buffer) {

@@ -87,7 +87,7 @@ namespace zlSplitter {
     void LHLinearSplitter<FloatType>::update() {
         if (currentOrder != order.load()) {
             currentOrder = order.load();
-            delay.setDelay(getLatency());
+            delay.setDelay(static_cast<FloatType>(getLatency()));
             switch (currentOrder) {
                 case 1: {
                     reverseFirstOrderFilter.reset();

@@ -67,7 +67,7 @@ namespace zlSplitter {
         std::unique_ptr<juce::dsp::FFT> fft;
         std::unique_ptr<juce::dsp::WindowingFunction<float> > window;
         size_t fftOrder = 10;
-        size_t fftSize = 1 << fftOrder; // 1024 samples
+        size_t fftSize = static_cast<size_t>(1) << fftOrder; // 1024 samples
         size_t numBins = fftSize / 2 + 1; // 513 bins
         size_t overlap = 4; // 75% overlap
         size_t hopSize = fftSize / overlap; // 256 samples

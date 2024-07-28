@@ -85,8 +85,6 @@ void PluginProcessor::changeProgramName(int index, const juce::String &newName) 
 
 //==============================================================================
 void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
     const juce::dsp::ProcessSpec spec{
         sampleRate,
         static_cast<juce::uint32>(samplesPerBlock),
@@ -97,17 +95,12 @@ void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
 }
 
 void PluginProcessor::releaseResources() {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
 }
 
 bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()) {
         return false;
     }
-    // if (layouts.getChannelSet(false, 0) != layouts.getChannelSet(false, 1)) {
-    //     return false;
-    // }
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet()) {
         return false;
     }

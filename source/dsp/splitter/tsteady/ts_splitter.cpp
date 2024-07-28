@@ -32,7 +32,7 @@ namespace zlSplitter {
     void TSSplitter<FloatType>::setOrder(const size_t order) {
         // set fft
         fftOrder = order;
-        fftSize = 1 << fftOrder;
+        fftSize = static_cast<size_t>(1) << fftOrder;
         numBins = fftSize / 2 + 1;
         hopSize = fftSize / overlap;
         latency.store(static_cast<int>(fftSize + hopSize * timeHalfMedianWindowsSize));
