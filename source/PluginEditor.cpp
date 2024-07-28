@@ -7,7 +7,7 @@
 //
 // You should have received a copy of the GNU General Public License along with ZLSplit. If not, see <https://www.gnu.org/licenses/>.
 
-#include "PluginEditor.h"
+#include "PluginEditor.hpp"
 
 PluginEditor::PluginEditor(PluginProcessor &p)
     : AudioProcessorEditor(&p), processorRef(p), property(p.state), mainPanel(p) {

@@ -19,7 +19,8 @@ namespace zlInterface {
     class ColourSelector final : public juce::Component,
                                  private juce::ChangeListener {
     public:
-        explicit ColourSelector(zlInterface::UIBase &base, juce::Component &parent,
+        explicit ColourSelector(zlInterface::UIBase &base,
+                                juce::Component &parent,
                                 float widthS = 12.f, float heightS = 10.f);
 
         void paint(juce::Graphics &g) override;

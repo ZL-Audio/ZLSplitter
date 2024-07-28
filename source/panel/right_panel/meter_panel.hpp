@@ -12,7 +12,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include "../../PluginProcessor.h"
+#include "../../PluginProcessor.hpp"
 #include "../../dsp/dsp.hpp"
 #include "../../gui/gui.hpp"
 #include "meter_panel/single_meter_panel.hpp"
@@ -32,8 +32,8 @@ namespace zlPanel {
         PluginProcessor &processorRef;
         zlInterface::UIBase &uiBase;
         SingleMeterPanel meterP1, meterP2;
-        juce::Label label1, label2;
         zlInterface::NameLookAndFeel labelLAF;
+        juce::Label label1, label2;
 
         std::atomic<int> splitType;
         std::atomic<bool> swap;

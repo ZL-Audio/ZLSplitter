@@ -12,13 +12,15 @@
 namespace zlPanel {
     MainPanel::MainPanel(PluginProcessor &processor)
         : uiBase(processor.state),
-          topPanel(processor, uiBase),
+          uiPanel(processor, uiBase),
+          topPanel(processor, uiBase, uiPanel),
           controlPanel(processor, uiBase),
           meterPanel(processor, uiBase) {
         uiBase.loadFromAPVTS();
         addAndMakeVisible(topPanel);
         addAndMakeVisible(controlPanel);
         addAndMakeVisible(meterPanel);
+        addChildComponent(uiPanel);
     }
 
     void MainPanel::paint(juce::Graphics &g) {
@@ -30,6 +32,8 @@ namespace zlPanel {
     void MainPanel::resized() {
         auto bound = getLocalBounds().toFloat();
         uiBase.setFontSize(bound.getWidth() * 0.06767659574468085f);
+
+        uiPanel.setBounds(getLocalBounds());
 
         bound = uiBase.getRoundedShadowRectangleArea(bound, 0.5f * uiBase.getFontSize(), {.blurRadius = 0.25f});
 

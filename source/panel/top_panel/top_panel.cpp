@@ -10,8 +10,10 @@
 #include "top_panel.hpp"
 
 namespace zlPanel {
-    TopPanel::TopPanel(PluginProcessor &processor, zlInterface::UIBase &base)
-        : logoPanel(processor.state, base),
+    TopPanel::TopPanel(PluginProcessor &processor,
+                       zlInterface::UIBase &base,
+                       UISettingPanel &panelToShow)
+        : logoPanel(processor, base, panelToShow),
           swapIcon(juce::Drawable::createFromImageData(BinaryData::arrowlr_svg,
                                                        BinaryData::arrowlr_svgSize)),
           lrIcon(juce::Drawable::createFromImageData(BinaryData::leftright_svg,

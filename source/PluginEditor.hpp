@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "PluginProcessor.h"
+#include "PluginProcessor.hpp"
 #include "BinaryData.h"
 
 #include "panel/main_panel.hpp"

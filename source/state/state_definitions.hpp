@@ -69,20 +69,20 @@ namespace zlState {
         return s + suffix;
     }
 
-    class windowW : public FloatParameters<windowW> {
+    class windowH : public FloatParameters<windowH> {
     public:
-        auto static constexpr ID = "window_w";
+        auto static constexpr ID = "window_h";
         auto static constexpr name = "NA";
-        inline static constexpr float minV = 140.f;
-        inline static constexpr float maxV = 2800.f;
-        inline static constexpr float defaultV = 280.f;
+        inline static constexpr float minV = 100.f;
+        inline static constexpr float maxV = 2000.f;
+        inline static constexpr float defaultV = 200.f;
         inline auto static const range =
                 juce::NormalisableRange<float>(minV, maxV, 1.f);
     };
 
-    class windowH : public FloatParameters<windowH> {
+    class windowW : public FloatParameters<windowW> {
     public:
-        auto static constexpr ID = "window_h";
+        auto static constexpr ID = "window_w";
         auto static constexpr name = "NA";
         inline static constexpr float minV = 95.f;
         inline static constexpr float maxV = 1900.f;

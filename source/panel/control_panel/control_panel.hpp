@@ -10,7 +10,7 @@
 #ifndef CONTROL_PANEL_HPP
 #define CONTROL_PANEL_HPP
 
-#include "../../PluginProcessor.h"
+#include "../../PluginProcessor.hpp"
 
 #include "lr_panel.hpp"
 #include "lh_panel.hpp"

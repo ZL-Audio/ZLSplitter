@@ -40,7 +40,8 @@ namespace zlInterface {
         zlInterface::UIBase &uiBase;
     };
 
-    ColourSelector::ColourSelector(zlInterface::UIBase &base, juce::Component &parent,
+    ColourSelector::ColourSelector(zlInterface::UIBase &base,
+                                   juce::Component &parent,
                                    const float widthS, const float heightS)
         : uiBase(base), laf(uiBase), parentC(parent),
           selectorWidthS(widthS), selectorHeightS(heightS) {

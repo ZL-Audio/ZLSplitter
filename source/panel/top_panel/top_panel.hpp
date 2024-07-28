@@ -11,31 +11,31 @@
 #define TOP_PANEL_HPP
 
 #include "../../gui/gui.hpp"
-#include "../../PluginProcessor.h"
+#include "../../PluginProcessor.hpp"
 #include "../panel_definitons.hpp"
 
 #include "logo_panel.hpp"
 
 namespace zlPanel {
+    class TopPanel final : public juce::Component {
+    public:
+        explicit TopPanel(PluginProcessor &processor,
+                          zlInterface::UIBase &base,
+                          UISettingPanel &panelToShow);
 
-class TopPanel final : public juce::Component {
-public:
-    explicit TopPanel (PluginProcessor &processor, zlInterface::UIBase &base);
+        void resized() override;
 
-    void resized() override;
+    private:
+        LogoPanel logoPanel;
 
-private:
-    LogoPanel logoPanel;
+        const std::unique_ptr<juce::Drawable> swapIcon, lrIcon, msIcon, lhIcon, tsIcon;
 
-    const std::unique_ptr<juce::Drawable> swapIcon, lrIcon, msIcon, lhIcon, tsIcon;
+        zlInterface::CompactButton swapButton;
+        zlInterface::CompactFigureCombobox splitBox;
 
-    zlInterface::CompactButton swapButton;
-    zlInterface::CompactFigureCombobox splitBox;
-
-    juce::OwnedArray<juce::AudioProcessorValueTreeState::ButtonAttachment> buttonAttachments;
-    juce::OwnedArray<juce::AudioProcessorValueTreeState::ComboBoxAttachment> boxAttachments;
-};
-
+        juce::OwnedArray<juce::AudioProcessorValueTreeState::ButtonAttachment> buttonAttachments;
+        juce::OwnedArray<juce::AudioProcessorValueTreeState::ComboBoxAttachment> boxAttachments;
+    };
 } // zlPanel
 
 #endif //TOP_PANEL_HPP

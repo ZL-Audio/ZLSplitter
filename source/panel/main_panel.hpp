@@ -25,6 +25,7 @@ namespace zlPanel {
 
     private:
         zlInterface::UIBase uiBase;
+        UISettingPanel uiPanel;
         TopPanel topPanel;
         ControlPanel controlPanel;
         MeterPanel meterPanel;

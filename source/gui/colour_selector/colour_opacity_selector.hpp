@@ -17,7 +17,13 @@ namespace zlInterface {
     class ColourOpacitySelector final : public juce::Component,
                                         private juce::Slider::Listener {
     public:
-        explicit ColourOpacitySelector(zlInterface::UIBase &base, juce::Component &parent,
+        enum Layout {
+            horizontal,
+            vertical
+        };
+
+        explicit ColourOpacitySelector(zlInterface::UIBase &base,
+                                       juce::Component &parent,
                                        bool useOpacity = true,
                                        float widthS = 12.f, float heightS = 10.f,
                                        float w1 = 0.3f, float w2 = 0.3f);

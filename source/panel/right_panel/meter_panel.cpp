@@ -14,8 +14,8 @@ namespace zlPanel {
         : processorRef(processor), uiBase(base),
           meterP1(processor.getController().getMeter1(), base),
           meterP2(processor.getController().getMeter2(), base),
-          label1("Label 1"), label2("Label 2"),
           labelLAF(base),
+          label1("Label 1"), label2("Label 2"),
           currentT(juce::Time::getCurrentTime()),
           vblank(this, [this]() { repaintCallBack(); }) {
         label1.setLookAndFeel(&labelLAF);

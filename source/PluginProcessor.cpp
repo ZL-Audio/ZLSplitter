@@ -7,8 +7,8 @@
 //
 // You should have received a copy of the GNU General Public License along with ZLSplit. If not, see <https://www.gnu.org/licenses/>.
 
-#include "PluginProcessor.h"
-#include "PluginEditor.h"
+#include "PluginProcessor.hpp"
+#include "PluginEditor.hpp"
 
 //==============================================================================
 PluginProcessor::PluginProcessor()
