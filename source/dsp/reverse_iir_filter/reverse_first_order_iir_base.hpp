@@ -13,10 +13,15 @@
 #include "reverse_real_pole_base.hpp"
 
 namespace zlReverseIIR {
+    /**
+     * reverse of a first order IIR
+     * @tparam SampleType
+     */
     template<typename SampleType>
     class ReverseFirstOrderIIRBase {
     public:
-        explicit ReverseFirstOrderIIRBase(const size_t stage) : reversePole(stage) {}
+        explicit ReverseFirstOrderIIRBase(const size_t stage) : reversePole(stage) {
+        }
 
         void setNumStage(const size_t stage) {
             reversePole.setNumStage(stage);
@@ -41,7 +46,7 @@ namespace zlReverseIIR {
             reversePole.process(block);
             for (size_t channel = 0; channel < static_cast<size_t>(block.getNumChannels()); ++channel) {
                 auto currentBlock = block.getChannelPointer(channel);
-                for (size_t index = 0; index < static_cast<size_t>(block.getNumSamples()) ; ++index) {
+                for (size_t index = 0; index < static_cast<size_t>(block.getNumSamples()); ++index) {
                     const auto current = currentBlock[index];
                     currentBlock[index] = zeros[1] * current + zeros[0] * states[channel];
                     states[channel] = current;

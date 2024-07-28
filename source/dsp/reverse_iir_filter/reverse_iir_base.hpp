@@ -13,10 +13,15 @@
 #include "reverse_cc_pole_base.hpp"
 
 namespace zlReverseIIR {
+    /**
+     * reverse of a second order IIR (with a pair of complex conjugates poles)
+     * @tparam SampleType
+     */
     template<typename SampleType>
     class ReverseIIRBase {
     public:
-        explicit ReverseIIRBase(const size_t stage) : reversePole(stage) {}
+        explicit ReverseIIRBase(const size_t stage) : reversePole(stage) {
+        }
 
         void setNumStage(const size_t stage) {
             reversePole.setNumStage(stage);
@@ -24,7 +29,7 @@ namespace zlReverseIIR {
 
         void reset() {
             reversePole.reset();
-            for (auto &state : states) {
+            for (auto &state: states) {
                 std::fill(state.begin(), state.end(), SampleType(0));
             }
         }
@@ -44,7 +49,7 @@ namespace zlReverseIIR {
             for (size_t channel = 0; channel < static_cast<size_t>(block.getNumChannels()); ++channel) {
                 std::array<SampleType, 2> &state(states[channel]);
                 auto currentBlock = block.getChannelPointer(channel);
-                for (size_t index = 0; index < static_cast<size_t>(block.getNumSamples()) ; ++index) {
+                for (size_t index = 0; index < static_cast<size_t>(block.getNumSamples()); ++index) {
                     const auto current = currentBlock[index];
                     currentBlock[index] = zeros[2] * current + zeros[1] * state[0] + zeros[2] * state[1];
                     state[1] = state[0];
@@ -67,7 +72,7 @@ namespace zlReverseIIR {
 
     private:
         ReverseCCPoleBase<SampleType> reversePole;
-        std::vector<std::array<SampleType, 2>> states;
+        std::vector<std::array<SampleType, 2> > states;
         std::array<SampleType, 3> zeros;
     };
 }

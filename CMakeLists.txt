@@ -63,7 +63,7 @@ else ()
 endif ()
 
 # include boost for this project
-find_package(Boost 1.80.0 REQUIRED)
+# find_package(Boost 1.80.0 REQUIRED)
 
 # Configures universal binaries in CI
 include(PamplejuceMacOS)
@@ -174,8 +174,8 @@ target_link_libraries(SharedCode
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
-        friz
-        Boost::boost)
+        friz)
+#        Boost::boost)
 
 # Link the JUCE plugin targets our SharedCode target
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)

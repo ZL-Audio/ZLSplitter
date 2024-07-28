@@ -1,11 +1,11 @@
 // Copyright (C) 2024 - zsliu98
-// This file is part of ZLSplit
+// This file is part of ZLSplitter
 //
-// ZLSplit is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 //
-// ZLSplit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+// ZLSplitter is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License along with ZLSplit. If not, see <https://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
 #ifndef REVERSE_CC_POLE_BASE_HPP
 #define REVERSE_CC_POLE_BASE_HPP
@@ -15,6 +15,10 @@
 #include "fifo_delay.hpp"
 
 namespace zlReverseIIR {
+    /**
+     * reverse of a pair of complex conjugates poles
+     * @tparam SampleType
+     */
     template<typename SampleType>
     class ReverseCCPoleBase {
     public:
@@ -29,21 +33,21 @@ namespace zlReverseIIR {
         }
 
         void reset() {
-            for (auto &buffer : us) {
+            for (auto &buffer: us) {
                 std::fill(buffer.begin(), buffer.end(), SampleType(0));
             }
 
-            for (auto &buffer : vs) {
+            for (auto &buffer: vs) {
                 std::fill(buffer.begin(), buffer.end(), SampleType(0));
             }
 
-            for (auto &delay : uDelays) {
+            for (auto &delay: uDelays) {
                 for (auto &d: delay) {
                     d.reset();
                 }
             }
 
-            for (auto &delay : vDelays) {
+            for (auto &delay: vDelays) {
                 for (auto &d: delay) {
                     d.reset();
                 }
@@ -56,15 +60,15 @@ namespace zlReverseIIR {
             uDelays.resize(static_cast<size_t>(spec.numChannels));
             vDelays.resize(static_cast<size_t>(spec.numChannels));
 
-            for (auto &buffer : us) {
+            for (auto &buffer: us) {
                 buffer.resize(static_cast<size_t>(spec.maximumBlockSize));
             }
 
-            for (auto &buffer : vs) {
+            for (auto &buffer: vs) {
                 buffer.resize(static_cast<size_t>(spec.maximumBlockSize));
             }
 
-            for (auto &delay : uDelays) {
+            for (auto &delay: uDelays) {
                 int numDelay = 1;
                 delay.resize(numStage + 1);
                 for (size_t i = 0; i < numStage + 1; ++i) {
@@ -74,7 +78,7 @@ namespace zlReverseIIR {
                 }
             }
 
-            for (auto &delay : vDelays) {
+            for (auto &delay: vDelays) {
                 int numDelay = 1;
                 delay.resize(numStage + 1);
                 for (size_t i = 0; i < numStage + 1; ++i) {
@@ -116,13 +120,13 @@ namespace zlReverseIIR {
         }
 
     private:
-        size_t numStage = 10;
-        std::vector<std::vector<FIFODelay<SampleType>>> uDelays, vDelays;
+        size_t numStage{0};
+        std::vector<std::vector<FIFODelay<SampleType> > > uDelays, vDelays;
         std::vector<SampleType> as, bs;
         SampleType aB;
-        std::vector<std::vector<SampleType>> us, vs;
+        std::vector<std::vector<SampleType> > us, vs;
 
-        bool isComplex {false};
+        bool isComplex{false};
 
         void processComplex(juce::dsp::AudioBlock<SampleType> block) {
             for (size_t channel = 0; channel < static_cast<size_t>(block.getNumChannels()); ++channel) {
@@ -133,8 +137,8 @@ namespace zlReverseIIR {
                     v.resize(static_cast<size_t>(block.getNumSamples()));
                 }
 
-                std::vector<FIFODelay<SampleType>> &uDelay(uDelays[channel]);
-                std::vector<FIFODelay<SampleType>> &vDelay(vDelays[channel]);
+                std::vector<FIFODelay<SampleType> > &uDelay(uDelays[channel]);
+                std::vector<FIFODelay<SampleType> > &vDelay(vDelays[channel]);
 
                 auto currentBlock = block.getSingleChannelBlock(channel);
                 for (size_t index = 0; index < static_cast<size_t>(block.getNumSamples()); ++index) {

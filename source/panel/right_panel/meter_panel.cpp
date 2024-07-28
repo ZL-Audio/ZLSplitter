@@ -76,7 +76,7 @@ namespace zlPanel {
             }
             case zlDSP::splitType::stype::tsteady: {
                 text1 = "Transient";
-                text2 = "Steay";
+                text2 = "Steady";
                 break;
             }
         }

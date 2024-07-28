@@ -4,6 +4,6 @@ LICENSE and CODE are available at [https://github.com/ZL-Audio/ZLSplitter](https
 
 # Changelog
 
-## 0.1.0
+## 0.0.1
 
 - first release
