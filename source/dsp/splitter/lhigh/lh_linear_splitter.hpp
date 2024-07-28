@@ -20,6 +20,7 @@ namespace zlSplitter {
     */
     template<typename FloatType>
     class LHLinearSplitter {
+    public:
         LHLinearSplitter();
 
         void reset();
@@ -38,9 +39,15 @@ namespace zlSplitter {
          */
         void split(juce::dsp::AudioBlock<FloatType> block);
 
-        void setFreq(FloatType x);
+        void setFreq(const FloatType x) {
+            freq.store(x);
+            toUpdate.store(true);
+        }
 
-        void setOrder(size_t x);
+        void setOrder(const size_t x) {
+            order.store(x);
+            toUpdate.store(true);
+        }
 
         inline juce::AudioBuffer<FloatType> &getLBuffer() { return lBuffer; }
 
@@ -48,24 +55,41 @@ namespace zlSplitter {
 
         inline int getLatency() const {
             switch (order.load()) {
-                case 1:
-                case 2: return 2047;
-                case 4: return 2047 * 2;
+                case 1: return static_cast<int>(1 << (firstOrderNumStage + 1));
+                case 2: return static_cast<int>(1 << (secondOrderNumStage + 1)) + 1;
+                case 4: return static_cast<int>(1 << (secondOrderNumStage + 2)) + 2;
                 default: return 0;
             }
         }
 
     private:
+        inline static constexpr size_t firstOrderNumStage = 9;
+        inline static constexpr size_t secondOrderNumStage = 11;
+
         juce::AudioBuffer<FloatType> lBuffer, hBuffer;
-        juce::dsp::DelayLine<FloatType> delay;
+        juce::dsp::DelayLine<FloatType, juce::dsp::DelayLineInterpolationTypes::None> delay;
 
-        zlReverseIIR::ReverseIIRBase<FloatType> reverseFilter;
-        zlIIR::IIRBase<FloatType> forwardFilter;
+        zlReverseIIR::ReverseFirstOrderIIRBase<FloatType> reverseFirstOrderFilter{firstOrderNumStage};
 
+        std::array<zlReverseIIR::ReverseIIRBase<FloatType>, 2> reverseFilter = {
+            zlReverseIIR::ReverseIIRBase<FloatType>(secondOrderNumStage),
+            zlReverseIIR::ReverseIIRBase<FloatType>(secondOrderNumStage)
+        };
+        std::array<zlIIR::IIRBase<FloatType>, 2> forwardFilter;
+
+        std::atomic<double> sampleRate;
         std::atomic<FloatType> freq{FloatType(1000)};
         FloatType currentFreq{FloatType(1000)};
-        std::atomic<size_t> order{2};
-        size_t currentOrder{2};
+        std::atomic<size_t> order{0};
+        size_t currentOrder{0};
+
+        std::atomic<bool> toUpdate{true}, toReset{false};
+
+        void update();
+
+        static constexpr double order2q = 0.70710678118654757274; // np.sqrt(2) / 2
+        static constexpr double order4q1 = 0.54119610014619701222; // 1 / (2 * np.cos(np.pi / 8))
+        static constexpr double order4q2 = 1.30656296487637635373; // 1 / (2 * np.cos(np.pi / 8 * 3))
     };
 } // zlSplitter
 

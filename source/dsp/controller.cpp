@@ -22,6 +22,7 @@ namespace zlDSP {
         lrSplitter.prepare(spec);
         msSplitter.prepare(spec);
         lhSplitter.prepare(spec);
+        lhLinearSplitter.prepare(spec);
         tsSplitters[0].prepare(spec);
         tsSplitters[1].prepare(spec);
 
@@ -129,9 +130,16 @@ namespace zlDSP {
     }
 
     void Controller::processLH(juce::AudioBuffer<double> &buffer) {
-        lhSplitter.split(buffer);
-        const auto lBlock = juce::dsp::AudioBlock<double>(lhSplitter.getLBuffer());
-        const auto hBlock = juce::dsp::AudioBlock<double>(lhSplitter.getHBuffer());
+        juce::dsp::AudioBlock<double> lBlock, hBlock;
+        if (lhFilterType.load() == lhFilterType::svf) {
+            lhSplitter.split(buffer);
+            lBlock = juce::dsp::AudioBlock<double>(lhSplitter.getLBuffer());
+            hBlock = juce::dsp::AudioBlock<double>(lhSplitter.getHBuffer());
+        } else {
+            lhLinearSplitter.split(buffer);
+            lBlock = juce::dsp::AudioBlock<double>(lhLinearSplitter.getLBuffer());
+            hBlock = juce::dsp::AudioBlock<double>(lhLinearSplitter.getHBuffer());
+        }
         const auto block = juce::dsp::AudioBlock<double>(internalBuffer);
         if (!swap.load()) {
             block.getSubsetChannelBlock(0, 2).copyFrom(lBlock);

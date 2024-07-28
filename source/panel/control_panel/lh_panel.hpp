@@ -25,7 +25,7 @@ namespace zlPanel {
         zlInterface::UIBase &uiBase;
         zlInterface::CompactLinearSlider mixS;
         zlInterface::TwoValueRotarySlider freqS;
-        zlInterface::CompactCombobox slopeC;
+        zlInterface::CompactCombobox ftypeC, slopeC;
         juce::OwnedArray<juce::AudioProcessorValueTreeState::SliderAttachment> sliderAttachments;
         juce::OwnedArray<juce::AudioProcessorValueTreeState::ComboBoxAttachment> boxAttachments;
     };

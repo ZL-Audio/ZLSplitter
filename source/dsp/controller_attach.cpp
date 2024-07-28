@@ -29,16 +29,21 @@ namespace zlDSP {
     void ControllerAttach::parameterChanged(const juce::String &parameterID, float newValue) {
         if (parameterID == splitType::ID) {
             controllerRef.setType(static_cast<splitType::stype>(newValue));
-            sType.store(static_cast<splitType::stype>(newValue));
             triggerAsyncUpdate();
         } else if (parameterID == mix::ID) {
             controllerRef.setMix(static_cast<double>(newValue) / 200.0);
         } else if (parameterID == swap::ID) {
             controllerRef.setSwap(static_cast<bool>(newValue));
+        } else if (parameterID == lhFilterType::ID) {
+            controllerRef.setLHFilterType(static_cast<lhFilterType::ftype>(newValue));
+            triggerAsyncUpdate();
         } else if (parameterID == lhSlope::ID) {
             controllerRef.getLHSplitter().setOrder(lhSlope::orders[static_cast<size_t>(newValue)]);
+            controllerRef.getLHLinearSplitter().setOrder(lhSlope::orders[static_cast<size_t>(newValue)]);
+            triggerAsyncUpdate();
         } else if (parameterID == lhFreq::ID) {
             controllerRef.getLHSplitter().setFreq(static_cast<double>(newValue));
+            controllerRef.getLHLinearSplitter().setFreq(static_cast<double>(newValue));
         } else if (parameterID == tsBalance::ID) {
             controllerRef.getTSSplitter(0).setBalance(tsBalance::formatV(newValue));
             controllerRef.getTSSplitter(1).setBalance(tsBalance::formatV(newValue));
@@ -55,17 +60,7 @@ namespace zlDSP {
     }
 
     void ControllerAttach::handleAsyncUpdate() {
-        switch (sType.load()) {
-            case splitType::lright:
-            case splitType::mside:
-            case splitType::lhigh: {
-                processorRef.setLatencySamples(0);
-                break;
-            }
-            case splitType::tsteady: {
-                processorRef.setLatencySamples(controllerRef.getTSSplitter(0).getLatency());
-            }
-        }
+        processorRef.setLatencySamples(controllerRef.getLatency());
     }
 
     void ControllerAttach::initDefaults() {

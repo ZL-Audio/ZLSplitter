@@ -56,8 +56,8 @@ namespace zlSplitter {
         size_t fitlerNum{0};
         std::atomic<FloatType> freq{FloatType(1000)};
         FloatType currentFreq{FloatType(1000)};
-        std::atomic<size_t> order{2};
-        size_t currentOrder{2};
+        std::atomic<size_t> order{0};
+        size_t currentOrder{0};
         std::atomic<bool> toUpdate{false}, toReset{false};
 
         void update();

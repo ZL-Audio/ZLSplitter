@@ -16,16 +16,21 @@ namespace zlPanel {
         : uiBase(base),
           mixS("Mix", base),
           freqS("Freq", base),
+          ftypeC(zlDSP::lhFilterType::choices, base),
           slopeC(zlDSP::lhSlope::choices, base) {
         freqS.setShowSlider2(false);
         attach({&mixS.getSlider(), &freqS.getSlider1()},
                {zlDSP::mix::ID, zlDSP::lhFreq::ID},
                parameter, sliderAttachments);
-        attach({&slopeC.getBox()}, {zlDSP::lhSlope::ID}, parameter, boxAttachments);
+        attach({&ftypeC.getBox(), &slopeC.getBox()},
+            {zlDSP::lhFilterType::ID, zlDSP::lhSlope::ID},
+            parameter, boxAttachments);
         mixS.setFontScale(1.125f, 1.125f);
         addAndMakeVisible(mixS);
-        slopeC.getLAF().setFontScale(1.125f);
-        addAndMakeVisible(slopeC);
+        for (auto &c : {&ftypeC, &slopeC}) {
+            c->getLAF().setFontScale(1.125f);
+            addAndMakeVisible(c);
+        }
         freqS.setFontScale(1.25f, 1.25f);
         addAndMakeVisible(freqS);
     }
@@ -35,7 +40,11 @@ namespace zlPanel {
         const auto height = bound.getHeight() * .25f;
         mixS.setPadding(uiBase.getFontSize() * 1.f, uiBase.getFontSize() * .5f);
         mixS.setBounds(bound.removeFromTop(height).toNearestInt());
-        slopeC.setBounds(bound.removeFromTop(height).toNearestInt());
+        auto boxBound = bound.removeFromTop(height);
+        auto leftBound = boxBound.removeFromLeft(boxBound.getWidth() * .5f);
+        leftBound = leftBound.withSizeKeepingCentre(leftBound.getWidth() * .75f, leftBound.getHeight());
+        ftypeC.setBounds(leftBound.toNearestInt());
+        slopeC.setBounds(boxBound.toNearestInt());
         freqS.setBounds(bound.toNearestInt());
     }
 } // zlPanel

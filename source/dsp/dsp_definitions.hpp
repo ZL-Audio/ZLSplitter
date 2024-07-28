@@ -102,10 +102,13 @@ namespace zlDSP {
         auto static constexpr ID = "lh_filter_type";
         auto static constexpr name = "LH Filter Type";
         inline auto static const choices = juce::StringArray{
-            "IIR", "FIR"
+            "SVF", "FIR"
         };
 
         int static constexpr defaultI = 0;
+        enum ftype {
+            svf, fir
+        };
     };
 
     class lhSlope : public ChoiceParameters<lhSlope> {
@@ -125,7 +128,7 @@ namespace zlDSP {
     public:
         auto static constexpr ID = "lh_freq";
         auto static constexpr name = "LH Freq";
-        inline auto static const range = juce::NormalisableRange<float>(10, 20000, .1f, 0.23064293761596813f);
+        inline auto static const range = juce::NormalisableRange<float>(50, 18000, .1f, 0.23585392273859968f);
         auto static constexpr defaultV = 1000.f;
     };
 
@@ -180,7 +183,7 @@ namespace zlDSP {
     inline juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(splitType::get(), mix::get(), swap::get(),
-                   lhSlope::get(), lhFreq::get(),
+                   lhFilterType::get(), lhSlope::get(), lhFreq::get(),
                    tsBalance::get(), tsSeperation::get(), tsHold::get(), tsSmooth::get());
         return layout;
     }

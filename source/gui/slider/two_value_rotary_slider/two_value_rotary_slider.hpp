@@ -70,6 +70,7 @@ namespace zlInterface {
             labelLookAndFeel.setFontScale(x1);
             labelLookAndFeel1.setFontScale(x2);
             labelLookAndFeel2.setFontScale(x2);
+            fontScale = x2;
         }
 
     private:
@@ -77,6 +78,7 @@ namespace zlInterface {
 
         FirstRotarySliderLookAndFeel slider1LAF;
         SecondRotarySliderLookAndFeel slider2LAF;
+        float fontScale = 1.75f;
 
         SnappingSlider slider1, slider2;
 

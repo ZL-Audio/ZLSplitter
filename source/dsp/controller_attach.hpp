@@ -27,18 +27,16 @@ namespace zlDSP {
         juce::AudioProcessorValueTreeState &parametersRef;
         Controller &controllerRef;
 
-        std::atomic<splitType::stype> sType{splitType::lright};
-
         constexpr static std::array IDs{
             splitType::ID, mix::ID, swap::ID,
-            lhSlope::ID, lhFreq::ID,
+            lhFilterType::ID, lhSlope::ID, lhFreq::ID,
             tsBalance::ID, tsSeperation::ID, tsHold::ID, tsSmooth::ID
         };
 
         constexpr static std::array defaultVs{
             static_cast<float>(splitType::defaultI),
             mix::defaultV, static_cast<float>(swap::defaultV),
-            static_cast<float>(lhSlope::defaultI), lhFreq::defaultV,
+            static_cast<float>(lhFilterType::defaultI), static_cast<float>(lhSlope::defaultI), lhFreq::defaultV,
             tsBalance::defaultV, tsSeperation::defaultV, tsHold::defaultV, tsSmooth::defaultV
         };
 

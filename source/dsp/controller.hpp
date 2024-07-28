@@ -25,12 +25,16 @@ namespace zlDSP {
 
         void process(juce::AudioBuffer<double> &buffer);
 
-        void setType(splitType::stype x) {
+        void setType(const splitType::stype x) {
             splitType.store(x);
         }
 
-        void setMix(double x) {
+        void setMix(const double x) {
             mix.store(x);
+        }
+
+        void setLHFilterType(const lhFilterType::ftype x) {
+            lhFilterType.store(x);
         }
 
         zlSplitter::LRSplitter<double> &getLRSplitter() {
@@ -45,6 +49,10 @@ namespace zlDSP {
             return lhSplitter;
         }
 
+        zlSplitter::LHLinearSplitter<double> &getLHLinearSplitter() {
+            return lhLinearSplitter;
+        }
+
         zlSplitter::TSSplitter<double> &getTSSplitter(const size_t i) {
             return tsSplitters[i];
         }
@@ -55,11 +63,35 @@ namespace zlDSP {
 
         zlMeter::SingleMeter<double> &getMeter2() { return meter2; }
 
+        inline int getLatency() const {
+            switch (splitType.load()) {
+                case splitType::lright:
+                case splitType::mside: {
+                    return 0;
+                }
+                case splitType::lhigh: {
+                    switch (lhFilterType.load()) {
+                        case lhFilterType::svf:
+                            return 0;
+                        case lhFilterType::fir:
+                            return lhLinearSplitter.getLatency();
+                    }
+                }
+                case splitType::tsteady: {
+                    return tsSplitters[0].getLatency();
+                }
+                default:
+                    return 0;
+            }
+        }
+
     private:
         std::atomic<splitType::stype> splitType;
+        std::atomic<lhFilterType::ftype> lhFilterType;
         zlSplitter::LRSplitter<double> lrSplitter;
         zlSplitter::MSSplitter<double> msSplitter;
         zlSplitter::LHSplitter<double> lhSplitter;
+        zlSplitter::LHLinearSplitter<double> lhLinearSplitter;
         std::array<zlSplitter::TSSplitter<double>, 2> tsSplitters;
         std::atomic<double> mix{0.0};
         std::atomic<bool> swap{false};

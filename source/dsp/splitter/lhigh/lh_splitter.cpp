@@ -48,6 +48,7 @@ namespace zlSplitter {
 
         lBuffer.setSize(2, static_cast<int>(spec.maximumBlockSize));
         hBuffer.setSize(2, static_cast<int>(spec.maximumBlockSize));
+        toUpdate.store(true);
     }
 
     template<typename FloatType>

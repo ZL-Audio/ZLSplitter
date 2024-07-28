@@ -11,6 +11,8 @@
 #define REVERSE_IIR_SINGLE_FILTER_HPP
 
 #include "reverse_iir_base.hpp"
+#include "reverse_first_order_iir_base.hpp"
+#include "reverse_real_pole_base.hpp"
 
 namespace zlReverseIIR {
 

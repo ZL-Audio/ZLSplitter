@@ -7,22 +7,20 @@
 //
 // You should have received a copy of the GNU General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef REVERSE_IIR_BASE_HPP
-#define REVERSE_IIR_BASE_HPP
+#ifndef REVERSE_FIRST_ORDER_IIR_BASE_HPP
+#define REVERSE_FIRST_ORDER_IIR_BASE_HPP
 
-#include "reverse_cc_pole_base.hpp"
+#include "reverse_real_pole_base.hpp"
 
 namespace zlReverseIIR {
     template<typename SampleType>
-    class ReverseIIRBase {
+    class ReverseFirstOrderIIRBase {
     public:
-        explicit ReverseIIRBase(const size_t stage) : reversePole(stage) {}
+        explicit ReverseFirstOrderIIRBase(const size_t stage) : reversePole(stage) {}
 
         void reset() {
             reversePole.reset();
-            for (auto &state : states) {
-                std::fill(state.begin(), state.end(), 0);
-            }
+            std::fill(states.begin(), states.end(), SampleType(0));
         }
 
         void prepare(const juce::dsp::ProcessSpec &spec) {
@@ -38,23 +36,20 @@ namespace zlReverseIIR {
         void process(juce::dsp::AudioBlock<SampleType> block) {
             reversePole.process(block);
             for (size_t channel = 0; channel < static_cast<size_t>(block.getNumChannels()); ++channel) {
-                std::array<SampleType, 2> &state(states[channel]);
                 auto currentBlock = block.getChannelPointer(channel);
                 for (size_t index = 0; index < static_cast<size_t>(block.getNumSamples()) ; ++index) {
                     const auto current = currentBlock[index];
-                    currentBlock[index] = zeros[2] * current + zeros[1] * state[0] + zeros[2] * state[1];
-                    state[1] = state[0];
-                    state[0] = current;
+                    currentBlock[index] = zeros[1] * current + zeros[0] * states[channel];
+                    states[channel] = current;
                 }
             }
         }
 
-        void updateFromBiquad(const std::array<double, 3> &a, const std::array<double, 3> &b) {
+        void updateFromBiquad(const std::array<double, 2> &a, const std::array<double, 2> &b) {
             const auto a0Inv = 1.0 / a[0];
-            reversePole.updateFromBiquad({1.0, a[1] * a0Inv, a[2] * a0Inv});
+            reversePole.updateFromBiquad({1.0, a[1] * a0Inv});
             zeros[0] = static_cast<SampleType>(b[0] * a0Inv);
             zeros[1] = static_cast<SampleType>(b[1] * a0Inv);
-            zeros[2] = static_cast<SampleType>(b[2] * a0Inv);
         }
 
         [[nodiscard]] inline int getLatency() const {
@@ -62,10 +57,10 @@ namespace zlReverseIIR {
         }
 
     private:
-        ReverseCCPoleBase<SampleType> reversePole;
-        std::vector<std::array<SampleType, 2>> states;
-        std::array<SampleType, 3> zeros;
+        ReverseRealPoleBase<SampleType> reversePole;
+        std::vector<SampleType> states;
+        std::array<SampleType, 2> zeros;
     };
 }
 
-#endif //REVERSE_IIR_BASE_HPP
+#endif //REVERSE_FIRST_ORDER_IIR_BASE_HPP
