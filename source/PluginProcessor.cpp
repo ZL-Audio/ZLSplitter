@@ -92,6 +92,7 @@ void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     };
     doubleBuffer.setSize(4, samplesPerBlock);
     controller.prepare(spec);
+    controllerAttach.prepare(spec);
 }
 
 void PluginProcessor::releaseResources() {

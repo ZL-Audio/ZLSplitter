@@ -18,6 +18,10 @@ namespace zlReverseIIR {
     public:
         explicit ReverseFirstOrderIIRBase(const size_t stage) : reversePole(stage) {}
 
+        void setNumStage(const size_t stage) {
+            reversePole.setNumStage(stage);
+        }
+
         void reset() {
             reversePole.reset();
             std::fill(states.begin(), states.end(), SampleType(0));

@@ -22,6 +22,8 @@ namespace zlDSP {
 
         ~ControllerAttach() override;
 
+        void prepare(const juce::dsp::ProcessSpec &spec);
+
     private:
         juce::AudioProcessor &processorRef;
         juce::AudioProcessorValueTreeState &parametersRef;

@@ -55,9 +55,9 @@ namespace zlSplitter {
 
         inline int getLatency() const {
             switch (order.load()) {
-                case 1: return static_cast<int>(1 << (firstOrderNumStage + 1));
-                case 2: return static_cast<int>(1 << (secondOrderNumStage + 1)) + 1;
-                case 4: return static_cast<int>(1 << (secondOrderNumStage + 2)) + 2;
+                case 1: return static_cast<int>(1 << (firstOrderNumStage + extraStage.load() + 1));
+                case 2: return static_cast<int>(1 << (secondOrderNumStage + extraStage.load() + 1)) + 1;
+                case 4: return static_cast<int>(1 << (secondOrderNumStage + extraStage.load() + 2)) + 2;
                 default: return 0;
             }
         }
@@ -65,6 +65,7 @@ namespace zlSplitter {
     private:
         inline static constexpr size_t firstOrderNumStage = 9;
         inline static constexpr size_t secondOrderNumStage = 11;
+        std::atomic<size_t> extraStage{0};
 
         juce::AudioBuffer<FloatType> lBuffer, hBuffer;
         juce::dsp::DelayLine<FloatType, juce::dsp::DelayLineInterpolationTypes::None> delay;

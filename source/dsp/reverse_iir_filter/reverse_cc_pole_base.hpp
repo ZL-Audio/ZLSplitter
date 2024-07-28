@@ -18,7 +18,12 @@ namespace zlReverseIIR {
     template<typename SampleType>
     class ReverseCCPoleBase {
     public:
-        explicit ReverseCCPoleBase(const size_t stage) : numStage(stage) {
+        explicit ReverseCCPoleBase(const size_t stage) {
+            setNumStage(stage);
+        }
+
+        void setNumStage(const size_t stage) {
+            numStage = stage;
             as.resize(stage + 1);
             bs.resize(stage + 1);
         }

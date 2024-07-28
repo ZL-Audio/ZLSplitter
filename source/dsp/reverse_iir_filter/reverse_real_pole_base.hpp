@@ -18,8 +18,13 @@ namespace zlReverseIIR {
     template<typename SampleType>
     class ReverseRealPoleBase {
     public:
-        explicit ReverseRealPoleBase(const size_t stage) : numStage(stage) {
-            cs.resize(numStage + 1);
+        explicit ReverseRealPoleBase(const size_t stage) {
+            setNumStage(stage);
+        }
+
+        void setNumStage(const size_t stage) {
+            numStage = stage;
+            cs.resize(stage + 1);
         }
 
         void reset() {

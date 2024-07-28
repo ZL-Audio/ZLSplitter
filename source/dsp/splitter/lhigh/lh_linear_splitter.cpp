@@ -20,13 +20,23 @@ namespace zlSplitter {
 
     template<typename FloatType>
     void LHLinearSplitter<FloatType>::prepare(const juce::dsp::ProcessSpec &spec) {
+        if (spec.sampleRate < 50000) {
+            extraStage.store(0);
+        } else if (spec.sampleRate < 100000) {
+            extraStage.store(1);
+        } else {
+            extraStage.store(2);
+        }
         sampleRate.store(spec.sampleRate);
+        reverseFirstOrderFilter.setNumStage(firstOrderNumStage + extraStage.load());
         reverseFirstOrderFilter.prepare(spec);
+        reverseFilter[0].setNumStage(secondOrderNumStage + extraStage.load());
         reverseFilter[0].prepare(spec);
+        reverseFilter[1].setNumStage(secondOrderNumStage + extraStage.load());
         reverseFilter[1].prepare(spec);
         forwardFilter[0].prepare(spec);
         forwardFilter[1].prepare(spec);
-        delay.setMaximumDelayInSamples(static_cast<int>(1 << (secondOrderNumStage + 2)) + 2);
+        delay.setMaximumDelayInSamples(static_cast<int>(1 << (secondOrderNumStage + extraStage.load() + 2)) + 2);
         delay.prepare(spec);
         toUpdate.store(true);
     }

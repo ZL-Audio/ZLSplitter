@@ -18,6 +18,10 @@ namespace zlReverseIIR {
     public:
         explicit ReverseIIRBase(const size_t stage) : reversePole(stage) {}
 
+        void setNumStage(const size_t stage) {
+            reversePole.setNumStage(stage);
+        }
+
         void reset() {
             reversePole.reset();
             for (auto &state : states) {

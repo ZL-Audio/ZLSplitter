@@ -26,6 +26,10 @@ namespace zlDSP {
         }
     }
 
+    void ControllerAttach::prepare(const juce::dsp::ProcessSpec &spec) {
+        triggerAsyncUpdate();
+    }
+
     void ControllerAttach::parameterChanged(const juce::String &parameterID, float newValue) {
         if (parameterID == splitType::ID) {
             controllerRef.setType(static_cast<splitType::stype>(newValue));
