@@ -26,6 +26,8 @@ namespace zlDSP {
         tsSplitters[0].prepare(spec);
         tsSplitters[1].prepare(spec);
 
+        currentMixSmooth.reset(spec.sampleRate, 0.01);
+
         meter1.prepare(spec);
         meter2.prepare(spec);
 
@@ -60,17 +62,28 @@ namespace zlDSP {
             case splitType::lright:
             case splitType::mside:
             case splitType::lhigh: {
-                const auto currentMix = mix.load();
-                block.getSubsetChannelBlock(0, 2).replaceWithProductOf(
-                    internalBlock.getSubsetChannelBlock(0, 2), 1.0 - currentMix);
-                block.getSubsetChannelBlock(0, 2).addProductOf(
-                    internalBlock.getSubsetChannelBlock(2, 2), currentMix);
-
+                currentMix = mix.load();
+                currentMixSmooth.setTargetValue(currentMix);
+                if (currentMixSmooth.isSmoothing()) {
+                    for (size_t index = 0; index < block.getNumSamples(); ++index) {
+                        const auto sampleMix = currentMixSmooth.getNextValue();
+                        block.setSample(0, static_cast<int>(index),
+                                        internalBlock.getSample(0, static_cast<int>(index)) * (1 - sampleMix)
+                                        + internalBlock.getSample(2, static_cast<int>(index)) * sampleMix);
+                        block.setSample(1, static_cast<int>(index),
+                                        internalBlock.getSample(1, static_cast<int>(index)) * (1 - sampleMix)
+                                        + internalBlock.getSample(3, static_cast<int>(index)) * sampleMix);
+                    }
+                } else {
+                    block.getSubsetChannelBlock(0, 2).replaceWithProductOf(
+                        internalBlock.getSubsetChannelBlock(0, 2), 1.0 - currentMix);
+                    block.getSubsetChannelBlock(0, 2).addProductOf(
+                        internalBlock.getSubsetChannelBlock(2, 2), currentMix);
+                }
                 if (block.getNumChannels() >= 4) {
-                    block.getSubsetChannelBlock(2, 2).replaceWithProductOf(
-                        internalBlock.getSubsetChannelBlock(0, 2), currentMix);
-                    block.getSubsetChannelBlock(2, 2).addProductOf(
-                        internalBlock.getSubsetChannelBlock(2, 2), 1.0 - currentMix);
+                    block.getSubsetChannelBlock(2, 2).replaceWithSumOf(
+                        internalBlock.getSubsetChannelBlock(0, 2), internalBlock.getSubsetChannelBlock(2, 2));
+                    block.getSubsetChannelBlock(2, 2).subtract(block.getSubsetChannelBlock(0, 2));
                 }
                 break;
             }

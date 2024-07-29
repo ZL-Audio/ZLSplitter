@@ -94,6 +94,8 @@ namespace zlDSP {
         zlSplitter::LHLinearSplitter<double> lhLinearSplitter;
         std::array<zlSplitter::TSSplitter<double>, 2> tsSplitters;
         std::atomic<double> mix{0.0};
+        double currentMix{0.0};
+        juce::SmoothedValue<double> currentMixSmooth{0.0};
         std::atomic<bool> swap{false};
 
         zlMeter::SingleMeter<double> meter1, meter2;
