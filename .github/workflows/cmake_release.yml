@@ -60,7 +60,7 @@ jobs:
         if: runner.os == 'Linux'
         # Thanks to McMartin & co https://forum.juce.com/t/list-of-juce-dependencies-under-linux/15121/44
         run: |
-          sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev xvfb ninja-build
+          sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype-dev libfontconfig1-dev libwebkit2gtk-4.1-dev libglu1-mesa-dev xvfb ninja-build
           sudo /usr/bin/Xvfb $DISPLAY &
 
       - name: Cache IPP (Windows)
@@ -106,15 +106,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-
-#      - name: Install boost
-#        uses: MarkusJx/install-boost@v2.4.5
-#        id: install-boost
-#        with:
-#          boost_version: 1.80.0
-#          platform_version: ${{ matrix.boost_platform_version }}
-#          toolset: ${{ matrix.boost_toolset }}
-#          link: "static"
 
       - name: Cache the build
         uses: mozilla-actions/sccache-action@v0.0.5
