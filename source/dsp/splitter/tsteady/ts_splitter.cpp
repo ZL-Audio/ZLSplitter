@@ -35,7 +35,11 @@ namespace zlSplitter {
         fftSize = static_cast<size_t>(1) << fftOrder;
         numBins = fftSize / 2 + 1;
         hopSize = fftSize / overlap;
-        latency.store(static_cast<int>(fftSize + hopSize * timeHalfMedianWindowsSize));
+        const auto d = static_cast<int>(fftSize + hopSize * timeHalfMedianWindowsSize);
+        latency.store(d);
+        delay.setMaximumDelayInSamples(d);
+        delay.setDelay(d);
+
         fft = std::make_unique<juce::dsp::FFT>(static_cast<int>(fftOrder));
         window = std::make_unique<juce::dsp::WindowingFunction<float> >(
             fftSize + 1, juce::dsp::WindowingFunction<float>::WindowingMethod::hann, false);
@@ -46,8 +50,6 @@ namespace zlSplitter {
         std::fill(inputFifo.begin(), inputFifo.end(), 0.f);
         transientFifo.resize(fftSize);
         std::fill(transientFifo.begin(), transientFifo.end(), 0.f);
-        steadyFifo.resize(fftSize);
-        std::fill(steadyFifo.begin(), steadyFifo.end(), 0.f);
         // set fft data holder
         fftDataPos = 0;
         for (auto &data: fftDatas) {
@@ -56,7 +58,6 @@ namespace zlSplitter {
         }
         magnitude.resize(numBins);
         transientSpec.resize(2 * fftSize);
-        steadySpec.resize(2 * fftSize);
         // resize median calculators
         timeMedian.resize(numBins);
         mask.resize(numBins);
@@ -66,12 +67,13 @@ namespace zlSplitter {
     void TSSplitter<FloatType>::split(juce::AudioBuffer<FloatType> &buffer) {
         tBuffer.setSize(1, buffer.getNumSamples(), true, false, true);
         sBuffer.setSize(1, buffer.getNumSamples(), true, false, true);
-        for (int i = 0; i < buffer.getNumSamples(); ++i) {
-            inputFifo[pos] = static_cast<float>(buffer.getSample(0, i));
-            tBuffer.setSample(0, i, static_cast<FloatType>(transientFifo[pos]));
-            sBuffer.setSample(0, i, static_cast<FloatType>(steadyFifo[pos]));
+        auto readPointer = buffer.getReadPointer(0);
+        auto tPointer = tBuffer.getWritePointer(0);
+        auto sPointer = sBuffer.getWritePointer(0);
+        for (size_t i = 0; i < static_cast<size_t>(buffer.getNumSamples()); ++i) {
+            inputFifo[pos] = static_cast<float>(readPointer[i]);
+            tPointer[i] = static_cast<FloatType>(transientFifo[pos]);
             transientFifo[pos] = 0.f;
-            steadyFifo[pos] = 0.f;
 
             pos += 1;
             if (pos == fftSize) {
@@ -83,6 +85,10 @@ namespace zlSplitter {
                 count = 0;
                 processFrame();
             }
+        }
+
+        for (size_t i = 0; i < static_cast<size_t>(buffer.getNumSamples()); ++i) {
+            sPointer[i] = delay.push(readPointer[i]) - tPointer[i];
         }
     }
 
@@ -103,23 +109,18 @@ namespace zlSplitter {
         processSpectrum();
         // perform the inverse fft
         fft->performRealOnlyInverseTransform(transientSpec.data());
-        fft->performRealOnlyInverseTransform(steadySpec.data());
         // apply the window again for resynthesis.
         window->multiplyWithWindowingTable(transientSpec.data(), fftSize);
-        window->multiplyWithWindowingTable(steadySpec.data(), fftSize);
         // scale down the output samples because of the overlapping windows.
         for (size_t i = 0; i < fftSize; ++i) {
             transientSpec[i] *= windowCorrection;
-            steadySpec[i] *= windowCorrection;
         }
         // add the ifft results to the output fifos
         for (size_t i = 0; i < pos; ++i) {
             transientFifo[i] += transientSpec[i + fftSize - pos];
-            steadyFifo[i] += steadySpec[i + fftSize - pos];
         }
         for (size_t i = 0; i < fftSize - pos; ++i) {
             transientFifo[i + pos] += transientSpec[i];
-            steadyFifo[i + pos] += steadySpec[i];
         }
     }
 
@@ -166,8 +167,6 @@ namespace zlSplitter {
             const auto binMask = allMask * currentSmooth + mask[i] * (1.f - currentSmooth);
             transientSpec[i1] = fftDatas[fftDataPos][i1] * binMask;
             transientSpec[i2] = fftDatas[fftDataPos][i2] * binMask;
-            steadySpec[i1] = fftDatas[fftDataPos][i1] * (1.f - binMask);
-            steadySpec[i2] = fftDatas[fftDataPos][i2] * (1.f - binMask);
         }
     }
 

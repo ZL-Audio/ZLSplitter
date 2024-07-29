@@ -16,6 +16,7 @@
 #include <juce_dsp/juce_dsp.h>
 
 #include "../../median_filter/median_filter.hpp"
+#include "../../delay/delay.hpp"
 
 namespace zlSplitter {
     /**
@@ -63,6 +64,7 @@ namespace zlSplitter {
         static constexpr size_t timeMedianWindowsSize = 5;
         static constexpr size_t timeHalfMedianWindowsSize = timeMedianWindowsSize / 2;
         juce::AudioBuffer<FloatType> tBuffer, sBuffer;
+        zlDelay::FIFODelay<FloatType> delay;
         // FFT parameters
         std::unique_ptr<juce::dsp::FFT> fft;
         std::unique_ptr<juce::dsp::WindowingFunction<float> > window;
@@ -79,7 +81,7 @@ namespace zlSplitter {
         size_t pos = 0;
         // circular buffers for incoming and outgoing audio data.
         std::vector<float> inputFifo;
-        std::vector<float> transientFifo, steadyFifo;
+        std::vector<float> transientFifo;
         // circular FFT working space which contains interleaved complex numbers.
         size_t fftDataPos = 0;
         std::array<std::vector<float>, timeHalfMedianWindowsSize + 1> fftDatas;
@@ -90,7 +92,7 @@ namespace zlSplitter {
         // portion holders
         std::vector<float> mask;
         // transient and steady spectrum
-        std::vector<float> transientSpec, steadySpec;
+        std::vector<float> transientSpec;
         // seperation factor
         std::atomic<float> balance{5.f}, seperation{1.f}, hold{0.9f}, smooth{.5f};
         float currentBalance{0.f}, currentSeperation{0.f}, currentHold{0.f}, currentSmooth{0.f};

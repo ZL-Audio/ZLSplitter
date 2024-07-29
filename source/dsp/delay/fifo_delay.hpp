@@ -10,21 +10,27 @@
 #ifndef FIFODELAY_HPP
 #define FIFODELAY_HPP
 
-namespace zlReverseIIR {
+#include <juce_dsp/juce_dsp.h>
+
+namespace zlDelay {
     template<typename SampleType>
     class FIFODelay {
     public:
-        FIFODelay(const size_t maxDelay = 1) {
+        FIFODelay() {
+            setMaximumDelayInSamples(1);
+        }
+
+        explicit FIFODelay(const int maxDelay) {
             setMaximumDelayInSamples(maxDelay);
         }
 
-        void setMaximumDelayInSamples(const size_t x) {
+        void setMaximumDelayInSamples(const int x) {
             maximumDelay = x;
-            states.resize(x);
+            states.resize(static_cast<size_t>(x));
             reset();
         }
 
-        void setDelay(const size_t x) {
+        void setDelay(const int x) {
             numDelay = x;
         }
 
@@ -34,16 +40,16 @@ namespace zlReverseIIR {
         }
 
         SampleType push(SampleType x) {
-            const auto current = states[pos];
-            states[pos] = x;
+            const auto current = states[static_cast<size_t>(pos)];
+            states[static_cast<size_t>(pos)] = x;
             pos = (pos + 1) % numDelay;
             return current;
         }
 
     private:
-        size_t maximumDelay, numDelay;
+        int maximumDelay{1}, numDelay{1};
         std::vector<SampleType> states;
-        size_t pos = 0;
+        int pos{0};
     };
 }
 

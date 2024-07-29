@@ -12,7 +12,7 @@
 
 #include <juce_dsp/juce_dsp.h>
 
-#include "fifo_delay.hpp"
+#include "../delay/delay.hpp"
 
 namespace zlReverseIIR {
     /**
@@ -72,8 +72,8 @@ namespace zlReverseIIR {
                 int numDelay = 1;
                 delay.resize(numStage + 1);
                 for (size_t i = 0; i < numStage + 1; ++i) {
-                    delay[i].setMaximumDelayInSamples(static_cast<size_t>(numDelay));
-                    delay[i].setDelay(static_cast<size_t>(numDelay));
+                    delay[i].setMaximumDelayInSamples(numDelay);
+                    delay[i].setDelay(numDelay);
                     numDelay *= 2;
                 }
             }
@@ -82,8 +82,8 @@ namespace zlReverseIIR {
                 int numDelay = 1;
                 delay.resize(numStage + 1);
                 for (size_t i = 0; i < numStage + 1; ++i) {
-                    delay[i].setMaximumDelayInSamples(static_cast<size_t>(numDelay));
-                    delay[i].setDelay(static_cast<size_t>(numDelay));
+                    delay[i].setMaximumDelayInSamples(numDelay);
+                    delay[i].setDelay(numDelay);
                     numDelay *= 2;
                 }
             }
@@ -121,7 +121,7 @@ namespace zlReverseIIR {
 
     private:
         size_t numStage{0};
-        std::vector<std::vector<FIFODelay<SampleType> > > uDelays, vDelays;
+        std::vector<std::vector<zlDelay::FIFODelay<SampleType> > > uDelays, vDelays;
         std::vector<SampleType> as, bs;
         SampleType aB;
         std::vector<std::vector<SampleType> > us, vs;
@@ -137,8 +137,8 @@ namespace zlReverseIIR {
                     v.resize(static_cast<size_t>(block.getNumSamples()));
                 }
 
-                std::vector<FIFODelay<SampleType> > &uDelay(uDelays[channel]);
-                std::vector<FIFODelay<SampleType> > &vDelay(vDelays[channel]);
+                std::vector<zlDelay::FIFODelay<SampleType> > &uDelay(uDelays[channel]);
+                std::vector<zlDelay::FIFODelay<SampleType> > &vDelay(vDelays[channel]);
 
                 auto currentBlock = block.getSingleChannelBlock(channel);
                 for (size_t index = 0; index < static_cast<size_t>(block.getNumSamples()); ++index) {

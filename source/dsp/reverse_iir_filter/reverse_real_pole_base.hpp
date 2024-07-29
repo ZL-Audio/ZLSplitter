@@ -12,7 +12,7 @@
 
 #include <juce_dsp/juce_dsp.h>
 
-#include "fifo_delay.hpp"
+#include "../delay/delay.hpp"
 
 namespace zlReverseIIR {
     /**
@@ -46,8 +46,8 @@ namespace zlReverseIIR {
                 int numDelay = 1;
                 delay.resize(numStage + 1);
                 for (auto &d: delay) {
-                    d.setMaximumDelayInSamples(static_cast<size_t>(numDelay));
-                    d.setDelay(static_cast<size_t>(numDelay));
+                    d.setMaximumDelayInSamples(numDelay);
+                    d.setDelay(numDelay);
                     numDelay *= 2;
                 }
             }
@@ -60,7 +60,7 @@ namespace zlReverseIIR {
 
         void process(juce::dsp::AudioBlock<SampleType> block) {
             for (size_t channel = 0; channel < static_cast<size_t>(block.getNumChannels()); ++channel) {
-                std::vector<FIFODelay<SampleType> > &delay(delays[channel]);
+                std::vector<zlDelay::FIFODelay<SampleType> > &delay(delays[channel]);
                 auto currentBlock = block.getChannelPointer(channel);
                 for (int index = 0; index < static_cast<int>(block.getNumSamples()); ++index) {
                     for (size_t stage = 0; stage <= numStage; ++stage) {
@@ -85,7 +85,7 @@ namespace zlReverseIIR {
     private:
         size_t numStage{0};
 
-        std::vector<std::vector<FIFODelay<SampleType> > > delays;
+        std::vector<std::vector<zlDelay::FIFODelay<SampleType> > > delays;
         std::vector<SampleType> cs;
     };
 }
