@@ -71,7 +71,7 @@ namespace zlDSP {
     class splitType : public ChoiceParameters<splitType> {
     public:
         auto static constexpr ID = "split_type";
-        auto static constexpr name = "";
+        auto static constexpr name = "Split Type";
         inline auto static const choices = juce::StringArray{
             "Left Right", "Mid Side", "Low High", "Transient Steady"
         };
@@ -170,8 +170,8 @@ namespace zlDSP {
 
     class tsSeperation : public FloatParameters<tsSeperation> {
     public:
-        auto static constexpr ID = "ts_seperation";
-        auto static constexpr name = "Seperation";
+        auto static constexpr ID = "ts_strength";
+        auto static constexpr name = "Strength";
         inline auto static const range = juce::NormalisableRange<float>(0.f, 100.f, .1f);
         auto static constexpr defaultV = 50.f;
 

@@ -13,7 +13,7 @@
 //==============================================================================
 PluginProcessor::PluginProcessor()
     : AudioProcessor(BusesProperties()
-          .withInput("Input 1", juce::AudioChannelSet::stereo(), true)
+          .withInput("Input", juce::AudioChannelSet::stereo(), true)
           .withOutput("Output 1", juce::AudioChannelSet::stereo(), true)
           .withOutput("Output 2", juce::AudioChannelSet::stereo(), true)),
       parameters(*this, nullptr,

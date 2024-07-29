@@ -12,7 +12,7 @@
 namespace zlPanel {
     TSPanel::TSPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base)
         : uiBase(base),
-          separationS("Separation", base),
+          separationS("Strength", base),
           balanceS("Balance", base),
           holdS("Hold", base),
           smoothS("Smooth", base) {
