@@ -58,9 +58,11 @@ namespace zlSplitter {
         FloatType currentFreq{FloatType(1000)};
         std::atomic<size_t> order{0};
         size_t currentOrder{0};
-        std::atomic<bool> toUpdate{false}, toReset{false};
+        std::atomic<bool> toUpdate{true}, toUpdateOrder{true}, toReset{false};
 
         void update();
+
+        void updateOrder();
 
         static constexpr double order2q = 0.7071067811865476; // np.sqrt(2) / 2
         static constexpr double order4q1 = 0.541196100146197; // 1 / (2 * np.cos(np.pi / 8))
