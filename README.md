@@ -4,9 +4,9 @@
 </p>
 
 # ZLSplitter
-![pluginval](<https://github.com/ZL-Audio/ZLSplit/actions/workflows/cmake_full_test.yml/badge.svg?branch=main>)
+![pluginval](<https://github.com/ZL-Audio/ZLSplitter/actions/workflows/cmake_full_test.yml/badge.svg?branch=main>)
 [![License](https://img.shields.io/badge/License-GPL3-blue.svg)](https://opensource.org/licenses/GPL-3.0)
-[![Downloads](https://img.shields.io/github/downloads/ZL-Audio/ZLSplit/total)](https://somsubhra.github.io/github-release-stats/?username=ZL-Audio&repository=ZLSplit&page=1&per_page=30)
+[![Downloads](https://img.shields.io/github/downloads/ZL-Audio/ZLSplitter/total)](https://somsubhra.github.io/github-release-stats/?username=ZL-Audio&repository=ZLSplitter&page=1&per_page=30)
 
 ZLSplitter is a splitter plugin.
 
@@ -14,7 +14,7 @@ ZLSplitter is a splitter plugin.
  
 ## Usage
 
-See the wiki for details.
+See the [manual](https://zl-audio.github.io/plugins/zlsplitter/) for details.
 
 ## Download
 
@@ -33,6 +33,8 @@ See the releases for the latest version.
 2. Populate all submodules by running `git submodule update --init` in your repository directory.
 
 3. Follow the [JUCE CMake API](https://github.com/juce-framework/JUCE/blob/master/docs/CMake%20API.md) to build the source.
+
+For more details, please refer to the corresponding [Github action workflows](.github/workflows/cmake_release.yml).
 
 ## License
 
