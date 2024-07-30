@@ -15,12 +15,11 @@
 #include "../../interface_definitions.hpp"
 
 namespace zlInterface {
-    class CompactComboboxLookAndFeel : public juce::LookAndFeel_V4 {
+    class CompactComboboxLookAndFeel final : public juce::LookAndFeel_V4 {
     public:
         // rounded menu box
-        explicit CompactComboboxLookAndFeel(UIBase &base) {
-            uiBase = &base;
-            setColour(juce::PopupMenu::backgroundColourId, uiBase->getBackgroundInactiveColor());
+        explicit CompactComboboxLookAndFeel(UIBase &base) : uiBase(base) {
+            setColour(juce::PopupMenu::backgroundColourId, uiBase.getBackgroundColor().withAlpha(0.f));
         }
 
         void drawComboBox(juce::Graphics &g, int width, int height, bool isButtonDown, int, int, int, int,
@@ -29,23 +28,23 @@ namespace zlInterface {
             const auto boxBounds = juce::Rectangle<float>(0, 0,
                                                           static_cast<float>(width),
                                                           static_cast<float>(height));
-            const auto cornerSize = uiBase->getFontSize() * 0.375f;
+            const auto cornerSize = uiBase.getFontSize() * 0.375f;
             if (isButtonDown || box.isPopupActive()) {
-                g.setColour(uiBase->getTextInactiveColor());
+                g.setColour(uiBase.getTextInactiveColor());
                 g.fillRoundedRectangle(boxBounds, cornerSize);
             } else {
-                uiBase->fillRoundedInnerShadowRectangle(g, boxBounds, cornerSize,
-                                                        {
-                                                            .blurRadius = 0.45f, .flip = true,
-                                                            .mainColour = uiBase->getBackgroundColor().
-                                                            withMultipliedAlpha(
-                                                                juce::jlimit(.25f, .5f, boxAlpha.load())),
-                                                            .darkShadowColor = uiBase->getDarkShadowColor().
-                                                            withMultipliedAlpha(boxAlpha.load()),
-                                                            .brightShadowColor = uiBase->getBrightShadowColor().
-                                                            withMultipliedAlpha(boxAlpha.load()),
-                                                            .changeMain = true, .changeDark = true, .changeBright = true
-                                                        });
+                uiBase.fillRoundedInnerShadowRectangle(g, boxBounds, cornerSize,
+                                                       {
+                                                           .blurRadius = 0.45f, .flip = true,
+                                                           .mainColour = uiBase.getBackgroundColor().
+                                                           withMultipliedAlpha(
+                                                               juce::jlimit(.25f, .5f, boxAlpha.load())),
+                                                           .darkShadowColor = uiBase.getDarkShadowColor().
+                                                           withMultipliedAlpha(boxAlpha.load()),
+                                                           .brightShadowColor = uiBase.getBrightShadowColor().
+                                                           withMultipliedAlpha(boxAlpha.load()),
+                                                           .changeMain = true, .changeDark = true, .changeBright = true
+                                                       });
             }
         }
 
@@ -55,26 +54,26 @@ namespace zlInterface {
 
         void drawLabel(juce::Graphics &g, juce::Label &label) override {
             if (editable.load()) {
-                g.setColour(uiBase->getTextColor());
+                g.setColour(uiBase.getTextColor());
             } else {
-                g.setColour(uiBase->getTextInactiveColor());
+                g.setColour(uiBase.getTextInactiveColor());
             }
-            g.setFont(uiBase->getFontSize() * fontScale);
+            g.setFont(uiBase.getFontSize() * fontScale);
             g.drawText(label.getText(), label.getLocalBounds(), juce::Justification::centred);
         }
 
         void drawPopupMenuBackground(juce::Graphics &g, int width, int height) override {
-            const auto cornerSize = uiBase->getFontSize() * 0.375f;
+            const auto cornerSize = uiBase.getFontSize() * 0.375f;
             const auto boxBounds = juce::Rectangle<float>(0, 0, static_cast<float>(width),
                                                           static_cast<float>(height));
-            uiBase->fillRoundedInnerShadowRectangle(g, boxBounds, cornerSize, {.blurRadius = 0.45f, .flip = true});
+            uiBase.fillRoundedInnerShadowRectangle(g, boxBounds, cornerSize, {.blurRadius = 0.45f, .flip = true});
         }
 
         void getIdealPopupMenuItemSize(const juce::String &text, const bool isSeparator, int standardMenuItemHeight,
                                        int &idealWidth, int &idealHeight) override {
             juce::ignoreUnused(text, isSeparator, standardMenuItemHeight);
             idealWidth = static_cast<int>(0);
-            idealHeight = static_cast<int>(uiBase->getFontSize() * fontScale * 1.2f);
+            idealHeight = static_cast<int>(uiBase.getFontSize() * fontScale * 1.2f);
         }
 
         void drawPopupMenuItem(juce::Graphics &g, const juce::Rectangle<int> &area,
@@ -85,14 +84,14 @@ namespace zlInterface {
                                const juce::Colour *const textColourToUse) override {
             juce::ignoreUnused(isSeparator, hasSubMenu, shortcutKeyText, icon, textColourToUse);
             if ((isHighlighted || isTicked) && isActive && editable) {
-                g.setColour(uiBase->getTextColor());
+                g.setColour(uiBase.getTextColor());
             } else if (!isActive) {
-                g.setColour(uiBase->getTextInactiveColor().withMultipliedAlpha(.25f));
+                g.setColour(uiBase.getTextInactiveColor().withMultipliedAlpha(.25f));
             } else {
-                g.setColour(uiBase->getTextInactiveColor());
+                g.setColour(uiBase.getTextInactiveColor());
             }
-            if (uiBase->getFontSize() > 0) {
-                g.setFont(uiBase->getFontSize() * fontScale);
+            if (uiBase.getFontSize() > 0) {
+                g.setFont(uiBase.getFontSize() * fontScale);
             } else {
                 g.setFont(static_cast<float>(area.getHeight()) * 0.35f);
             }
@@ -104,7 +103,7 @@ namespace zlInterface {
         }
 
         int getPopupMenuBorderSize() override {
-            return juce::roundToInt(uiBase->getFontSize() * 0.125f);
+            return juce::roundToInt(uiBase.getFontSize() * 0.125f);
         }
 
         inline void setEditable(const bool f) { editable.store(f); }
@@ -115,11 +114,24 @@ namespace zlInterface {
 
         inline float getBoxAlpha() const { return boxAlpha.load(); }
 
+        void setOption(const juce::PopupMenu::Options &x) { option = x; }
+
+        juce::PopupMenu::Options getOptionsForComboBoxPopupMenu(juce::ComboBox &box, juce::Label &label) override {
+            return option.withParentComponent(box.getTopLevelComponent()->getChildComponent(0))
+                    .withTargetComponent(&box)
+                    .withItemThatMustBeVisible(box.getSelectedId())
+                    .withInitiallySelectedItem(box.getSelectedId())
+                    .withMinimumWidth(box.getWidth())
+                    .withMaximumNumColumns(1)
+                    .withStandardItemHeight(label.getHeight());
+        }
+
     private:
         std::atomic<bool> editable = true;
         std::atomic<float> boxAlpha, fontScale = 1.5f;
+        juce::PopupMenu::Options option{};
 
-        UIBase *uiBase;
+        UIBase &uiBase;
     };
 }
 
