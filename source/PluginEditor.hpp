@@ -36,8 +36,11 @@ private:
     juce::Value lastUIWidth, lastUIHeight;
 
     constexpr const static std::array IDs{
-        zlState::windowW::ID,
-        zlState::windowH::ID,
+        zlState::windowW::ID, zlState::windowH::ID,
+        "text_r", "text_g", "text_b",
+        "background_r", "background_g", "background_b",
+        "shadow_r", "shadow_g", "shadow_b",
+        "glow_r", "glow_g", "glow_b",
         zlState::wheelSensitivity::ID, zlState::wheelFineSensitivity::ID,
         zlState::rotaryStyle::ID, zlState::rotaryDragSensitivity::ID
     };
