@@ -34,7 +34,7 @@ namespace zlPanel {
         zlInterface::CompactFigureCombobox splitBox;
 
         juce::OwnedArray<juce::AudioProcessorValueTreeState::ButtonAttachment> buttonAttachments;
-        juce::OwnedArray<juce::AudioProcessorValueTreeState::ComboBoxAttachment> boxAttachments;
+        zlInterface::ComboBoxSubAttachment boxAttachment;
     };
 } // zlPanel
 

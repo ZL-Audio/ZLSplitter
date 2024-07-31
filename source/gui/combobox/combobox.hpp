@@ -14,5 +14,6 @@
 #include "compact_figure_combobox/compact_figure_combobox.hpp"
 #include "left_right_combobox/left_right_combobox.hpp"
 #include "click_combobox/click_combobox.hpp"
+#include "combobox_sub_attachment.hpp"
 
 #endif //ZLINTERFACE_COMBOBOX_H

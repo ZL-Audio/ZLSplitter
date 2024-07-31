@@ -33,6 +33,7 @@ namespace zlDSP {
 
     void ControllerAttach::parameterChanged(const juce::String &parameterID, float newValue) {
         if (parameterID == splitType::ID) {
+            newValue = std::min(newValue, static_cast<float>(splitType::tsteady));
             controllerRef.setType(static_cast<splitType::stype>(newValue));
             triggerAsyncUpdate();
         } else if (parameterID == mix::ID) {
