@@ -60,6 +60,12 @@ namespace zlPanel {
                 tsPanel.setVisible(true);
                 break;
             }
+            case zlDSP::splitType::numSplit: {
+                lrPanel.setVisible(false);
+                lhPanel.setVisible(false);
+                tsPanel.setVisible(false);
+                break;
+            }
         }
     }
 } // zlPanel

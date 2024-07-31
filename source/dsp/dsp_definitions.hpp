@@ -78,7 +78,7 @@ namespace zlDSP {
         int static constexpr defaultI = 0;
 
         enum stype {
-            lright, mside, lhigh, tsteady
+            lright, mside, lhigh, tsteady, numSplit
         };
     };
 

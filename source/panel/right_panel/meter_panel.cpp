@@ -79,6 +79,11 @@ namespace zlPanel {
                 text2 = "Steady";
                 break;
             }
+            case zlDSP::splitType::stype::numSplit: {
+                text1 = "";
+                text2 = "";
+                break;
+            }
         }
         if (!swap.load()) {
             label1.setText(text1, juce::sendNotification);

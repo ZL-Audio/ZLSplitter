@@ -80,8 +80,9 @@ namespace zlDSP {
                 case splitType::tsteady: {
                     return tsSplitters[0].getLatency();
                 }
-                default:
+                case splitType::numSplit: {
                     return 0;
+                }
             }
         }
 

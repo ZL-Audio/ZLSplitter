@@ -53,6 +53,7 @@ namespace zlDSP {
                 processTS(buffer);
                 break;
             }
+            case splitType::numSplit: {}
         }
 
         const juce::dsp::AudioBlock<double> block{buffer};
@@ -95,6 +96,9 @@ namespace zlDSP {
                         internalBlock.getSubsetChannelBlock(2, 2));
                 }
                 break;
+            }
+            case splitType::numSplit: {
+                buffer.clear();
             }
         }
 
