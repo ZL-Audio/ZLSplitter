@@ -10,8 +10,10 @@
 
 ZLSplitter is a splitter plugin.
 
-<a href=""><img src="https://drive.google.com/uc?export=view&id=1tIUlmsWHyQXsIKHtnVANe4cnloAgyXp5" style="width: 280px; max-width: 100%; height: auto" title="Click to enlarge picture" />
- 
+A short intro video is available at [here](https://www.youtube.com/watch?v=-RVm9mbbQtA).
+
+<img src="https://drive.google.com/uc?export=view&id=1tIUlmsWHyQXsIKHtnVANe4cnloAgyXp5" style="width:240px; max-width: 100%; height: auto"/>
+
 ## Usage
 
 See the [manual](https://zl-audio.github.io/plugins/zlsplitter/) for details.
