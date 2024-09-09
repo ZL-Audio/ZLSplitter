@@ -24,9 +24,12 @@ namespace zlPanel {
                                                      BinaryData::lowhigh_svgSize)),
           tsIcon(juce::Drawable::createFromImageData(BinaryData::transientsteady_svg,
                                                      BinaryData::transientsteady_svgSize)),
+          psIcon(juce::Drawable::createFromImageData(BinaryData::peaksteady_svg,
+                                                     BinaryData::peaksteady_svgSize)),
           swapButton("", base),
-          splitBox({lrIcon.get(), msIcon.get(), lhIcon.get(), tsIcon.get()}, base),
-          boxAttachment(processor.parameters, zlDSP::splitType::ID, splitBox.getBox(), zlDSP::splitType::choices.size()) {
+          splitBox({lrIcon.get(), msIcon.get(), lhIcon.get(), tsIcon.get(), psIcon.get()}, base),
+          boxAttachment(processor.parameters, zlDSP::splitType::ID, splitBox.getBox(),
+                        zlDSP::splitType::choices.size()) {
         attach({&swapButton.getButton()}, {zlDSP::swap::ID}, processor.parameters, buttonAttachments);
         addAndMakeVisible(logoPanel);
 

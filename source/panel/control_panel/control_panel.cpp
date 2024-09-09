@@ -60,6 +60,7 @@ namespace zlPanel {
                 tsPanel.setVisible(true);
                 break;
             }
+            case zlDSP::splitType::psteady:
             case zlDSP::splitType::numSplit: {
                 lrPanel.setVisible(false);
                 lhPanel.setVisible(false);

@@ -97,6 +97,9 @@ namespace zlDSP {
                 }
                 break;
             }
+            case splitType::psteady: {
+                buffer.clear();
+            }
             case splitType::numSplit: {
                 buffer.clear();
             }

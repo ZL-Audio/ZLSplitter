@@ -79,6 +79,11 @@ namespace zlPanel {
                 text2 = "Steady";
                 break;
             }
+            case zlDSP::splitType::stype::psteady: {
+                text1 = "Peak";
+                text2 = "Steady";
+                break;
+            }
             case zlDSP::splitType::stype::numSplit: {
                 text1 = "";
                 text2 = "";

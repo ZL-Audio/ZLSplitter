@@ -28,7 +28,7 @@ namespace zlPanel {
     private:
         LogoPanel logoPanel;
 
-        const std::unique_ptr<juce::Drawable> swapIcon, lrIcon, msIcon, lhIcon, tsIcon;
+        const std::unique_ptr<juce::Drawable> swapIcon, lrIcon, msIcon, lhIcon, tsIcon, psIcon;
 
         zlInterface::CompactButton swapButton;
         zlInterface::CompactFigureCombobox splitBox;
