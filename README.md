@@ -5,7 +5,7 @@
 
 # ZLSplitter
 ![pluginval](<https://github.com/ZL-Audio/ZLSplitter/actions/workflows/cmake_full_test.yml/badge.svg?branch=main>)
-[![License](https://img.shields.io/badge/License-GPL3-blue.svg)](https://opensource.org/licenses/GPL-3.0)
+[![License](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://opensource.org/license/agpl-v3)
 [![Downloads](https://img.shields.io/github/downloads/ZL-Audio/ZLSplitter/total)](https://somsubhra.github.io/github-release-stats/?username=ZL-Audio&repository=ZLSplitter&page=1&per_page=30)
 
 ZLSplitter is a splitter plugin.
@@ -40,7 +40,7 @@ For more details, please refer to the corresponding [Github action workflows](.g
 
 ## License
 
-ZLSplitter is licensed under GPLv3, as found in the [LICENSE.md](LICENSE.md) file.
+ZLSplitter is licensed under AGPLv3, as found in the [LICENSE.md](LICENSE.md) file.
 
 Copyright (c) 2024 - [zsliu98](https://github.com/zsliu98)
 
