@@ -134,12 +134,9 @@ jobs:
         env:
           p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
 
-      - name: Cache the build
-        uses: mozilla-actions/sccache-action@v0.0.7
-
       - name: Configure
         shell: bash
-        run: cmake -B ${{ env.BUILD_DIR }} -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ${{ matrix.cmake_extra_flags }} .
+        run: cmake -B ${{ env.BUILD_DIR }} -G Ninja -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} ${{ matrix.cmake_extra_flags }} .
         env:
           PLUGIN_OS_FORMAT: ${{ matrix.plugin_os_format }}
 
