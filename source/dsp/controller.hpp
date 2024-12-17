@@ -26,7 +26,7 @@ namespace zlDSP {
         void process(juce::AudioBuffer<double> &buffer);
 
         void setType(const splitType::stype x) {
-            splitType.store(x);
+            mSplitType.store(x);
         }
 
         void setMix(const double x) {
@@ -64,7 +64,7 @@ namespace zlDSP {
         zlMeter::SingleMeter<double> &getMeter2() { return meter2; }
 
         inline int getLatency() const {
-            switch (splitType.load()) {
+            switch (mSplitType.load()) {
                 case splitType::lright:
                 case splitType::mside: {
                     return 0;
@@ -90,7 +90,7 @@ namespace zlDSP {
         }
 
     private:
-        std::atomic<splitType::stype> splitType;
+        std::atomic<splitType::stype> mSplitType;
         std::atomic<lhFilterType::ftype> lhFilterType;
         zlSplitter::LRSplitter<double> lrSplitter;
         zlSplitter::MSSplitter<double> msSplitter;

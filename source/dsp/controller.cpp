@@ -36,7 +36,7 @@ namespace zlDSP {
 
     void Controller::process(juce::AudioBuffer<double> &buffer) {
         internalBuffer.setSize(4, buffer.getNumSamples(), false, false, true);
-        switch (splitType.load()) {
+        switch (mSplitType.load()) {
             case splitType::lright: {
                 processLR(buffer);
                 break;
@@ -53,13 +53,14 @@ namespace zlDSP {
                 processTS(buffer);
                 break;
             }
+            case splitType::psteady: {}
             case splitType::numSplit: {}
         }
 
         const juce::dsp::AudioBlock<double> block{buffer};
         const juce::dsp::AudioBlock<double> internalBlock{internalBuffer};
 
-        switch (splitType.load()) {
+        switch (mSplitType.load()) {
             case splitType::lright:
             case splitType::mside:
             case splitType::lhigh: {
