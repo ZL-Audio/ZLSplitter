@@ -1,11 +1,11 @@
 // Copyright (C) 2024 - zsliu98
 // This file is part of ZLSplitter
 //
-// ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+// ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
 //
-// ZLSplitter is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+// ZLSplitter is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
 #ifndef ZLSPLIT_DSP_DEFINITIONS_HPP
 #define ZLSPLIT_DSP_DEFINITIONS_HPP
@@ -73,7 +73,7 @@ namespace zlDSP {
         auto static constexpr ID = "split_type";
         auto static constexpr name = "Split Type";
         inline auto static const choices = juce::StringArray{
-            "Left Right", "Mid Side", "Low High", "Transient Steady", "", "", "", ""
+            "Left Right", "Mid Side", "Low High", "Transient Steady", "Peak Steady"
         };
         int static constexpr defaultI = 0;
 

@@ -7,29 +7,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef MAIN_PANEL_HPP
-#define MAIN_PANEL_HPP
+#ifndef PS_SPLITTER_HPP
+#define PS_SPLITTER_HPP
 
-#include "right_panel/meter_panel.hpp"
-#include "top_panel/top_panel.hpp"
-#include "control_panel/control_panel.hpp"
+namespace zlSplitter {
 
-namespace zlPanel {
-    class MainPanel final : public juce::Component {
-    public:
-        explicit MainPanel(PluginProcessor &processor);
+class PSSplitter {
 
-        void paint(juce::Graphics &g) override;
+};
 
-        void resized() override;
+} // zlSplitter
 
-    private:
-        zlInterface::UIBase uiBase;
-        UISettingPanel uiPanel;
-        TopPanel topPanel;
-        ControlPanel controlPanel;
-        MeterPanel meterPanel;
-    };
-} // zlPanel
-
-#endif //MAIN_PANEL_HPP
+#endif //PS_SPLITTER_HPP
