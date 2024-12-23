@@ -7,25 +7,27 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef TS_PANEL_HPP
-#define TS_PANEL_HPP
+#ifndef PS_PANEL_HPP
+#define PS_PANEL_HPP
 
 #include "../../dsp/dsp.hpp"
 #include "../../gui/gui.hpp"
 #include "../panel_definitons.hpp"
 
 namespace zlPanel {
-    class TSPanel final : public juce::Component {
+
+    class PSPanel final : public juce::Component {
     public:
-        explicit TSPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base);
+        explicit PSPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base);
 
         void resized() override;
 
     private:
         zlInterface::UIBase &uiBase;
-        zlInterface::CompactLinearSlider separationS, balanceS, holdS, smoothS;
+        zlInterface::CompactLinearSlider mixS, balanceS, holdS, smoothS;
         juce::OwnedArray<juce::AudioProcessorValueTreeState::SliderAttachment> sliderAttachments;
     };
+
 } // zlPanel
 
-#endif //TS_PANEL_HPP
+#endif //PS_PANEL_HPP

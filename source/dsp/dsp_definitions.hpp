@@ -168,10 +168,46 @@ namespace zlDSP {
         }
     };
 
-    class tsSeperation : public FloatParameters<tsSeperation> {
+    class tsSeparation : public FloatParameters<tsSeparation> {
     public:
         auto static constexpr ID = "ts_strength";
         auto static constexpr name = "Strength";
+        inline auto static const range = juce::NormalisableRange<float>(0.f, 100.f, .1f);
+        auto static constexpr defaultV = 50.f;
+
+        inline static float formatV(const float x) {
+            return x / 100.f;
+        }
+    };
+
+    class psBalance : public FloatParameters<psBalance> {
+    public:
+        auto static constexpr ID = "ps_balance";
+        auto static constexpr name = "Balance";
+        inline auto static const range = juce::NormalisableRange<float>(-50.f, 50.f, .1f);
+        auto static constexpr defaultV = 0.f;
+
+        inline static float formatV(const float x) {
+            return x / 100.f + .5f;
+        }
+    };
+
+    class psSmooth : public FloatParameters<psSmooth> {
+    public:
+        auto static constexpr ID = "ps_smooth";
+        auto static constexpr name = "Smooth";
+        inline auto static const range = juce::NormalisableRange<float>(0.f, 100.f, .1f);
+        auto static constexpr defaultV = 50.f;
+
+        inline static float formatV(const float x) {
+            return x / 100.f;
+        }
+    };
+
+    class psHold : public FloatParameters<psHold> {
+    public:
+        auto static constexpr ID = "ps_hold";
+        auto static constexpr name = "Hold";
         inline auto static const range = juce::NormalisableRange<float>(0.f, 100.f, .1f);
         auto static constexpr defaultV = 50.f;
 
@@ -184,7 +220,8 @@ namespace zlDSP {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(splitType::get(), mix::get(), swap::get(),
                    lhFilterType::get(), lhSlope::get(), lhFreq::get(),
-                   tsBalance::get(), tsSeperation::get(), tsHold::get(), tsSmooth::get());
+                   tsBalance::get(), tsSeparation::get(), tsHold::get(), tsSmooth::get(),
+                   psBalance::get(), psHold::get(), psSmooth::get());
         return layout;
     }
 }

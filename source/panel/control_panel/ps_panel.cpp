@@ -7,26 +7,26 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#include "ts_panel.hpp"
+#include "ps_panel.hpp"
 
 namespace zlPanel {
-    TSPanel::TSPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base)
+    PSPanel::PSPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base)
         : uiBase(base),
-          separationS("Strength", base),
+          mixS("Mix", base),
           balanceS("Balance", base),
           holdS("Hold", base),
           smoothS("Smooth", base) {
-        attach({&separationS.getSlider(), &balanceS.getSlider(), &holdS.getSlider(), &smoothS.getSlider()},
-               {zlDSP::tsSeparation::ID, zlDSP::tsBalance::ID, zlDSP::tsHold::ID, zlDSP::tsSmooth::ID},
+        attach({&mixS.getSlider(), &balanceS.getSlider(), &holdS.getSlider(), &smoothS.getSlider()},
+               {zlDSP::mix::ID, zlDSP::psBalance::ID, zlDSP::psHold::ID, zlDSP::psSmooth::ID},
                parameter, sliderAttachments);
-        for (auto &s: {&separationS, &balanceS, &holdS, &smoothS}) {
+        for (auto &s: {&mixS, &balanceS, &holdS, &smoothS}) {
             s->setFontScale(1.125f, 1.125f);
             addAndMakeVisible(s);
         }
     }
 
-    void TSPanel::resized() {
-        for (auto &s: {&separationS, &balanceS, &holdS, &smoothS}) {
+    void PSPanel::resized() {
+        for (auto &s: {&mixS, &balanceS, &holdS, &smoothS}) {
             s->setPadding(uiBase.getFontSize() * 1.f, uiBase.getFontSize() * .5f);
         }
 
@@ -41,7 +41,7 @@ namespace zlPanel {
             Track(Fr(1))
         };
         grid.items = {
-            juce::GridItem(separationS).withArea(1, 1),
+            juce::GridItem(mixS).withArea(1, 1),
             juce::GridItem(balanceS).withArea(2, 1),
             juce::GridItem(holdS).withArea(3, 1),
             juce::GridItem(smoothS).withArea(4, 1),

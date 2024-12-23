@@ -32,14 +32,16 @@ namespace zlDSP {
         constexpr static std::array IDs{
             splitType::ID, mix::ID, swap::ID,
             lhFilterType::ID, lhSlope::ID, lhFreq::ID,
-            tsBalance::ID, tsSeperation::ID, tsHold::ID, tsSmooth::ID
+            tsSeparation::ID, tsBalance::ID, tsHold::ID, tsSmooth::ID,
+            psBalance::ID, psHold::ID, psSmooth::ID
         };
 
         constexpr static std::array defaultVs{
             static_cast<float>(splitType::defaultI),
             mix::defaultV, static_cast<float>(swap::defaultV),
             static_cast<float>(lhFilterType::defaultI), static_cast<float>(lhSlope::defaultI), lhFreq::defaultV,
-            tsBalance::defaultV, tsSeperation::defaultV, tsHold::defaultV, tsSmooth::defaultV
+            tsSeparation::defaultV, tsBalance::defaultV, tsHold::defaultV, tsSmooth::defaultV,
+            psBalance::defaultV, psHold::defaultV, psSmooth::defaultV
         };
 
         void parameterChanged(const juce::String &parameterID, float newValue) override;

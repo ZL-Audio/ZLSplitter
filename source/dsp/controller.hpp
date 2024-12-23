@@ -31,6 +31,8 @@ namespace zlDSP {
 
         void setMix(const double x) {
             mix.store(x);
+            psSplitters[0].setMix(x);
+            psSplitters[1].setMix(x);
         }
 
         void setLHFilterType(const lhFilterType::ftype x) {
@@ -55,6 +57,10 @@ namespace zlDSP {
 
         zlSplitter::TSSplitter<double> &getTSSplitter(const size_t i) {
             return tsSplitters[i];
+        }
+
+        zlSplitter::PSSplitter<double> &getPSSplitter(const size_t i) {
+            return psSplitters[i];
         }
 
         void setSwap(const bool x) { swap.store(x); }
@@ -97,6 +103,7 @@ namespace zlDSP {
         zlSplitter::LHSplitter<double> lhSplitter;
         zlSplitter::LHLinearSplitter<double> lhLinearSplitter;
         std::array<zlSplitter::TSSplitter<double>, 2> tsSplitters;
+        std::array<zlSplitter::PSSplitter<double>, 2> psSplitters;
         std::atomic<double> mix{0.0};
         double currentMix{0.0};
         juce::SmoothedValue<double> currentMixSmooth{0.0};
@@ -113,6 +120,8 @@ namespace zlDSP {
         void processLH(juce::AudioBuffer<double> &buffer);
 
         void processTS(juce::AudioBuffer<double> &buffer);
+
+        void processPS(juce::AudioBuffer<double> &buffer);
     };
 } // zlDSP
 

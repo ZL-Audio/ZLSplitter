@@ -25,6 +25,8 @@ namespace zlDSP {
         lhLinearSplitter.prepare(spec);
         tsSplitters[0].prepare(spec);
         tsSplitters[1].prepare(spec);
+        psSplitters[0].prepare(spec);
+        psSplitters[1].prepare(spec);
 
         currentMixSmooth.reset(spec.sampleRate, 0.01);
 
@@ -53,8 +55,12 @@ namespace zlDSP {
                 processTS(buffer);
                 break;
             }
-            case splitType::psteady: {}
-            case splitType::numSplit: {}
+            case splitType::psteady: {
+                processPS(buffer);
+                break;
+            }
+            case splitType::numSplit: {
+            }
         }
 
         const juce::dsp::AudioBlock<double> block{buffer};
@@ -89,7 +95,8 @@ namespace zlDSP {
                 }
                 break;
             }
-            case splitType::tsteady: {
+            case splitType::tsteady:
+            case splitType::psteady: {
                 block.getSubsetChannelBlock(0, 2).copyFrom(
                     internalBlock.getSubsetChannelBlock(0, 2));
                 if (block.getNumChannels() >= 4) {
@@ -97,9 +104,6 @@ namespace zlDSP {
                         internalBlock.getSubsetChannelBlock(2, 2));
                 }
                 break;
-            }
-            case splitType::psteady: {
-                buffer.clear();
             }
             case splitType::numSplit: {
                 buffer.clear();
@@ -195,6 +199,33 @@ namespace zlDSP {
             block.getSingleChannelBlock(1).copyFrom(rSteadyBlock);
             block.getSingleChannelBlock(2).copyFrom(lTransientBlock);
             block.getSingleChannelBlock(3).copyFrom(rTransientBlock);
+        }
+    }
+
+    void Controller::processPS(juce::AudioBuffer<double> &buffer) {
+        juce::AudioBuffer<double> lBuffer{buffer.getArrayOfWritePointers(), 1, buffer.getNumSamples()};
+        juce::AudioBuffer<double> rBuffer{buffer.getArrayOfWritePointers() + 1, 1, buffer.getNumSamples()};
+        psSplitters[0].split(lBuffer);
+        psSplitters[1].split(rBuffer);
+
+        const auto block = juce::dsp::AudioBlock<double>(internalBuffer);
+
+        const auto lPeakBlock = juce::dsp::AudioBlock<double>(psSplitters[0].getPBuffer());
+        const auto lSteadyBlock = juce::dsp::AudioBlock<double>(psSplitters[0].getSBuffer());
+
+        const auto rPeakBlock = juce::dsp::AudioBlock<double>(psSplitters[1].getPBuffer());
+        const auto rSteadyBlock = juce::dsp::AudioBlock<double>(psSplitters[1].getSBuffer());
+
+        if (!swap.load()) {
+            block.getSingleChannelBlock(0).copyFrom(lPeakBlock);
+            block.getSingleChannelBlock(1).copyFrom(rPeakBlock);
+            block.getSingleChannelBlock(2).copyFrom(lSteadyBlock);
+            block.getSingleChannelBlock(3).copyFrom(rSteadyBlock);
+        } else {
+            block.getSingleChannelBlock(0).copyFrom(lSteadyBlock);
+            block.getSingleChannelBlock(1).copyFrom(rSteadyBlock);
+            block.getSingleChannelBlock(2).copyFrom(lPeakBlock);
+            block.getSingleChannelBlock(3).copyFrom(rPeakBlock);
         }
     }
 } // zlDSP

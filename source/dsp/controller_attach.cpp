@@ -50,18 +50,27 @@ namespace zlDSP {
         } else if (parameterID == lhFreq::ID) {
             controllerRef.getLHSplitter().setFreq(static_cast<double>(newValue));
             controllerRef.getLHLinearSplitter().setFreq(static_cast<double>(newValue));
+        } else if (parameterID == tsSeparation::ID) {
+            controllerRef.getTSSplitter(0).setSeparation(tsSeparation::formatV(newValue));
+            controllerRef.getTSSplitter(1).setSeparation(tsSeparation::formatV(newValue));
         } else if (parameterID == tsBalance::ID) {
             controllerRef.getTSSplitter(0).setBalance(tsBalance::formatV(newValue));
             controllerRef.getTSSplitter(1).setBalance(tsBalance::formatV(newValue));
-        } else if (parameterID == tsSeperation::ID) {
-            controllerRef.getTSSplitter(0).setSeperation(tsSeperation::formatV(newValue));
-            controllerRef.getTSSplitter(1).setSeperation(tsSeperation::formatV(newValue));
-        } else if (parameterID == tsHold::ID) {
+        }  else if (parameterID == tsHold::ID) {
             controllerRef.getTSSplitter(0).setHold(tsHold::formatV(newValue));
             controllerRef.getTSSplitter(1).setHold(tsHold::formatV(newValue));
         } else if (parameterID == tsSmooth::ID) {
             controllerRef.getTSSplitter(0).setSmooth(tsSmooth::formatV(newValue));
             controllerRef.getTSSplitter(1).setSmooth(tsSmooth::formatV(newValue));
+        } else if (parameterID == psBalance::ID) {
+            controllerRef.getPSSplitter(0).setBalance(psBalance::formatV(newValue));
+            controllerRef.getPSSplitter(1).setBalance(psBalance::formatV(newValue));
+        }  else if (parameterID == psHold::ID) {
+            controllerRef.getPSSplitter(0).setHold(psHold::formatV(newValue));
+            controllerRef.getPSSplitter(1).setHold(psHold::formatV(newValue));
+        } else if (parameterID == psSmooth::ID) {
+            controllerRef.getPSSplitter(0).setSmooth(psSmooth::formatV(newValue));
+            controllerRef.getPSSplitter(1).setSmooth(psSmooth::formatV(newValue));
         }
     }
 

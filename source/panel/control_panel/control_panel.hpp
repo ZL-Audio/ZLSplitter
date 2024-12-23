@@ -15,6 +15,7 @@
 #include "lr_panel.hpp"
 #include "lh_panel.hpp"
 #include "ts_panel.hpp"
+#include "ps_panel.hpp"
 
 namespace zlPanel {
     class ControlPanel final : public juce::Component,
@@ -34,6 +35,7 @@ namespace zlPanel {
         LRPanel lrPanel;
         LHPanel lhPanel;
         TSPanel tsPanel;
+        PSPanel psPanel;
 
         std::atomic<int> splitType;
 

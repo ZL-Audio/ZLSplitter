@@ -99,10 +99,14 @@ void PluginProcessor::releaseResources() {
 }
 
 bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
+    if (layouts.getMainInputChannelSet() != juce::AudioChannelSet::stereo()) {
+        return false;
+    }
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()) {
         return false;
     }
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet()) {
+    const auto auxOut = layouts.getChannelSet(false, 1);
+    if (!auxOut.isDisabled() && auxOut != juce::AudioChannelSet::stereo()) {
         return false;
     }
     return true;

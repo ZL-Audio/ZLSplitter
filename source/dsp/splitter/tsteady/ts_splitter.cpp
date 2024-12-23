@@ -141,7 +141,7 @@ namespace zlSplitter {
             freqMedian.insert(magnitude[i]);
         }
         currentBalance = balance.load();
-        currentSeperation = seperation.load();
+        currentSaperation = separation.load();
         currentHold = hold.load();
         for (size_t i = 0; i < numBins - freqHalfMedianWindowsSize; ++i) {
             freqMedian.insert(magnitude[i + freqHalfMedianWindowsSize]);
@@ -158,7 +158,7 @@ namespace zlSplitter {
         // retrieve fft data
         currentSmooth = smooth.load();
         auto allMask = std::reduce(mask.begin(), mask.end()) / static_cast<float>(mask.size());
-        allMask = juce::jlimit(-.5f, .5f, (allMask - 0.5f) * std::sqrt(currentSeperation)) + .5f;
+        allMask = juce::jlimit(-.5f, .5f, (allMask - 0.5f) * std::sqrt(currentSaperation)) + .5f;
         fftDataPos = (fftDataPos + 1) % (timeHalfMedianWindowsSize + 1);
         // apply masks
         for (size_t i = 0; i < numBins; ++i) {
@@ -177,7 +177,7 @@ namespace zlSplitter {
         const auto tt = t * t;
         const auto ss = s * s;
         const auto p = tt / std::max(tt + ss, 0.00000001f);
-        return juce::jlimit(-.5f, .5f, (p - 0.5f) * currentSeperation) + .5f;
+        return juce::jlimit(-.5f, .5f, (p - 0.5f) * currentSaperation) + .5f;
     }
 
     template
