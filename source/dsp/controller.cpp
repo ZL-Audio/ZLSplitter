@@ -156,7 +156,7 @@ namespace zlDSP {
 
     void Controller::processLH(juce::AudioBuffer<double> &buffer) {
         juce::dsp::AudioBlock<double> lBlock, hBlock;
-        if (lhFilterType.load() == lhFilterType::svf) {
+        if (mLhFilterType.load() == lhFilterType::svf) {
             lhSplitter.split(buffer);
             lBlock = juce::dsp::AudioBlock<double>(lhSplitter.getLBuffer());
             hBlock = juce::dsp::AudioBlock<double>(lhSplitter.getHBuffer());

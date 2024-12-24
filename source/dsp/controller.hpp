@@ -36,7 +36,7 @@ namespace zlDSP {
         }
 
         void setLHFilterType(const lhFilterType::ftype x) {
-            lhFilterType.store(x);
+            mLhFilterType.store(x);
         }
 
         zlSplitter::LRSplitter<double> &getLRSplitter() {
@@ -76,7 +76,7 @@ namespace zlDSP {
                     return 0;
                 }
                 case splitType::lhigh: {
-                    switch (lhFilterType.load()) {
+                    switch (mLhFilterType.load()) {
                         case lhFilterType::svf:
                             return 0;
                         case lhFilterType::fir:
@@ -97,7 +97,7 @@ namespace zlDSP {
 
     private:
         std::atomic<splitType::stype> mSplitType;
-        std::atomic<lhFilterType::ftype> lhFilterType;
+        std::atomic<lhFilterType::ftype> mLhFilterType;
         zlSplitter::LRSplitter<double> lrSplitter;
         zlSplitter::MSSplitter<double> msSplitter;
         zlSplitter::LHSplitter<double> lhSplitter;
