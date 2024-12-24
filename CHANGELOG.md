@@ -4,6 +4,11 @@ LICENSE and CODE are available at [https://github.com/ZL-Audio/ZLSplitter](https
 
 # Changelog
 
+## 0.0.3
+
+- add peak/steady split
+- fix macOS compatibility issue
+
 ## 0.0.2
 
 - restrict popup-menu in the main editor
