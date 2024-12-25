@@ -64,7 +64,7 @@ namespace zlSplitter {
         currentBalance = std::pow(FloatType(10), FloatType(1) - balance.load());
         currentBalance = currentBalance * currentBalance;
         currentRelease = std::pow(FloatType(0.9) * cube(hold.load()) + FloatType(5e-2), FloatType(10) / sampleRate.load());
-        currentAttack = std::pow(FloatType(1e-4) * cube(attack.load()) + FloatType(1e-6) , FloatType(100) / sampleRate.load());
+        currentAttack = std::pow(FloatType(1e-4), (FloatType(500) - FloatType(450) * attack.load()) / sampleRate.load());
         currentAttackC = FloatType(1) - currentAttack;
         const auto currentSmooth = std::max(smooth.load(), FloatType(0.01));
         peakBufferSize = peakBuffer.capacity();
