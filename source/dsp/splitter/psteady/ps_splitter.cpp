@@ -16,7 +16,9 @@ namespace zlSplitter {
         sBuffer.setSize(1, static_cast<int>(spec.maximumBlockSize));
         sampleRate.store(static_cast<FloatType>(spec.sampleRate));
         peakBuffer.set_capacity(static_cast<size_t>(spec.sampleRate * .001));
+        peakBuffer.clear();
         steadyBuffer.set_capacity(static_cast<size_t>(spec.sampleRate * 1.));
+        steadyBuffer.clear();
         toUpdate.store(true);
     }
 
@@ -70,7 +72,7 @@ namespace zlSplitter {
         peakBufferSize = peakBuffer.capacity();
         peakBufferSizeInverse = FloatType(1) / static_cast<FloatType>(peakBufferSize);
         steadyBufferSize = static_cast<size_t>(currentSmooth * static_cast<FloatType>(steadyBuffer.capacity()));
-        steadyBufferSize = std::max(steadyBufferSize, size_t(1));
+        steadyBufferSize = std::max(steadyBufferSize, peakBufferSize);
         steadyBufferSizeInverse = FloatType(1) / static_cast<FloatType>(steadyBufferSize);
     }
 
