@@ -39,13 +39,13 @@ namespace zlSplitter {
 
         inline juce::AudioBuffer<FloatType> &getSBuffer() { return sBuffer; }
 
-        inline void setMix(const FloatType x) {
-            mix.store(x);
+        inline void setBalance(const FloatType x) {
+            balance.store(x);
             toUpdate.store(true);
         }
 
-        inline void setBalance(const FloatType x) {
-            balance.store(x);
+        inline void setAttack(const FloatType x) {
+            attack.store(x);
             toUpdate.store(true);
         }
 
@@ -61,17 +61,20 @@ namespace zlSplitter {
 
     private:
         juce::AudioBuffer<FloatType> pBuffer, sBuffer;
-        std::atomic<FloatType> mix{FloatType(0)}, balance{FloatType(0.5)}, hold{FloatType(0.5)}, smooth{FloatType(0.5)};
+        std::atomic<FloatType> attack{FloatType(0.5)}, balance{FloatType(0.5)}, hold{FloatType(0.5)}, smooth{FloatType(0.5)};
         std::atomic<FloatType> sampleRate{FloatType(48000)};
         std::atomic<bool> toUpdate{true};
-        FloatType currentMix{0}, currentMixC{1};
         FloatType currentBalance{}, currentRelease{}, currentAttack{}, currentAttackC{};
-        FloatType currentBufferSizeInverse{1};
-        size_t currentBufferSize{1};
-        FloatType squareSum{0}, mask{0};
-        zlContainer::CircularBuffer<FloatType> circularBuffer{1};
+        FloatType peakBufferSizeInverse{1}, steadyBufferSizeInverse{1};
+        size_t peakBufferSize{1}, steadyBufferSize{1};
+        FloatType peakSM{0}, steadySM{0}, mask{0};
+        zlContainer::CircularBuffer<FloatType> peakBuffer{1}, steadyBuffer{1};
 
         void updatePara();
+
+        inline static constexpr FloatType cube(const FloatType x) {
+            return x * x * x;
+        }
     };
 } // zlSplitter
 

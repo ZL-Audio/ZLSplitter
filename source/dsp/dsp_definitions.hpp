@@ -204,6 +204,18 @@ namespace zlDSP {
         }
     };
 
+    class psAttack : public FloatParameters<psAttack> {
+    public:
+        auto static constexpr ID = "ps_attack";
+        auto static constexpr name = "Attack";
+        inline auto static const range = juce::NormalisableRange<float>(0.f, 100.f, .1f);
+        auto static constexpr defaultV = 50.f;
+
+        inline static float formatV(const float x) {
+            return x / 100.f;
+        }
+    };
+
     class psHold : public FloatParameters<psHold> {
     public:
         auto static constexpr ID = "ps_hold";
@@ -221,7 +233,7 @@ namespace zlDSP {
         layout.add(splitType::get(), mix::get(), swap::get(),
                    lhFilterType::get(), lhSlope::get(), lhFreq::get(),
                    tsBalance::get(), tsSeparation::get(), tsHold::get(), tsSmooth::get(),
-                   psBalance::get(), psHold::get(), psSmooth::get());
+                   psBalance::get(), psAttack::get(), psHold::get(), psSmooth::get());
         return layout;
     }
 }

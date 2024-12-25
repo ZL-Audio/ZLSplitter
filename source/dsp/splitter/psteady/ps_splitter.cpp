@@ -15,7 +15,8 @@ namespace zlSplitter {
         pBuffer.setSize(1, static_cast<int>(spec.maximumBlockSize));
         sBuffer.setSize(1, static_cast<int>(spec.maximumBlockSize));
         sampleRate.store(static_cast<FloatType>(spec.sampleRate));
-        circularBuffer.set_capacity(static_cast<size_t>(spec.sampleRate * 1.));
+        peakBuffer.set_capacity(static_cast<size_t>(spec.sampleRate * .001));
+        steadyBuffer.set_capacity(static_cast<size_t>(spec.sampleRate * 1.));
         toUpdate.store(true);
     }
 
@@ -35,37 +36,42 @@ namespace zlSplitter {
         auto *pData = pBuffer.getWritePointer(0);
         auto *sData = sBuffer.getWritePointer(0);
         for (size_t i = 0; i < block.getNumSamples(); ++i) {
-            while (circularBuffer.size() >= currentBufferSize) {
-                squareSum = squareSum - circularBuffer.pop_front();
+            while (peakBuffer.size() >= peakBufferSize) {
+                peakSM = peakSM - peakBuffer.pop_front();
+            }
+            while (steadyBuffer.size() >= steadyBufferSize) {
+                steadySM = steadySM - steadyBuffer.pop_front();
             }
             const auto square = data[i] * data[i];
-            circularBuffer.push_back(square);
-            squareSum += square;
-            const auto currentThreshold = std::sqrt(squareSum * currentBufferSizeInverse) * currentBalance;
-            if (std::abs(data[i]) > currentThreshold) {
+            peakBuffer.push_back(square);
+            steadyBuffer.push_back(square);
+            peakSM += square;
+            steadySM += square;
+            const auto currentThreshold = steadySM * steadyBufferSizeInverse * currentBalance;
+            if (peakSM * peakBufferSizeInverse > currentThreshold) {
                 mask = mask * currentAttack + currentAttackC;
             } else {
                 mask *= currentRelease;
             }
             const auto peak = data[i] * mask;
-            const auto steady = data[i] - peak;
-            pData[i] = steady * currentMix + peak * currentMixC;
-            sData[i] = data[i] - pData[i];
+            pData[i] = peak;
+            sData[i] = data[i] - peak;
         }
     }
 
     template<typename FloatType>
     void PSSplitter<FloatType>::updatePara() {
-        currentMix = mix.load();
-        currentMixC = FloatType(1) - currentMix;
         currentBalance = std::pow(FloatType(10), FloatType(1) - balance.load());
-        currentRelease = std::pow(FloatType(0.9) * hold.load() + FloatType(0.01), FloatType(10) / sampleRate.load());
-        currentAttack = std::pow(FloatType(1e-5), FloatType(50) / sampleRate.load());
+        currentBalance = currentBalance * currentBalance;
+        currentRelease = std::pow(FloatType(0.9) * cube(hold.load()) + FloatType(5e-2), FloatType(10) / sampleRate.load());
+        currentAttack = std::pow(FloatType(1e-4) * cube(attack.load()) + FloatType(1e-6) , FloatType(100) / sampleRate.load());
         currentAttackC = FloatType(1) - currentAttack;
-        currentBufferSize = std::max(static_cast<size_t>(1),
-                                     static_cast<size_t>(
-                                         smooth.load() * static_cast<FloatType>(circularBuffer.capacity())));
-        currentBufferSizeInverse = FloatType(1) / static_cast<FloatType>(currentBufferSize);
+        const auto currentSmooth = std::max(smooth.load(), FloatType(0.01));
+        peakBufferSize = peakBuffer.capacity();
+        peakBufferSizeInverse = FloatType(1) / static_cast<FloatType>(peakBufferSize);
+        steadyBufferSize = static_cast<size_t>(currentSmooth * static_cast<FloatType>(steadyBuffer.capacity()));
+        steadyBufferSize = std::max(steadyBufferSize, size_t(1));
+        steadyBufferSizeInverse = FloatType(1) / static_cast<FloatType>(steadyBufferSize);
     }
 
     template

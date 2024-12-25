@@ -24,7 +24,7 @@ namespace zlPanel {
 
     private:
         zlInterface::UIBase &uiBase;
-        zlInterface::CompactLinearSlider mixS, balanceS, holdS, smoothS;
+        zlInterface::CompactLinearSlider balanceS, attackS, holdS, smoothS;
         juce::OwnedArray<juce::AudioProcessorValueTreeState::SliderAttachment> sliderAttachments;
     };
 

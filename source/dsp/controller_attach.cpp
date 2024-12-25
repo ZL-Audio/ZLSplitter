@@ -65,7 +65,10 @@ namespace zlDSP {
         } else if (parameterID == psBalance::ID) {
             controllerRef.getPSSplitter(0).setBalance(psBalance::formatV(newValue));
             controllerRef.getPSSplitter(1).setBalance(psBalance::formatV(newValue));
-        }  else if (parameterID == psHold::ID) {
+        } else if (parameterID == psAttack::ID) {
+            controllerRef.getPSSplitter(0).setAttack(psAttack::formatV(newValue));
+            controllerRef.getPSSplitter(1).setAttack(psAttack::formatV(newValue));
+        } else if (parameterID == psHold::ID) {
             controllerRef.getPSSplitter(0).setHold(psHold::formatV(newValue));
             controllerRef.getPSSplitter(1).setHold(psHold::formatV(newValue));
         } else if (parameterID == psSmooth::ID) {

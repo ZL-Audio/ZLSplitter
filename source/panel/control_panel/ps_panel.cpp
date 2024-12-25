@@ -12,21 +12,21 @@
 namespace zlPanel {
     PSPanel::PSPanel(juce::AudioProcessorValueTreeState &parameter, zlInterface::UIBase &base)
         : uiBase(base),
-          mixS("Mix", base),
           balanceS("Balance", base),
+          attackS("Attack", base),
           holdS("Hold", base),
           smoothS("Smooth", base) {
-        attach({&mixS.getSlider(), &balanceS.getSlider(), &holdS.getSlider(), &smoothS.getSlider()},
-               {zlDSP::mix::ID, zlDSP::psBalance::ID, zlDSP::psHold::ID, zlDSP::psSmooth::ID},
+        attach({&balanceS.getSlider(), &attackS.getSlider(), &holdS.getSlider(), &smoothS.getSlider()},
+               {zlDSP::psBalance::ID, zlDSP::psAttack::ID, zlDSP::psHold::ID, zlDSP::psSmooth::ID},
                parameter, sliderAttachments);
-        for (auto &s: {&mixS, &balanceS, &holdS, &smoothS}) {
+        for (auto &s: {&balanceS, &attackS, &holdS, &smoothS}) {
             s->setFontScale(1.125f, 1.125f);
             addAndMakeVisible(s);
         }
     }
 
     void PSPanel::resized() {
-        for (auto &s: {&mixS, &balanceS, &holdS, &smoothS}) {
+        for (auto &s: {&balanceS, &attackS, &holdS, &smoothS}) {
             s->setPadding(uiBase.getFontSize() * 1.f, uiBase.getFontSize() * .5f);
         }
 
@@ -41,7 +41,7 @@ namespace zlPanel {
             Track(Fr(1))
         };
         grid.items = {
-            juce::GridItem(mixS).withArea(1, 1),
+            juce::GridItem(attackS).withArea(1, 1),
             juce::GridItem(balanceS).withArea(2, 1),
             juce::GridItem(holdS).withArea(3, 1),
             juce::GridItem(smoothS).withArea(4, 1),

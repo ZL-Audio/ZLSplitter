@@ -31,8 +31,6 @@ namespace zlDSP {
 
         void setMix(const double x) {
             mix.store(x);
-            psSplitters[0].setMix(x);
-            psSplitters[1].setMix(x);
         }
 
         void setLHFilterType(const lhFilterType::ftype x) {

@@ -13,8 +13,8 @@
 #include "controller.hpp"
 
 namespace zlDSP {
-    class ControllerAttach : private juce::AudioProcessorValueTreeState::Listener,
-                             private::juce::AsyncUpdater {
+    class ControllerAttach final : private juce::AudioProcessorValueTreeState::Listener,
+                                   private::juce::AsyncUpdater {
     public:
         explicit ControllerAttach(juce::AudioProcessor &processor,
                                   juce::AudioProcessorValueTreeState &parameters,
@@ -33,7 +33,7 @@ namespace zlDSP {
             splitType::ID, mix::ID, swap::ID,
             lhFilterType::ID, lhSlope::ID, lhFreq::ID,
             tsSeparation::ID, tsBalance::ID, tsHold::ID, tsSmooth::ID,
-            psBalance::ID, psHold::ID, psSmooth::ID
+            psAttack::ID, psBalance::ID, psHold::ID, psSmooth::ID
         };
 
         constexpr static std::array defaultVs{
@@ -41,7 +41,7 @@ namespace zlDSP {
             mix::defaultV, static_cast<float>(swap::defaultV),
             static_cast<float>(lhFilterType::defaultI), static_cast<float>(lhSlope::defaultI), lhFreq::defaultV,
             tsSeparation::defaultV, tsBalance::defaultV, tsHold::defaultV, tsSmooth::defaultV,
-            psBalance::defaultV, psHold::defaultV, psSmooth::defaultV
+            psAttack::defaultV, psBalance::defaultV, psHold::defaultV, psSmooth::defaultV
         };
 
         void parameterChanged(const juce::String &parameterID, float newValue) override;
