@@ -56,9 +56,6 @@ namespace zlInterface {
 
         setEditable(true);
         setShowSlider2(false);
-
-        label1.setInterceptsMouseClicks(true, false);
-        label2.setInterceptsMouseClicks(true, false);
         label1.setEditable(false, true);
         label2.setEditable(false, true);
 
@@ -77,8 +74,7 @@ namespace zlInterface {
     }
 
     juce::String TwoValueRotarySlider::getDisplayValue(juce::Slider &s) {
-        const auto interval = s.getNormalisableRange().interval;
-        auto value = std::round(s.getValue() / interval) * interval;
+        auto value = s.getNormalisableRange().snapToLegalValue(s.getValue());
         juce::String labelToDisplay = juce::String(value).substring(0, 4);
         if (value < 10000 && labelToDisplay.contains(".")) {
             labelToDisplay = juce::String(value).substring(0, 5);
@@ -96,7 +92,6 @@ namespace zlInterface {
                 break;
             }
         }
-
         return labelToDisplay;
     }
 
@@ -127,6 +122,9 @@ namespace zlInterface {
     }
 
     void TwoValueRotarySlider::mouseUp(const juce::MouseEvent &event) {
+        if (event.getNumberOfClicks() > 1 || event.mods.isCommandDown()) {
+            return;
+        }
         if (!showSlider2.load() || event.mods.isLeftButtonDown()) {
             slider1.mouseUp(event);
         } else {
@@ -135,10 +133,18 @@ namespace zlInterface {
     }
 
     void TwoValueRotarySlider::mouseDown(const juce::MouseEvent &event) {
+        if (event.getNumberOfClicks() > 1 || event.mods.isCommandDown()) {
+            return;
+        }
         if (!showSlider2.load() || event.mods.isLeftButtonDown()) {
             slider1.mouseDown(event);
         } else {
             slider2.mouseDown(event);
+        }
+        const auto currentShiftPressed = event.mods.isShiftDown();
+        if (currentShiftPressed != isShiftPressed) {
+            isShiftPressed = currentShiftPressed;
+            updateDragDistance();
         }
     }
 
@@ -153,7 +159,6 @@ namespace zlInterface {
     void TwoValueRotarySlider::mouseEnter(const juce::MouseEvent &event) {
         slider1.mouseEnter(event);
         slider2.mouseEnter(event);
-        mouseOver.store(true);
         labelLookAndFeel.setAlpha(0.f);
         labelLookAndFeel1.setAlpha(1.f);
         labelLookAndFeel2.setAlpha(1.f);
@@ -167,29 +172,11 @@ namespace zlInterface {
         slider1.mouseExit(event);
         slider2.mouseExit(event);
 
-        mouseOver.store(false);
-
-        if (this->contains(event.getMouseDownPosition())) {
+        if (label1.getCurrentTextEditor() != nullptr || label2.getCurrentTextEditor() != nullptr) {
             return;
         }
 
-        if (animator.getAnimation(animationId) != nullptr)
-            return;
-        auto effect{
-            friz::makeAnimation<friz::Parametric, 1>(
-                animationId, {1.5f}, {0.f}, 1000, friz::Parametric::kLinear)
-        };
-        effect->updateFn = [this](int, const auto &vals) {
-            auto val = juce::jmin(vals[0], 1.0f);
-            labelLookAndFeel.setAlpha(1 - val);
-            labelLookAndFeel1.setAlpha(val);
-            labelLookAndFeel2.setAlpha(val);
-            for (auto &l: {&label, &label1, &label2}) {
-                l->repaint();
-            }
-        };
-
-        animator.addAnimation(std::move(effect));
+        leaveAnimation();
     }
 
     void TwoValueRotarySlider::mouseMove(const juce::MouseEvent &event) {
@@ -197,7 +184,17 @@ namespace zlInterface {
     }
 
     void TwoValueRotarySlider::mouseDoubleClick(const juce::MouseEvent &event) {
-        juce::ignoreUnused(event);
+        if (uiBase.getIsSliderDoubleClickOpenEditor() != event.mods.isCommandDown()) {
+            const auto portion = static_cast<float>(event.getPosition().getY()
+                ) / static_cast<float>(getLocalBounds().getHeight());
+            if (portion < .5f || !showSlider2.load()) {
+                label1.showEditor();
+                return;
+            } else {
+                label2.showEditor();
+                return;
+            }
+        }
         if (!showSlider2.load() || event.mods.isLeftButtonDown()) {
             slider1.mouseDoubleClick(event);
         } else {
@@ -270,13 +267,7 @@ namespace zlInterface {
             slider2.setValue(actualValue, juce::sendNotificationAsync);
         }
 
-        labelLookAndFeel.setAlpha(1);
-        labelLookAndFeel1.setAlpha(0);
-        labelLookAndFeel2.setAlpha(0);
-
-        for (auto &ll: {&label, &label1, &label2}) {
-            ll->repaint();
-        }
+        leaveAnimation();
     }
 
     void TwoValueRotarySlider::sliderValueChanged(juce::Slider *slider) {
@@ -287,5 +278,25 @@ namespace zlInterface {
         if (slider == &slider2) {
             label2.setText(getDisplayValue(slider2), juce::dontSendNotification);
         }
+    }
+
+    void TwoValueRotarySlider::leaveAnimation() {
+        if (animator.getAnimation(animationId) != nullptr)
+            return;
+        auto frizEffect{
+            friz::makeAnimation<friz::Parametric, 1>(
+                animationId, {1.5f}, {0.f}, 1000, friz::Parametric::kLinear)
+        };
+        frizEffect->updateFn = [this](int, const auto &vals) {
+            auto val = juce::jmin(vals[0], 1.0f);
+            labelLookAndFeel.setAlpha(1 - val);
+            labelLookAndFeel1.setAlpha(val);
+            labelLookAndFeel2.setAlpha(val);
+            for (auto &l: {&label, &label1, &label2}) {
+                l->repaint();
+            }
+        };
+
+        animator.addAnimation(std::move(frizEffect));
     }
 }

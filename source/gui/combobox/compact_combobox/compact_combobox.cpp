@@ -10,9 +10,10 @@
 #include "compact_combobox.hpp"
 
 namespace zlInterface {
-    CompactCombobox::CompactCombobox(const juce::StringArray &choices,
-                                     UIBase &base)
-        : uiBase(base), boxLookAndFeel(base), animator{} {
+    CompactCombobox::CompactCombobox(const juce::String &labelText, const juce::StringArray &choices,
+                                     UIBase &base) : uiBase(base), boxLookAndFeel(base),
+                                                     animator{} {
+        juce::ignoreUnused(labelText);
         comboBox.addItemList(choices, 1);
         comboBox.setScrollWheelEnabled(false);
         comboBox.setInterceptsMouseClicks(false, false);
@@ -30,8 +31,8 @@ namespace zlInterface {
 
     void CompactCombobox::resized() {
         auto bound = getLocalBounds().toFloat();
-        bound = bound.withSizeKeepingCentre(bound.getWidth(), juce::jmin(bound.getHeight(),
-                                                                         uiBase.getFontSize() * 2.f));
+        bound = bound.withSizeKeepingCentre(bound.getWidth(),
+                                            juce::jmin(bound.getHeight(), uiBase.getFontSize() * 2.f));
         comboBox.setBounds(bound.toNearestInt());
     }
 
@@ -52,15 +53,15 @@ namespace zlInterface {
         animator.cancelAnimation(animationId, false);
         if (animator.getAnimation(animationId) != nullptr)
             return;
-        auto effect{
+        auto frizEffect{
             friz::makeAnimation<friz::Parametric, 1>(
                 animationId, {boxLookAndFeel.getBoxAlpha()}, {1.f}, 1000, friz::Parametric::kEaseInQuad)
         };
-        effect->updateFn = [this](int, const auto &vals) {
+        frizEffect->updateFn = [this](int, const auto &vals) {
             boxLookAndFeel.setBoxAlpha(vals[0]);
             comboBox.repaint();
         };
-        animator.addAnimation(std::move(effect));
+        animator.addAnimation(std::move(frizEffect));
     }
 
     void CompactCombobox::mouseExit(const juce::MouseEvent &event) {
@@ -68,15 +69,15 @@ namespace zlInterface {
         animator.cancelAnimation(animationId, false);
         if (animator.getAnimation(animationId) != nullptr)
             return;
-        auto effect{
+        auto frizEffect{
             friz::makeAnimation<friz::Parametric, 1>(
                 animationId, {boxLookAndFeel.getBoxAlpha()}, {0.f}, 1000, friz::Parametric::kEaseOutQuad)
         };
-        effect->updateFn = [this](int, const auto &vals) {
+        frizEffect->updateFn = [this](int, const auto &vals) {
             boxLookAndFeel.setBoxAlpha(vals[0]);
             comboBox.repaint();
         };
-        animator.addAnimation(std::move(effect));
+        animator.addAnimation(std::move(frizEffect));
     }
 
     void CompactCombobox::mouseMove(const juce::MouseEvent &event) {

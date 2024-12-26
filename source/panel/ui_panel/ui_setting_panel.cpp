@@ -18,9 +18,9 @@ namespace zlPanel {
           closeDrawable(juce::Drawable::createFromImageData(BinaryData::xmark_svg, BinaryData::xmark_svgSize)),
           resetDrawable(
               juce::Drawable::createFromImageData(BinaryData::loopleftline_svg, BinaryData::loopleftline_svgSize)),
-          saveButton(saveDrawable.get(), uiBase),
-          closeButton(closeDrawable.get(), uiBase),
-          resetButton(resetDrawable.get(), uiBase),
+          saveButton(uiBase, saveDrawable.get()),
+          closeButton(uiBase, closeDrawable.get()),
+          resetButton(uiBase, resetDrawable.get()),
           labelLAF(uiBase) {
         juce::ignoreUnused(pRef);
         setOpaque(true);

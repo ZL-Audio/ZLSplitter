@@ -12,8 +12,8 @@
 namespace zlInterface {
     class SelectorBox final : public juce::Component {
     public:
-        explicit SelectorBox(const int flags, zlInterface::UIBase &base)
-            : selector(flags,
+        explicit SelectorBox(const int selectorFlags, zlInterface::UIBase &base)
+            : selector(selectorFlags,
                        juce::roundToInt(base.getFontSize() * 0.5f),
                        juce::roundToInt(base.getFontSize() * 0.33f)),
               uiBase(base) {
@@ -40,15 +40,21 @@ namespace zlInterface {
         zlInterface::UIBase &uiBase;
     };
 
-    ColourSelector::ColourSelector(zlInterface::UIBase &base,
-                                   juce::Component &parent,
+    ColourSelector::ColourSelector(zlInterface::UIBase &base, juce::Component &parent,
                                    const float widthS, const float heightS)
         : uiBase(base), laf(uiBase), parentC(parent),
           selectorWidthS(widthS), selectorHeightS(heightS) {
     }
 
     void ColourSelector::paint(juce::Graphics &g) {
-        g.fillAll(colour);
+        g.fillAll(uiBase.getTextColor().withAlpha(.875f));
+        auto bound = getLocalBounds().toFloat();
+        bound = bound.withSizeKeepingCentre(bound.getWidth() - uiBase.getFontSize() * .375f,
+                                            bound.getHeight() - uiBase.getFontSize() * .375f);
+        g.setColour(uiBase.getBackgroundColor());
+        g.fillRect(bound);
+        g.setColour(colour);
+        g.fillRect(bound);
     }
 
     void ColourSelector::mouseDown(const juce::MouseEvent &event) {

@@ -16,8 +16,8 @@ namespace zlPanel {
         : uiBase(base),
           mixS("Mix", base),
           freqS("Freq", base),
-          ftypeC(zlDSP::lhFilterType::choices, base),
-          slopeC(zlDSP::lhSlope::choices, base) {
+          ftypeC("", zlDSP::lhFilterType::choices, base),
+          slopeC("", zlDSP::lhSlope::choices, base) {
         freqS.setShowSlider2(false);
         attach({&mixS.getSlider(), &freqS.getSlider1()},
                {zlDSP::mix::ID, zlDSP::lhFreq::ID},

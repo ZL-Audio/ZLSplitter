@@ -20,11 +20,12 @@ namespace zlInterface {
 
         void mouseWheelMove(const juce::MouseEvent &e, const juce::MouseWheelDetails &wheel) override {
             w = wheel;
-            w.deltaX *= uiBase.getWheelSensitivity(0);
-            w.deltaY *= uiBase.getWheelSensitivity(0);
-            if (e.mods.isCommandDown()) {
-                w.deltaX *= uiBase.getWheelSensitivity(1);
-                w.deltaY *= uiBase.getWheelSensitivity(1);
+            w.deltaX *= uiBase.getSensitivity(mouseWheel);
+            w.deltaY *= uiBase.getSensitivity(mouseWheel);
+            if (e.mods.isShiftDown()) {
+                const auto dir = uiBase.getIsMouseWheelShiftReverse() ? -1.f : 1.f;
+                w.deltaX *= uiBase.getSensitivity(mouseWheelFine) * dir;
+                w.deltaY *= uiBase.getSensitivity(mouseWheelFine) * dir;
             }
             Slider::mouseWheelMove(e, w);
         }

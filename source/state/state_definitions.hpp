@@ -103,8 +103,34 @@ namespace zlState {
     public:
         auto static constexpr ID = "wheel_fine_sensitivity";
         auto static constexpr name = "";
-        inline auto static const range = juce::NormalisableRange<float>(0.f, 1.f, 0.01f);
+        inline auto static const range = juce::NormalisableRange<float>(0.01f, 1.f, 0.01f);
         auto static constexpr defaultV = .12f;
+    };
+
+    class wheelShiftReverse : public ChoiceParameters<wheelShiftReverse> {
+    public:
+        auto static constexpr ID = "wheel_shift_reverse";
+        auto static constexpr name = "";
+        inline auto static const choices = juce::StringArray{
+            "No Change", "Reverse"
+        };
+        int static constexpr defaultI = 0;
+    };
+
+    class dragSensitivity : public FloatParameters<dragSensitivity> {
+    public:
+        auto static constexpr ID = "drag_sensitivity";
+        auto static constexpr name = "";
+        inline auto static const range = juce::NormalisableRange<float>(0.f, 1.f, 0.01f);
+        auto static constexpr defaultV = 1.f;
+    };
+
+    class dragFineSensitivity : public FloatParameters<dragFineSensitivity> {
+    public:
+        auto static constexpr ID = "drag_fine_sensitivity";
+        auto static constexpr name = "";
+        inline auto static const range = juce::NormalisableRange<float>(0.01f, 1.f, 0.01f);
+        auto static constexpr defaultV = .25f;
     };
 
     class rotaryStyle : public ChoiceParameters<rotaryStyle> {
@@ -114,7 +140,7 @@ namespace zlState {
         inline auto static const choices = juce::StringArray{
             "Circular", "Horizontal", "Vertical", "Horiz + Vert"
         };
-        int static constexpr defaultI = 0;
+        int static constexpr defaultI = 3;
         inline static std::array<juce::Slider::SliderStyle, 4> styles{
             juce::Slider::Rotary,
             juce::Slider::RotaryHorizontalDrag,
@@ -125,10 +151,59 @@ namespace zlState {
 
     class rotaryDragSensitivity : public FloatParameters<rotaryDragSensitivity> {
     public:
-        auto static constexpr ID = "rotary_darg_sensitivity";
+        auto static constexpr ID = "rotary_drag_sensitivity";
         auto static constexpr name = "";
         inline auto static const range = juce::NormalisableRange<float>(2.f, 32.f, 0.01f);
         auto static constexpr defaultV = 10.f;
+    };
+
+    class sliderDoubleClickFunc : public ChoiceParameters<sliderDoubleClickFunc> {
+    public:
+        auto static constexpr ID = "slider_double_click_func";
+        auto static constexpr name = "";
+        inline auto static const choices = juce::StringArray{
+            "Return Default", "Open Editor"
+        };
+        int static constexpr defaultI = 1;
+    };
+
+    class colourMapIdx : public ChoiceParameters<colourMapIdx> {
+    public:
+        auto static constexpr ID = "colour_map_idx";
+        auto static constexpr name = "";
+        inline auto static const choices = juce::StringArray{
+            "Default Light", "Default Dark",
+            "Seaborn Normal Light", "Seaborn Normal Dark",
+            "Seaborn Bright Light", "Seaborn Bright Dark"
+        };
+
+        enum colourMapName {
+            defaultLight,
+            defaultDark,
+            seabornNormalLight,
+            seabornNormalDark,
+            seabornBrightLight,
+            seabornBrightDark,
+            colourMapNum
+        };
+
+        int static constexpr defaultI = 0;
+    };
+
+    class colourMap1Idx : public ChoiceParameters<colourMap1Idx> {
+    public:
+        auto static constexpr ID = "colour_map_1_idx";
+        auto static constexpr name = "";
+        inline auto static const choices = colourMapIdx::choices;
+        int static constexpr defaultI = 1;
+    };
+
+    class colourMap2Idx : public ChoiceParameters<colourMap2Idx> {
+    public:
+        auto static constexpr ID = "colour_map_2_idx";
+        auto static constexpr name = "";
+        inline auto static const choices = colourMapIdx::choices;
+        int static constexpr defaultI = 5;
     };
 
     inline void addOneColour(juce::AudioProcessorValueTreeState::ParameterLayout &layout,
@@ -154,12 +229,15 @@ namespace zlState {
     inline juce::AudioProcessorValueTreeState::ParameterLayout getStateParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(windowW::get(), windowH::get(),
-                   wheelSensitivity::get(), wheelFineSensitivity::get(),
-                   rotaryStyle::get(), rotaryDragSensitivity::get());
+                   wheelSensitivity::get(), wheelFineSensitivity::get(), wheelShiftReverse::get(),
+                   dragSensitivity::get(), dragFineSensitivity::get(),
+                   rotaryStyle::get(), rotaryDragSensitivity::get(),
+                   sliderDoubleClickFunc::get());
         addOneColour(layout, "text", 255 - 8, 255 - 9, 255 - 11, true, 1.f);
         addOneColour(layout, "background", (255 - 214) / 2, (255 - 223) / 2, (255 - 236) / 2, true, 1.f);
         addOneColour(layout, "shadow", 0, 0, 0, true, 1.f);
         addOneColour(layout, "glow", 70, 66, 62, true, 1.f);
+        layout.add(colourMap1Idx::get(), colourMap2Idx::get());
         return layout;
     }
 }

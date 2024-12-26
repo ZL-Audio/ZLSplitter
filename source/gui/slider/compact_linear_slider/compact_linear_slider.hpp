@@ -17,7 +17,9 @@
 #include "../extra_slider/snapping_slider.h"
 
 namespace zlInterface {
-    class CompactLinearSlider : public juce::Component {
+    class CompactLinearSlider : public juce::Component,
+                                private juce::Label::Listener,
+                                private juce::Slider::Listener {
     public:
         explicit CompactLinearSlider(const juce::String &labelText, UIBase &base);
 
@@ -43,8 +45,6 @@ namespace zlInterface {
 
         inline juce::Slider &getSlider() { return slider; }
 
-        inline NameLookAndFeel &getLabelLAF() { return nameLookAndFeel; }
-
         inline void setEditable(const bool x) {
             nameLookAndFeel.setEditable(x);
             textLookAndFeel.setEditable(x);
@@ -54,6 +54,11 @@ namespace zlInterface {
         inline void setPadding(const float lr, const float ub) {
             lrPad.store(lr);
             ubPad.store(ub);
+        }
+
+        void updateDisplayValue() {
+            text.setText(getDisplayValue(slider), juce::dontSendNotification);
+            text.repaint();
         }
 
         inline void setFontScale(const float x1, const float x2) {
@@ -75,6 +80,16 @@ namespace zlInterface {
         std::atomic<float> lrPad = 0, ubPad = 0;
 
         juce::String getDisplayValue(juce::Slider &s);
+
+        void labelTextChanged(juce::Label *labelThatHasChanged) override;
+
+        void editorShown(juce::Label *l, juce::TextEditor &editor) override;
+
+        void editorHidden(juce::Label *l, juce::TextEditor &editor) override;
+
+        void sliderValueChanged(juce::Slider *slider) override;
+
+        void leaveAnimation();
     };
 }
 

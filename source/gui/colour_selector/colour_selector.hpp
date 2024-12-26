@@ -7,8 +7,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef COLOURSELECTOR_H
-#define COLOURSELECTOR_H
+#ifndef ZL_COLOUR_SELECTOR_H
+#define ZL_COLOUR_SELECTOR_H
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_gui_extra/juce_gui_extra.h>
@@ -19,8 +19,7 @@ namespace zlInterface {
     class ColourSelector final : public juce::Component,
                                  private juce::ChangeListener {
     public:
-        explicit ColourSelector(zlInterface::UIBase &base,
-                                juce::Component &parent,
+        explicit ColourSelector(zlInterface::UIBase &base, juce::Component &parent,
                                 float widthS = 12.f, float heightS = 10.f);
 
         void paint(juce::Graphics &g) override;
@@ -53,4 +52,4 @@ namespace zlInterface {
     };
 } // zlInterface
 
-#endif //COLOURSELECTOR_H
+#endif //ZL_COLOUR_SELECTOR_H

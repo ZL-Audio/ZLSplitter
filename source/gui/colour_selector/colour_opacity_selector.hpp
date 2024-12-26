@@ -7,8 +7,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef COLOUR_OPACITY_SELECTOR_HPP
-#define COLOUR_OPACITY_SELECTOR_HPP
+#ifndef ZL_COLOUR_OPACITY_SELECTOR_HPP
+#define ZL_COLOUR_OPACITY_SELECTOR_HPP
 
 #include "colour_selector.hpp"
 #include "../slider/slider.hpp"
@@ -17,13 +17,7 @@ namespace zlInterface {
     class ColourOpacitySelector final : public juce::Component,
                                         private juce::Slider::Listener {
     public:
-        enum Layout {
-            horizontal,
-            vertical
-        };
-
-        explicit ColourOpacitySelector(zlInterface::UIBase &base,
-                                       juce::Component &parent,
+        explicit ColourOpacitySelector(zlInterface::UIBase &base, juce::Component &parent,
                                        bool useOpacity = true,
                                        float widthS = 12.f, float heightS = 10.f,
                                        float w1 = 0.3f, float w2 = 0.3f);
@@ -52,4 +46,4 @@ namespace zlInterface {
     };
 } // zlInterface
 
-#endif //COLOUR_OPACITY_SELECTOR_HPP
+#endif //ZL_COLOUR_OPACITY_SELECTOR_HPP

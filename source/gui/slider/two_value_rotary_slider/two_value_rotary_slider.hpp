@@ -21,7 +21,8 @@
 
 namespace zlInterface {
     class TwoValueRotarySlider final : public juce::Component,
-    private juce::Label::Listener, private juce::Slider::Listener {
+                                       private juce::Label::Listener,
+                                       private juce::Slider::Listener {
     public:
         explicit TwoValueRotarySlider(const juce::String &labelText, UIBase &base);
 
@@ -66,11 +67,15 @@ namespace zlInterface {
 
         inline bool getEditable() const { return editable.load(); }
 
+        void setMouseDragSensitivity(const int x) {
+            dragDistance = x;
+            updateDragDistance();
+        }
+
         inline void setFontScale(const float x1, const float x2) {
             labelLookAndFeel.setFontScale(x1);
             labelLookAndFeel1.setFontScale(x2);
             labelLookAndFeel2.setFontScale(x2);
-            fontScale = x2;
         }
 
     private:
@@ -78,7 +83,6 @@ namespace zlInterface {
 
         FirstRotarySliderLookAndFeel slider1LAF;
         SecondRotarySliderLookAndFeel slider2LAF;
-        float fontScale = 1.75f;
 
         SnappingSlider slider1, slider2;
 
@@ -87,11 +91,14 @@ namespace zlInterface {
 
         juce::Label label, label1, label2;
 
-        std::atomic<bool> showSlider2 = true, mouseOver, editable;
+        std::atomic<bool> showSlider2 = true, editable;
         std::atomic<float> lrPad = 0, ubPad = 0;
 
         friz::Animator animator;
         static constexpr int animationId = 1;
+
+        int dragDistance{10};
+        bool isShiftPressed{false};
 
         static juce::String getDisplayValue(juce::Slider &s);
 
@@ -102,6 +109,22 @@ namespace zlInterface {
         void editorHidden(juce::Label *l, juce::TextEditor &editor) override;
 
         void sliderValueChanged(juce::Slider *slider) override;
+
+        void updateDragDistance() {
+            int actualDragDistance;
+            if (isShiftPressed) {
+                actualDragDistance = juce::roundToInt(
+                    static_cast<float>(dragDistance) / uiBase.getSensitivity(sensitivityIdx::mouseDragFine));
+            } else {
+                actualDragDistance = juce::roundToInt(
+                    static_cast<float>(dragDistance) / uiBase.getSensitivity(sensitivityIdx::mouseDrag));
+            }
+            actualDragDistance = std::max(actualDragDistance, 1);
+            slider1.setMouseDragSensitivity(actualDragDistance);
+            slider2.setMouseDragSensitivity(actualDragDistance);
+        }
+
+        void leaveAnimation();
     };
 }
 

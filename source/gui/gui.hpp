@@ -14,9 +14,9 @@
 #include "button/button.hpp"
 #include "combobox/combobox.hpp"
 #include "slider/slider.hpp"
-#include "dragger2d/dragger2d.hpp"
 #include "calloutbox/call_out_box_laf.hpp"
 #include "colour_selector/colour_selector.hpp"
 #include "colour_selector/colour_opacity_selector.hpp"
+#include "colour_selector/colour_map_selector.hpp"
 
 #endif //ZL_GUI_H

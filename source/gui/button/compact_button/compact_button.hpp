@@ -36,7 +36,15 @@ namespace zlInterface {
 
         inline void setDrawable(juce::Drawable *x) { lookAndFeel.setDrawable(x); }
 
-        CompactButtonLookAndFeel &getLAF() {return lookAndFeel;}
+        CompactButtonLookAndFeel &getLAF() { return lookAndFeel; }
+
+        void lookAndFeelChanged() override {
+            lookAndFeel.updateImages();
+        }
+
+        void visibilityChanged() override {
+            lookAndFeel.updateImages();
+        }
 
     private:
         UIBase &uiBase;

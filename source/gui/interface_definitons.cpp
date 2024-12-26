@@ -74,7 +74,7 @@ namespace zlInterface {
                                                                    const fillRoundedShadowRectangleArgs &margs) const {
         auto args = margs;
         if (!args.changeMain)
-            args.mainColour = getBackgroundColor().withAlpha(args.mainColour.getAlpha());
+            args.mainColour = getBackgroundColor();
         if (!args.changeDark)
             args.darkShadowColor = getDarkShadowColor();
         if (!args.changeBright)
@@ -127,7 +127,7 @@ namespace zlInterface {
 
     juce::Rectangle<float> UIBase::getShadowEllipseArea(juce::Rectangle<float> boxBounds, float cornerSize,
                                                         const fillShadowEllipseArgs &margs) {
-        const auto radius = juce::jmax(juce::roundToInt(cornerSize * 0.75f), 1);
+        auto radius = juce::jmax(juce::roundToInt(cornerSize * 0.75f), 1);
         if (margs.fit) {
             boxBounds = boxBounds.withSizeKeepingCentre(
                 boxBounds.getWidth() - static_cast<float>(radius) - 1.5f * cornerSize,
@@ -143,7 +143,7 @@ namespace zlInterface {
                                                      const fillShadowEllipseArgs &margs) const {
         auto args = margs;
         if (!args.changeMain)
-            args.mainColour = getBackgroundColor().withAlpha(args.mainColour.getAlpha());
+            args.mainColour = getBackgroundColor();
         if (!args.changeDark)
             args.darkShadowColor = getDarkShadowColor();
         if (!args.changeBright)
@@ -197,7 +197,7 @@ namespace zlInterface {
                                                              float cornerSize,
                                                              const fillShadowEllipseArgs &margs) {
         juce::ignoreUnused(margs);
-        const auto radius = juce::jmax(juce::roundToInt(cornerSize * 1.5f), 1);
+        auto radius = juce::jmax(juce::roundToInt(cornerSize * 1.5f), 1);
         boxBounds = boxBounds.withSizeKeepingCentre(
             boxBounds.getWidth() - 0.75f * static_cast<float>(radius),
             boxBounds.getHeight() - 0.75f * static_cast<float>(radius));
@@ -210,7 +210,7 @@ namespace zlInterface {
                                                           const fillShadowEllipseArgs &margs) const {
         auto args = margs;
         if (!args.changeMain)
-            args.mainColour = getBackgroundColor().withAlpha(args.mainColour.getAlpha());
+            args.mainColour = getBackgroundColor();
         if (!args.changeDark)
             args.darkShadowColor = getDarkShadowColor();
         if (!args.changeBright)
@@ -260,11 +260,17 @@ namespace zlInterface {
         }
         wheelSensitivity[0] = state.getRawParameterValue(zlState::wheelSensitivity::ID)->load();
         wheelSensitivity[1] = state.getRawParameterValue(zlState::wheelFineSensitivity::ID)->load();
+        wheelSensitivity[2] = state.getRawParameterValue(zlState::dragSensitivity::ID)->load();
+        wheelSensitivity[3] = state.getRawParameterValue(zlState::dragFineSensitivity::ID)->load();
+        isMouseWheelShiftReverse.store(state.getRawParameterValue(zlState::wheelShiftReverse::ID)->load() > .5f);
         rotaryStyleId = static_cast<size_t>(state.getRawParameterValue(zlState::rotaryStyle::ID)->load());
         rotaryDragSensitivity = state.getRawParameterValue(zlState::rotaryDragSensitivity::ID)->load();
+        isSliderDoubleClickOpenEditor.store(loadPara(zlState::sliderDoubleClickFunc::ID) > .5f);
+        cMap1Idx = static_cast<size_t>(loadPara(zlState::colourMap1Idx::ID));
+        cMap2Idx = static_cast<size_t>(loadPara(zlState::colourMap2Idx::ID));
     }
 
-    void UIBase::saveToAPVTS() {
+    void UIBase::saveToAPVTS() const {
         for (size_t i = 0; i < colourNum; ++i) {
             const std::array<float, 4> rgbo = {
                 customColours[i].getFloatRed(),
@@ -282,10 +288,22 @@ namespace zlInterface {
                 savePara(ID[j], rgbo[j]);
             }
         }
-        savePara(zlState::wheelSensitivity::ID, wheelSensitivity[0]);
-        savePara(zlState::wheelFineSensitivity::ID, wheelSensitivity[1]);
-        savePara(zlState::rotaryStyle::ID, zlState::rotaryStyle::convertTo01(static_cast<int>(rotaryStyleId)));
+        savePara(zlState::wheelSensitivity::ID,
+                 zlState::wheelSensitivity::convertTo01(wheelSensitivity[0]));
+        savePara(zlState::wheelFineSensitivity::ID,
+                 zlState::wheelFineSensitivity::convertTo01(wheelSensitivity[1]));
+        savePara(zlState::dragSensitivity::ID,
+                 zlState::dragSensitivity::convertTo01(wheelSensitivity[2]));
+        savePara(zlState::dragFineSensitivity::ID,
+                 zlState::dragFineSensitivity::convertTo01(wheelSensitivity[3]));
+        savePara(zlState::wheelShiftReverse::ID,
+                 zlState::wheelShiftReverse::convertTo01(static_cast<int>(isMouseWheelShiftReverse.load())));
+        savePara(zlState::rotaryStyle::ID,
+                 zlState::rotaryStyle::convertTo01(static_cast<int>(rotaryStyleId)));
         savePara(zlState::rotaryDragSensitivity::ID,
                  zlState::rotaryDragSensitivity::convertTo01(rotaryDragSensitivity));
+        savePara(zlState::sliderDoubleClickFunc::ID, static_cast<float>(isSliderDoubleClickOpenEditor.load()));
+        savePara(zlState::colourMap1Idx::ID, zlState::colourMapIdx::convertTo01(static_cast<int>(cMap1Idx)));
+        savePara(zlState::colourMap2Idx::ID, zlState::colourMapIdx::convertTo01(static_cast<int>(cMap2Idx)));
     }
 }

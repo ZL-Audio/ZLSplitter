@@ -19,7 +19,7 @@ namespace zlPanel {
           glowSelector(base, *this, false, 9.6f, 8.f, .5f, .4f),
           roughWheelSlider("Rough", base),
           fineWheelSlider("Fine", base),
-          rotaryStyleBox(zlState::rotaryStyle::choices, base),
+          rotaryStyleBox("", zlState::rotaryStyle::choices, base),
           rotaryDragSensitivitySlider("Distance", base) {
         juce::ignoreUnused(pRef);
         nameLAF.setJustification(juce::Justification::centred);
@@ -89,8 +89,10 @@ namespace zlPanel {
         for (size_t i = 0; i < numSelectors; ++i) {
             selectors[i]->setColour(uiBase.getColourByIdx(static_cast<zlInterface::colourIdx>(i)));
         }
-        roughWheelSlider.getSlider().setValue(static_cast<double>(uiBase.getWheelSensitivity(0)));
-        fineWheelSlider.getSlider().setValue(static_cast<double>(uiBase.getWheelSensitivity(1)));
+        roughWheelSlider.getSlider().setValue(
+            static_cast<double>(uiBase.getSensitivity(zlInterface::sensitivityIdx::mouseWheel)));
+        fineWheelSlider.getSlider().setValue(
+            static_cast<double>(uiBase.getSensitivity(zlInterface::sensitivityIdx::mouseWheelFine)));
         rotaryStyleBox.getBox().setSelectedId(static_cast<int>(uiBase.getRotaryStyleID()) + 1);
         rotaryDragSensitivitySlider.getSlider().setValue(static_cast<double>(uiBase.getRotaryDragSensitivity()));
     }
@@ -99,8 +101,10 @@ namespace zlPanel {
         for (size_t i = 0; i < numSelectors; ++i) {
             uiBase.setColourByIdx(static_cast<zlInterface::colourIdx>(i), selectors[i]->getColour());
         }
-        uiBase.setWheelSensitivity(static_cast<float>(roughWheelSlider.getSlider().getValue()), 0);
-        uiBase.setWheelSensitivity(static_cast<float>(fineWheelSlider.getSlider().getValue()), 1);
+        uiBase.setSensitivity(static_cast<float>(roughWheelSlider.getSlider().getValue()),
+                              zlInterface::sensitivityIdx::mouseWheel);
+        uiBase.setSensitivity(static_cast<float>(fineWheelSlider.getSlider().getValue()),
+                              zlInterface::sensitivityIdx::mouseWheelFine);
         uiBase.setRotaryStyleID(static_cast<size_t>(rotaryStyleBox.getBox().getSelectedId() - 1));
         uiBase.setRotaryDragSensitivity(static_cast<float>(rotaryDragSensitivitySlider.getSlider().getValue()));
         uiBase.saveToAPVTS();

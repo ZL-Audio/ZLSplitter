@@ -17,7 +17,7 @@
 namespace zlInterface {
     class CompactCombobox final : public juce::Component {
     public:
-        CompactCombobox(const juce::StringArray &choices, UIBase &base);
+        CompactCombobox(const juce::String &labelText, const juce::StringArray &choices, UIBase &base);
 
         ~CompactCombobox() override;
 
