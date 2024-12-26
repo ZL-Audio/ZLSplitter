@@ -71,9 +71,9 @@ namespace zlPanel {
 
         internelPanel.setBounds(0, 0,
                                 juce::roundToInt(bound.getWidth()),
-                                juce::roundToInt(bound.getHeight() * 2.55f));
-        viewPort.setBounds(bound.removeFromTop(bound.getHeight() * .9125f).toNearestInt());
-        const auto iconWidth = std::min(uiBase.getFontSize() * 1.25f, bound.getHeight() * .8f);
+                                juce::roundToInt((InternalSettingPanel::heightP + 1.f) * uiBase.getFontSize()));
+        viewPort.setBounds(bound.removeFromTop(bound.getHeight() * .9f).toNearestInt());
+        const auto iconWidth = bound.getHeight() * .95f;
         const auto leftBound = bound.removeFromLeft(
             bound.getWidth() * .3333333f).withSizeKeepingCentre(iconWidth, iconWidth);
         const auto centerBound = bound.removeFromLeft(

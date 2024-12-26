@@ -227,7 +227,7 @@ namespace zlInterface {
                                                       float cornerSize,
                                                       const fillShadowEllipseArgs &margs) const;
 
-        juce::Colour getColourByIdx(colourIdx idx) const {
+        juce::Colour getColourByIdx(const colourIdx idx) const {
             return customColours[static_cast<size_t>(idx)];
         }
 

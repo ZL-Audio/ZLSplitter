@@ -16,15 +16,17 @@
 namespace zlPanel {
     class InternalSettingPanel final : public juce::Component {
     public:
-        explicit InternalSettingPanel(PluginProcessor &p, zlInterface::UIBase &base);
+        static constexpr float heightP = 28.f;
 
-        ~InternalSettingPanel() override;
+        explicit InternalSettingPanel(PluginProcessor &p, zlInterface::UIBase &base);
 
         void loadSetting();
 
         void saveSetting();
 
         void resetSetting();
+
+        void mouseDown(const juce::MouseEvent &event) override;
 
         void resized() override;
 
@@ -34,11 +36,7 @@ namespace zlPanel {
         zlInterface::UIBase &uiBase;
         zlInterface::NameLookAndFeel nameLAF;
         zlInterface::ColourOpacitySelector textSelector, backgroundSelector, shadowSelector, glowSelector;
-        juce::Label wheelLabel;
-        zlInterface::CompactLinearSlider roughWheelSlider, fineWheelSlider;
-        juce::Label rotaryStyleLabel;
-        zlInterface::CompactCombobox rotaryStyleBox;
-        zlInterface::CompactLinearSlider rotaryDragSensitivitySlider;
+        juce::Label colourImportLabel, controlImportLabel;
 
         static constexpr size_t numSelectors = 4;
         std::array<juce::Label, numSelectors> selectorLabels;
@@ -54,6 +52,32 @@ namespace zlPanel {
             "Shadow Colour",
             "Glow Colour"
         };
+
+        std::array<zlInterface::colourIdx, numSelectors> colourIdx {
+            zlInterface::colourIdx::textColour,
+            zlInterface::colourIdx::backgroundColour,
+            zlInterface::colourIdx::shadowColour,
+            zlInterface::colourIdx::glowColour
+        };
+
+        std::array<std::string, numSelectors> colourTagNames{
+            "text_colour",
+            "background_colour",
+            "shadow_colour",
+            "glow_colour",
+        };
+
+        std::unique_ptr<juce::FileChooser> myChooser;
+        inline auto static const settingDirectory =
+                juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                .getChildFile("Audio")
+                .getChildFile("Presets")
+                .getChildFile(JucePlugin_Manufacturer)
+                .getChildFile("Shared Settings");
+
+        void importColours();
+
+        void importControls();
     };
 } // zlPanel
 

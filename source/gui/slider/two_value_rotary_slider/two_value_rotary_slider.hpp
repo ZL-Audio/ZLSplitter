@@ -67,16 +67,15 @@ namespace zlInterface {
 
         inline bool getEditable() const { return editable.load(); }
 
-        void setMouseDragSensitivity(const int x) {
-            dragDistance = x;
-            updateDragDistance();
-        }
-
         inline void setFontScale(const float x1, const float x2) {
             labelLookAndFeel.setFontScale(x1);
             labelLookAndFeel1.setFontScale(x2);
             labelLookAndFeel2.setFontScale(x2);
             editorFontScale = x2;
+        }
+
+        void lookAndFeelChanged() override {
+            updateDragDistance();
         }
 
     private:

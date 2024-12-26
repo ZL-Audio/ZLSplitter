@@ -10,17 +10,22 @@
 #include "internal_setting_panel.hpp"
 
 namespace zlPanel {
+    static juce::Colour getIntColour(const int r, const int g, const int b, float alpha) {
+        return {
+            static_cast<juce::uint8>(r),
+            static_cast<juce::uint8>(g),
+            static_cast<juce::uint8>(b),
+            alpha
+        };
+    }
+
     InternalSettingPanel::InternalSettingPanel(PluginProcessor &p, zlInterface::UIBase &base)
         : pRef(p),
           uiBase(base), nameLAF(base),
           textSelector(base, *this, false, 9.6f, 8.f, .5f, .4f),
           backgroundSelector(base, *this, false, 9.6f, 8.f, .5f, .4f),
           shadowSelector(base, *this, false, 9.6f, 8.f, .5f, .4f),
-          glowSelector(base, *this, false, 9.6f, 8.f, .5f, .4f),
-          roughWheelSlider("Rough", base),
-          fineWheelSlider("Fine", base),
-          rotaryStyleBox("", zlState::rotaryStyle::choices, base),
-          rotaryDragSensitivitySlider("Distance", base) {
+          glowSelector(base, *this, false, 9.6f, 8.f, .5f, .4f) {
         juce::ignoreUnused(pRef);
         nameLAF.setJustification(juce::Justification::centred);
         nameLAF.setFontScale(1.f);
@@ -30,33 +35,14 @@ namespace zlPanel {
             addAndMakeVisible(selectorLabels[i]);
             addAndMakeVisible(selectors[i]);
         }
-        wheelLabel.setText("Mouse-Wheel Sensitivity", juce::dontSendNotification);
-        wheelLabel.setLookAndFeel(&nameLAF);
-        addAndMakeVisible(wheelLabel);
-        roughWheelSlider.getSlider().setDoubleClickReturnValue(true, 1.0);
-        fineWheelSlider.getSlider().setDoubleClickReturnValue(true, 0.1);
-        for (auto &s: {&roughWheelSlider, &fineWheelSlider}) {
-            s->getSlider().setRange(0.0, 1.0, 0.01);
-            s->setFontScale(1.125f, 1.125f);
-            addAndMakeVisible(s);
-        }
-        rotaryStyleLabel.setText("Rotary Slider Style", juce::dontSendNotification);
-        rotaryStyleLabel.setLookAndFeel(&nameLAF);
-        addAndMakeVisible(rotaryStyleLabel);
-        rotaryStyleBox.getLAF().setFontScale(1.125f);
-        addAndMakeVisible(rotaryStyleBox);
-        rotaryDragSensitivitySlider.setFontScale(1.125f, 1.125f);
-        rotaryDragSensitivitySlider.getSlider().setRange(2.0, 32.0, 0.01);
-        rotaryDragSensitivitySlider.getSlider().setDoubleClickReturnValue(true, 10.0);
-        addAndMakeVisible(rotaryDragSensitivitySlider);
-    }
-
-    InternalSettingPanel::~InternalSettingPanel() {
-        for (size_t i = 0; i < numSelectors; ++i) {
-            selectorLabels[i].setLookAndFeel(nullptr);
-        }
-        wheelLabel.setLookAndFeel(nullptr);
-        rotaryStyleLabel.setLookAndFeel(nullptr);
+        colourImportLabel.setText("Import Colours", juce::dontSendNotification);
+        colourImportLabel.setLookAndFeel(&nameLAF);
+        colourImportLabel.addMouseListener(this, false);
+        addAndMakeVisible(colourImportLabel);
+        controlImportLabel.setText("Import Controls", juce::dontSendNotification);
+        controlImportLabel.setLookAndFeel(&nameLAF);
+        controlImportLabel.addMouseListener(this, false);
+        addAndMakeVisible(controlImportLabel);
     }
 
     void InternalSettingPanel::resized() {
@@ -66,51 +52,119 @@ namespace zlPanel {
             auto localBound = bound.removeFromTop(uiBase.getFontSize() * iHeight);
             selectorLabels[i].setBounds(localBound.removeFromTop(localBound.getHeight() * .5f).toNearestInt());
             selectors[i]->setBounds(localBound.toNearestInt());
-        } {
+        }
+        {
             bound.removeFromTop(uiBase.getFontSize() * .5f);
-            auto localBound = bound.removeFromTop(uiBase.getFontSize() * iHeight);
-            wheelLabel.setBounds(localBound.removeFromTop(localBound.getHeight() * .5f).toNearestInt());
-            const auto sWidth = (bound.getWidth() - uiBase.getFontSize() * 1.f) * 0.45f;
-            roughWheelSlider.setBounds(localBound.removeFromLeft(sWidth).toNearestInt());
-            localBound.removeFromLeft(uiBase.getFontSize() * 1.f);
-            fineWheelSlider.setBounds(localBound.removeFromLeft(sWidth).toNearestInt());
-        } {
+            const auto localBound = bound.removeFromTop(uiBase.getFontSize() * iHeight * .5f);
+            colourImportLabel.setBounds(localBound.toNearestInt());
+        }
+        {
             bound.removeFromTop(uiBase.getFontSize() * .5f);
-            auto localBound = bound.removeFromTop(uiBase.getFontSize() * iHeight);
-            rotaryStyleLabel.setBounds(localBound.removeFromTop(localBound.getHeight() * .5f).toNearestInt());
-            const auto sWidth = (bound.getWidth() - uiBase.getFontSize() * 1.f) * 0.45f;
-            rotaryStyleBox.setBounds(localBound.removeFromLeft(sWidth).toNearestInt());
-            localBound.removeFromLeft(uiBase.getFontSize() * 1.f);
-            rotaryDragSensitivitySlider.setBounds(localBound.removeFromLeft(sWidth).toNearestInt());
+            const auto localBound = bound.removeFromTop(uiBase.getFontSize() * iHeight * .5f);
+            controlImportLabel.setBounds(localBound.toNearestInt());
         }
     }
 
     void InternalSettingPanel::loadSetting() {
         for (size_t i = 0; i < numSelectors; ++i) {
-            selectors[i]->setColour(uiBase.getColourByIdx(static_cast<zlInterface::colourIdx>(i)));
+            selectors[i]->setColour(uiBase.getColourByIdx(colourIdx[i]));
         }
-        roughWheelSlider.getSlider().setValue(
-            static_cast<double>(uiBase.getSensitivity(zlInterface::sensitivityIdx::mouseWheel)));
-        fineWheelSlider.getSlider().setValue(
-            static_cast<double>(uiBase.getSensitivity(zlInterface::sensitivityIdx::mouseWheelFine)));
-        rotaryStyleBox.getBox().setSelectedId(static_cast<int>(uiBase.getRotaryStyleID()) + 1);
-        rotaryDragSensitivitySlider.getSlider().setValue(static_cast<double>(uiBase.getRotaryDragSensitivity()));
     }
 
     void InternalSettingPanel::saveSetting() {
         for (size_t i = 0; i < numSelectors; ++i) {
-            uiBase.setColourByIdx(static_cast<zlInterface::colourIdx>(i), selectors[i]->getColour());
+            uiBase.setColourByIdx(colourIdx[i], selectors[i]->getColour());
         }
-        uiBase.setSensitivity(static_cast<float>(roughWheelSlider.getSlider().getValue()),
-                              zlInterface::sensitivityIdx::mouseWheel);
-        uiBase.setSensitivity(static_cast<float>(fineWheelSlider.getSlider().getValue()),
-                              zlInterface::sensitivityIdx::mouseWheelFine);
-        uiBase.setRotaryStyleID(static_cast<size_t>(rotaryStyleBox.getBox().getSelectedId() - 1));
-        uiBase.setRotaryDragSensitivity(static_cast<float>(rotaryDragSensitivitySlider.getSlider().getValue()));
         uiBase.saveToAPVTS();
     }
 
     void InternalSettingPanel::resetSetting() {
-        loadSetting();
+        textSelector.setColour(getIntColour(247, 246, 244, 1.f));
+        backgroundSelector.setColour(getIntColour((255 - 214) / 2, (255 - 223) / 2, (255 - 236) / 2, 1.f));
+        shadowSelector.setColour(getIntColour(0, 0, 0, 1.f));
+        glowSelector.setColour(getIntColour(70, 66, 62, 1.f));
+        saveSetting();
+    }
+
+    void InternalSettingPanel::mouseDown(const juce::MouseEvent &event) {
+        if (event.originalComponent == &colourImportLabel) {
+            importColours();
+        } else if (event.originalComponent == &controlImportLabel) {
+            importControls();
+        }
+    }
+
+    void InternalSettingPanel::importColours() {
+        myChooser = std::make_unique<juce::FileChooser>(
+                "Load the colour settings...", settingDirectory, "*.xml",
+                true, false, nullptr);
+        constexpr auto settingOpenFlags = juce::FileBrowserComponent::openMode |
+                                          juce::FileBrowserComponent::canSelectFiles;
+        myChooser->launchAsync(settingOpenFlags, [this](const juce::FileChooser &chooser) {
+            if (chooser.getResults().size() <= 0) { return; }
+            const juce::File settingFile(chooser.getResult());
+            if (const auto xmlInput = juce::XmlDocument::parse(settingFile)) {
+                for (size_t i = 0; i < numSelectors; ++i) {
+                    if (const auto *xmlColour = xmlInput->getChildByName(colourTagNames[i])) {
+                        const juce::Colour colour = getIntColour(
+                            xmlColour->getIntAttribute("r"),
+                            xmlColour->getIntAttribute("g"),
+                            xmlColour->getIntAttribute("b"),
+                            static_cast<float>(xmlColour->getDoubleAttribute("o")));
+                        uiBase.setColourByIdx(colourIdx[i], colour);
+                    }
+                }
+                uiBase.saveToAPVTS();
+                loadSetting();
+            }
+        });
+    }
+
+    void InternalSettingPanel::importControls() {
+        myChooser = std::make_unique<juce::FileChooser>(
+                "Load the control settings...", settingDirectory, "*.xml",
+                true, false, nullptr);
+        constexpr auto settingOpenFlags = juce::FileBrowserComponent::openMode |
+                                          juce::FileBrowserComponent::canSelectFiles;
+        myChooser->launchAsync(settingOpenFlags, [this](const juce::FileChooser &chooser) {
+            if (chooser.getResults().size() <= 0) { return; }
+            const juce::File settingFile(chooser.getResult());
+            if (const auto xmlInput = juce::XmlDocument::parse(settingFile)) {
+                if (const auto *xmlElement = xmlInput->getChildByName("drag_fine_sensitivity")) {
+                    const auto x = xmlElement->getDoubleAttribute("value");
+                    uiBase.setSensitivity(static_cast<float>(x), zlInterface::sensitivityIdx::mouseDragFine);
+                }
+                if (const auto *xmlElement = xmlInput->getChildByName("drag_sensitivity")) {
+                    const auto x = xmlElement->getDoubleAttribute("value");
+                    uiBase.setSensitivity(static_cast<float>(x), zlInterface::sensitivityIdx::mouseDrag);
+                }
+                if (const auto *xmlElement = xmlInput->getChildByName("wheel_fine_sensitivity")) {
+                    const auto x = xmlElement->getDoubleAttribute("value");
+                    uiBase.setSensitivity(static_cast<float>(x), zlInterface::sensitivityIdx::mouseWheelFine);
+                }
+                if (const auto *xmlElement = xmlInput->getChildByName("wheel_sensitivity")) {
+                    const auto x = xmlElement->getDoubleAttribute("value");
+                    uiBase.setSensitivity(static_cast<float>(x), zlInterface::sensitivityIdx::mouseWheel);
+                }
+                if (const auto *xmlElement = xmlInput->getChildByName("rotary_drag_sensitivity")) {
+                    const auto x = xmlElement->getDoubleAttribute("value");
+                    uiBase.setRotaryDragSensitivity(static_cast<float>(x));
+                }
+                if (const auto *xmlElement = xmlInput->getChildByName("rotary_style")) {
+                    const auto x = xmlElement->getDoubleAttribute("value");
+                    uiBase.setRotaryStyleID(static_cast<size_t>(x));
+                }
+                if (const auto *xmlElement = xmlInput->getChildByName("slider_double_click_func")) {
+                    const auto x = xmlElement->getDoubleAttribute("value");
+                    uiBase.setIsSliderDoubleClickOpenEditor(x > 0.5);
+                }
+                if (const auto *xmlElement = xmlInput->getChildByName("wheel_shift_reverse")) {
+                    const auto x = xmlElement->getDoubleAttribute("value");
+                    uiBase.setIsMouseWheelShiftReverse(x > 0.5);
+                }
+                uiBase.saveToAPVTS();
+                loadSetting();
+            }
+        });
     }
 } // zlPanel
