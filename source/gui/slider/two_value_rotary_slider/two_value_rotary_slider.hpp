@@ -76,6 +76,7 @@ namespace zlInterface {
             labelLookAndFeel.setFontScale(x1);
             labelLookAndFeel1.setFontScale(x2);
             labelLookAndFeel2.setFontScale(x2);
+            editorFontScale = x2;
         }
 
     private:
@@ -90,6 +91,7 @@ namespace zlInterface {
         NameLookAndFeel textBoxLAF;
 
         juce::Label label, label1, label2;
+        float editorFontScale{FontHuge};
 
         std::atomic<bool> showSlider2 = true, editable;
         std::atomic<float> lrPad = 0, ubPad = 0;

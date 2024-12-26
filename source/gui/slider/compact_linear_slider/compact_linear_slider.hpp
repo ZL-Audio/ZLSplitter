@@ -64,6 +64,7 @@ namespace zlInterface {
         inline void setFontScale(const float x1, const float x2) {
             nameLookAndFeel.setFontScale(x1);
             textLookAndFeel.setFontScale(x2);
+            editorFontScale = x2;
         }
 
     private:
@@ -73,6 +74,7 @@ namespace zlInterface {
         NameLookAndFeel nameLookAndFeel, textLookAndFeel;
         SnappingSlider slider;
         juce::Label label, text;
+        float editorFontScale{FontHuge};
 
         friz::Animator animator{};
         static constexpr int animationId = 1;
