@@ -4,8 +4,9 @@ LICENSE and CODE are available at [https://github.com/ZL-Audio/ZLSplitter](https
 
 # Changelog
 
-## 0.0.3
+## 0.1.0
 
+- add UI settings from ZL Equalizer
 - add peak/steady split
 - fix macOS compatibility issue
 
