@@ -2,7 +2,3 @@
 	path = JUCE
 	url = https://github.com/ZL-Audio/JUCE
 	branch = master
-[submodule "modules/friz"]
-	path = modules/friz
-	url = https://github.com/ZL-Audio/animator
-	branch = master
