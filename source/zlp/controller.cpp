@@ -14,6 +14,8 @@ namespace zlp {
     void Controller<FloatType>::prepare(const double sample_rate,
                                         const size_t max_num_samples) {
         lr_splitter_.prepare(sample_rate);
+        ms_splitter_.prepare(sample_rate);
+        juce::ignoreUnused(max_num_samples);
     }
 
     template<typename FloatType>
@@ -28,6 +30,7 @@ namespace zlp {
             const auto mix = std::clamp(mix_.load(std::memory_order::relaxed),
                                         static_cast<FloatType>(0.0), static_cast<FloatType>(0.5));
             lr_splitter_.setMix(mix);
+            ms_splitter_.setMix(mix);
         }
     }
 
@@ -41,7 +44,10 @@ namespace zlp {
                 lr_splitter_.process(in_buffer, out_buffer, num_samples);
                 break;
             }
-            case zlp::PSplitType::kMSide:
+            case zlp::PSplitType::kMSide: {
+                ms_splitter_.process(in_buffer, out_buffer, num_samples);
+                break;
+            }
             case zlp::PSplitType::kLHigh:
             case zlp::PSplitType::kTSteady:
             case zlp::PSplitType::kPSteady: {

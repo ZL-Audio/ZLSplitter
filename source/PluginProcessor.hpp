@@ -68,13 +68,16 @@ public:
     bool supportsDoublePrecisionProcessing() const override { return true; }
 
 private:
+    std::atomic<float> &swap_ref_;
     std::array<std::vector<float>, 4> float_out_buffer;
     std::array<float*, 2> float_in_pointers{};
-    std::array<float*, 4> float_out_pointers{};
+    std::array<float*, 4> float_out_pointers1{};
+    std::array<float*, 4> float_out_pointers2{};
 
     std::array<std::vector<double>, 4> double_out_buffer;
     std::array<double*, 2> double_in_pointers{};
-    std::array<double*, 4> double_out_pointers{};
+    std::array<double*, 4> double_out_pointers1{};
+    std::array<double*, 4> double_out_pointers2{};
 
     zlp::Controller<float> float_controller_;
     zlp::ControllerAttach<float> float_controller_attach_;

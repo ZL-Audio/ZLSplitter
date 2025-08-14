@@ -10,3 +10,4 @@
 #pragma once
 
 #include "lr_splitter/lr_splitter.hpp"
+#include "ms_splitter/ms_splitter.hpp"

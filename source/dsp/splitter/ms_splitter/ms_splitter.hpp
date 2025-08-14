@@ -15,16 +15,16 @@
 
 namespace zldsp::splitter {
     template<typename FloatType>
-    class LRSplitter {
+    class MSSplitter {
     public:
-        LRSplitter() = default;
+        MSSplitter() = default;
 
         void prepare(const double sample_rate) {
-            mix_.prepare(sample_rate, 0.1);
+            c_mix_.prepare(sample_rate, 0.1);
         }
 
         void setMix(const FloatType mix) {
-            mix_.setTarget(mix);
+            c_mix_.setTarget(static_cast<FloatType>(0.5) - mix);
         }
 
         void process(std::array<FloatType *, 2> &in_buffer,
@@ -32,19 +32,20 @@ namespace zldsp::splitter {
             const auto in_l = in_buffer[0], in_r = in_buffer[1];
             const auto out_l1 = out_buffer[0], out_r1 = out_buffer[1];
             const auto out_l2 = out_buffer[2], out_r2 = out_buffer[3];
-            if (mix_.isSmoothing()) {
+            if (c_mix_.isSmoothing()) {
                 for (size_t i = 0; i < num_samples; ++i) {
-                    const auto mix = mix_.getNext();
+                    const auto c_mix = c_mix_.getNext();
                     const auto l = in_l[i], r = in_r[i];
-                    const auto l_mix = l * mix, r_mix = r * (static_cast<FloatType>(1.0) - mix);
+                    const auto l_mix = static_cast<FloatType>(0.5) * l - c_mix * r;
+                    const auto r_mix = static_cast<FloatType>(0.5) * r - c_mix * l;
                     out_l2[i] = l_mix;
                     out_r2[i] = r_mix;
                     out_l1[i] = l - l_mix;
                     out_r1[i] = r - r_mix;
                 }
             } else {
-                const auto mix = mix_.getCurrent();
-                const auto c_mix = static_cast<FloatType>(1.0) - mix;
+                const auto c_mix = c_mix_.getCurrent();
+
                 auto in_l_v = kfr::make_univector(in_l, num_samples);
                 auto in_r_v = kfr::make_univector(in_r, num_samples);
                 auto out_l1_v = kfr::make_univector(out_l1, num_samples);
@@ -52,18 +53,14 @@ namespace zldsp::splitter {
                 auto out_l2_v = kfr::make_univector(out_l2, num_samples);
                 auto out_r2_v = kfr::make_univector(out_r2, num_samples);
 
-                out_l2_v = in_l_v * mix;
-                out_r2_v = in_r_v * c_mix;
+                out_l2_v = static_cast<FloatType>(0.5) * in_l_v - c_mix * in_r_v;
+                out_r2_v = static_cast<FloatType>(0.5) * in_r_v - c_mix * in_l_v;
                 out_l1_v = in_l_v - out_l2_v;
                 out_r1_v = in_r_v - out_r2_v;
-                // zldsp::vector::multiply(out_l2, in_l, mix, num_samples);
-                // zldsp::vector::multiply(out_r2, in_r, c_mix, num_samples);
-                // zldsp::vector::multiply(out_l1, in_l, c_mix, num_samples);
-                // zldsp::vector::multiply(out_r1, in_r, mix, num_samples);
             }
         }
 
     private:
-        zldsp::chore::SmoothedValue<FloatType, chore::SmoothedTypes::kLin> mix_{};
+        zldsp::chore::SmoothedValue<FloatType, chore::SmoothedTypes::kLin> c_mix_{static_cast<FloatType>(0.5)};
     };
 }

@@ -45,6 +45,7 @@ namespace zlp {
 
     private:
         zldsp::splitter::LRSplitter<FloatType> lr_splitter_;
+        zldsp::splitter::MSSplitter<FloatType> ms_splitter_;
 
         std::atomic<bool> to_update_{false};
 
