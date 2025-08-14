@@ -1,4 +1,4 @@
-// Copyright (C) 2024 - zsliu98
+// Copyright (C) 2025 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -7,12 +7,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef ZL_DUMMY_PROCESSOR_H
-#define ZL_DUMMY_PROCESSOR_H
+#pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
-namespace zlState {
+namespace zlstate {
     class DummyProcessor : public juce::AudioProcessor {
     public:
         DummyProcessor() = default;
@@ -28,6 +27,9 @@ namespace zlState {
         bool isBusesLayoutSupported(const BusesLayout &) const override { return true; }
 
         void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override {
+        }
+
+        void processBlock(juce::AudioBuffer<double> &, juce::MidiBuffer &) override {
         }
 
         juce::AudioProcessorEditor *createEditor() override { return nullptr; }
@@ -65,4 +67,3 @@ namespace zlState {
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DummyProcessor)
     };
 }
-#endif //ZL_DUMMY_PROCESSOR_H

@@ -1,4 +1,4 @@
-// Copyright (C) 2024 - zsliu98
+// Copyright (C) 2025 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -7,14 +7,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef ZL_PROPERTY_H
-#define ZL_PROPERTY_H
+#pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 
-namespace zlState {
-
+namespace zlstate {
     class Property {
     public:
         Property();
@@ -26,19 +24,15 @@ namespace zlState {
         void saveAPVTS(juce::AudioProcessorValueTreeState &apvts);
 
     private:
-        std::unique_ptr<juce::PropertiesFile> uiFile;
-        juce::ReadWriteLock readWriteLock;
+        std::unique_ptr<juce::PropertiesFile> ui_file_;
+        juce::ReadWriteLock read_write_lock_;
 
-        inline auto static const path =
+        inline static const auto kPath =
                 juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                        .getChildFile("Audio")
-                        .getChildFile("Presets")
-                        .getChildFile(JucePlugin_Manufacturer)
-                        .getChildFile(JucePlugin_Name);
-        inline auto static const uiPath =
-                path.getChildFile("ui.xml");
+                .getChildFile("Audio")
+                .getChildFile("Presets")
+                .getChildFile(JucePlugin_Manufacturer)
+                .getChildFile(JucePlugin_Name);
+        inline static const auto kUIPath = kPath.getChildFile("ui.xml");
     };
-
 }
-
-#endif // ZL_PROPERTY_H

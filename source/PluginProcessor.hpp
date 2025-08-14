@@ -1,4 +1,4 @@
-// Copyright (C) 2024 - zsliu98
+// Copyright (C) 2025 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -15,19 +15,19 @@
 #include "ipps.h"
 #endif
 
-#include "dsp/dsp.hpp"
+#include "zlp/zlp.hpp"
 #include "state/state.hpp"
 
 class PluginProcessor : public juce::AudioProcessor {
 public:
-    zlState::DummyProcessor dummyProcessor;
-    juce::AudioProcessorValueTreeState parameters, state;
+    zlstate::DummyProcessor dummy_processor_;
+    juce::AudioProcessorValueTreeState parameters_, state_;
 
     PluginProcessor();
 
     ~PluginProcessor() override;
 
-    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay(double sample_rate, int samples_per_block) override;
 
     void releaseResources() override;
 
@@ -59,20 +59,28 @@ public:
 
     const juce::String getProgramName(int index) override;
 
-    void changeProgramName(int index, const juce::String &newName) override;
+    void changeProgramName(int index, const juce::String &new_name) override;
 
-    void getStateInformation(juce::MemoryBlock &destData) override;
+    void getStateInformation(juce::MemoryBlock &dest_data) override;
 
-    void setStateInformation(const void *data, int sizeInBytes) override;
+    void setStateInformation(const void *data, int size_in_bytes) override;
 
     bool supportsDoublePrecisionProcessing() const override { return true; }
 
-    zlDSP::Controller &getController() { return controller; }
-
 private:
-    zlDSP::Controller controller;
-    zlDSP::ControllerAttach controllerAttach;
+    std::array<std::vector<float>, 4> float_out_buffer;
+    std::array<float*, 2> float_in_pointers{};
+    std::array<float*, 4> float_out_pointers{};
 
-    juce::AudioBuffer<double> doubleBuffer;
+    std::array<std::vector<double>, 4> double_out_buffer;
+    std::array<double*, 2> double_in_pointers{};
+    std::array<double*, 4> double_out_pointers{};
+
+    zlp::Controller<float> float_controller_;
+    zlp::ControllerAttach<float> float_controller_attach_;
+
+    zlp::Controller<double> double_controller_;
+    zlp::ControllerAttach<double> double_controller_attach_;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
 };

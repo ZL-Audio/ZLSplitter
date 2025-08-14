@@ -1,4 +1,4 @@
-// Copyright (C) 2024 - zsliu98
+// Copyright (C) 2025 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -7,10 +7,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef ZL_CONTAINER_HPP
-#define ZL_CONTAINER_HPP
+#pragma once
 
 #include "array.hpp"
 #include "circular_buffer.hpp"
-
-#endif //ZL_CONTAINER_HPP
+#include "circular_minmax_buffer.hpp"
+#include "abstract_fifo.hpp"

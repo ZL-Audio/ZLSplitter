@@ -1,6 +1,7 @@
 # 3.24.1 is bundled in Visual Studio 2022 v17.4
 # 3.24.1 is also bundled in CLion as of 2023
 cmake_minimum_required(VERSION 3.24.1)
+set (CMAKE_CXX_STANDARD 20)
 
 # This tells cmake we have goodies in the /cmake folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-includes")
@@ -37,31 +38,31 @@ set(LV2URI "https://github.com/ZL-Audio/${PROJECT_NAME}")
 # For simplicity, the name of the CMake project is also the name of the target
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
-# Change me! Set the plugin formats you want built
-# Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    if (DEFINED ENV{PLUGIN_OS_FORMAT})
-        set(FORMATS "$ENV{PLUGIN_OS_FORMAT}")
-    else ()
-        set(FORMATS AU VST3 AAX)
-    endif()
-    if (DEFINED ENV{GITHUB_TOKEN})
-        set(JUCE_AAX_COPY_DIR "/Users/runner/Library/Audio/Plug-Ins/AAX")
-    else ()
-        set(JUCE_AAX_COPY_DIR "/Library/Application Support/Avid/Audio/Plug-Ins")
-    endif ()
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    if (DEFINED ENV{PLUGIN_OS_FORMAT})
-        set(FORMATS "$ENV{PLUGIN_OS_FORMAT}")
-    else ()
-        set(FORMATS LV2 VST3 AAX)
-    endif()
-    set(JUCE_AAX_COPY_DIR "C:/Program Files/Common Files/Avid/Audio/Plug-Ins")
+if (NOT DEFINED ZL_JUCE_COPY_PLUGIN)
+    set (ZL_JUCE_COPY_PLUGIN TRUE)
+endif ()
+
+if (DEFINED ZL_JUCE_FORMATS)
+    set(FORMATS "${ZL_JUCE_FORMATS}")
 else ()
-    if (DEFINED ENV{PLUGIN_OS_FORMAT})
-        set(FORMATS "$ENV{PLUGIN_OS_FORMAT}")
-    else()
-        set(FORMATS LV2 VST3)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        set(FORMATS VST3 AU Standalone)
+    else ()
+        set(FORMATS VST3 LV2 Standalone)
+    endif ()
+endif ()
+
+message(STATUS "Formats are ${FORMATS}")
+
+if ("AAX" IN_LIST FORMATS)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        if (DEFINED ENV{GITHUB_TOKEN})
+            set(JUCE_AAX_COPY_DIR "/Users/runner/Library/Audio/Plug-Ins/AAX")
+        else ()
+            set(JUCE_AAX_COPY_DIR "/Library/Application Support/Avid/Audio/Plug-Ins")
+        endif ()
+    elseif (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        set(JUCE_AAX_COPY_DIR "C:/Program Files/Common Files/Avid/Audio/Plug-Ins")
     endif ()
 endif ()
 
@@ -77,20 +78,12 @@ include(JUCEDefaults)
 # On Github Actions, this is done as a part of actions/checkout
 add_subdirectory(JUCE)
 
-# Add any other modules you want modules here, before the juce_add_plugin call
-juce_add_module("${CMAKE_CURRENT_LIST_DIR}/modules/friz/Source/friz")
-
 # See `docs/CMake API.md` in the JUCE repo for all config options
 juce_add_plugin("${PROJECT_NAME}"
-        # Icons for the standalone app
-        # ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
-
-        # Change me!
         COMPANY_NAME "${COMPANY_NAME}"
         BUNDLE_ID "${BUNDLE_ID}"
 
-        # On MacOS, plugin is copied to ~/Users/yourname/Library/Audio/Plug-Ins/
-        COPY_PLUGIN_AFTER_BUILD TRUE
+        COPY_PLUGIN_AFTER_BUILD ${ZL_JUCE_COPY_PLUGIN}
         AAX_COPY_DIR "${JUCE_AAX_COPY_DIR}"
 
         # Change me!
@@ -128,7 +121,7 @@ include(SharedCodeDefaults)
 # Just ensure you employ CONFIGURE_DEPENDS so the build system picks up changes
 # If you want to appease the CMake gods and avoid globs, manually add files like so:
 # set(SourceFiles Source/PluginEditor.h Source/PluginProcessor.h Source/PluginEditor.cpp Source/PluginProcessor.cpp)
-file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/source/*.h")
+file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/source/*.hpp")
 target_sources(SharedCode INTERFACE ${SourceFiles})
 
 # Adds a BinaryData target for embedding assets into the binary
@@ -153,8 +146,7 @@ target_compile_definitions(SharedCode
         # JucePlugin_Name is for some reason doesn't use the nicer PRODUCT_NAME
         PRODUCT_NAME_WITHOUT_VERSION="${PRODUCT_NAME}"
         #        JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS=1
-        JUCE_SILENCE_XCODE_15_LINKER_WARNING=1
-        USE_JUCE7_INSTEAD_OF_LATEST=${USE_JUCE7_INSTEAD_OF_LATEST}
+        JUCE_SILENCE_XCODE_15_LINKER_WARNING=1}
 )
 
 # Link to any other modules you added (with juce_add_module) here!
@@ -173,13 +165,18 @@ target_link_libraries(SharedCode
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
-        friz)
+)
 
-# Link the JUCE plugin targets our SharedCode target
+# add kfr
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+add_subdirectory(kfr)
+target_link_libraries(SharedCode INTERFACE kfr kfr_dsp kfr_dft)
+
+# Link the nlopt targets our SharedCode target
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
 
 # IPP support, comment out to disable
-include(PamplejuceIPP)
+# include(PamplejuceIPP)
 
 # A separate target keeps the Tests target fast!
 # include(Benchmarks)

@@ -1,4 +1,4 @@
-// Copyright (C) 2024 - zsliu98
+// Copyright (C) 2025 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -16,17 +16,19 @@ PluginProcessor::PluginProcessor()
           .withInput("Input", juce::AudioChannelSet::stereo(), true)
           .withOutput("Output 1", juce::AudioChannelSet::stereo(), true)
           .withOutput("Output 2", juce::AudioChannelSet::stereo(), true)),
-      parameters(*this, nullptr,
-                 juce::Identifier("ZLSplitParameters"),
-                 zlDSP::getParameterLayout()),
-      state(dummyProcessor, nullptr,
-            juce::Identifier("State"),
-            zlState::getStateParameterLayout()),
-      controllerAttach(*this, parameters, controller) {
+      parameters_(*this, nullptr,
+                  juce::Identifier("ZLSplitParameters"),
+                  zlp::getParameterLayout()),
+      state_(dummy_processor_, nullptr,
+             juce::Identifier("ZLSplitState"),
+             zlstate::getStateParameterLayout()),
+      float_controller_(),
+      float_controller_attach_(*this, parameters_, float_controller_),
+      double_controller_(),
+      double_controller_attach_(*this, parameters_, double_controller_) {
 }
 
-PluginProcessor::~PluginProcessor() {
-}
+PluginProcessor::~PluginProcessor() = default;
 
 //==============================================================================
 const juce::String PluginProcessor::getName() const {
@@ -79,20 +81,23 @@ const juce::String PluginProcessor::getProgramName(int index) {
     return {};
 }
 
-void PluginProcessor::changeProgramName(int index, const juce::String &newName) {
-    juce::ignoreUnused(index, newName);
+void PluginProcessor::changeProgramName(int, const juce::String &) {
 }
 
 //==============================================================================
-void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
-    const juce::dsp::ProcessSpec spec{
-        sampleRate,
-        static_cast<juce::uint32>(samplesPerBlock),
-        2
-    };
-    doubleBuffer.setSize(4, samplesPerBlock);
-    controller.prepare(spec);
-    controllerAttach.prepare(spec);
+void PluginProcessor::prepareToPlay(const double sample_rate, const int samples_per_block) {
+    const auto max_num_samples = static_cast<size_t>(samples_per_block);
+    for (size_t chan = 0; chan < 4; ++chan) {
+        float_out_buffer[chan].resize(max_num_samples);
+        float_out_pointers[chan] = float_out_buffer[chan].data();
+    }
+    float_controller_.prepare(sample_rate, max_num_samples);
+
+    for (size_t chan = 0; chan < 4; ++chan) {
+        double_out_buffer[chan].resize(max_num_samples);
+        double_out_pointers[chan] = double_out_buffer[chan].data();
+    }
+    double_controller_.prepare(sample_rate, max_num_samples);
 }
 
 void PluginProcessor::releaseResources() {
@@ -105,44 +110,41 @@ bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()) {
         return false;
     }
-    const auto auxOut = layouts.getChannelSet(false, 1);
-    if (!auxOut.isDisabled() && auxOut != juce::AudioChannelSet::stereo()) {
+    const auto aux_out = layouts.getChannelSet(false, 1);
+    if (!aux_out.isDisabled() && aux_out != juce::AudioChannelSet::stereo()) {
         return false;
     }
     return true;
 }
 
 void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer,
-                                   juce::MidiBuffer &midiMessages) {
-    juce::ignoreUnused(midiMessages);
+                                   juce::MidiBuffer &) {
+    juce::ScopedNoDenormals no_denormals;
+    float_in_pointers[0] = buffer.getWritePointer(0);
+    float_in_pointers[1] = buffer.getWritePointer(1);
 
-    juce::ScopedNoDenormals noDenormals;
-    doubleBuffer.setSize(juce::jmin(4, buffer.getNumChannels()),
-                         buffer.getNumSamples(),
-                         false, false, true);
-    for (int chan = 0; chan < doubleBuffer.getNumChannels(); ++chan) {
-        auto *dest = doubleBuffer.getWritePointer(chan);
-        auto *src = buffer.getReadPointer(chan);
-        for (int i = 0; i < buffer.getNumSamples(); ++i) {
-            dest[i] = static_cast<double>(src[i]);
-        }
-    }
-    controller.process(doubleBuffer);
-    for (int chan = 0; chan < doubleBuffer.getNumChannels(); ++chan) {
-        auto *dest = buffer.getWritePointer(chan);
-        auto *src = doubleBuffer.getReadPointer(chan);
-        for (int i = 0; i < buffer.getNumSamples(); ++i) {
-            dest[i] = static_cast<float>(src[i]);
-        }
+    float_controller_.process(float_in_pointers, float_out_pointers,
+                              static_cast<size_t>(buffer.getNumSamples()));
+
+    for (size_t chan = 0; chan < static_cast<size_t>(std::min(4, buffer.getNumChannels())); ++chan) {
+        zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
+                            float_out_pointers[chan], static_cast<size_t>(buffer.getNumSamples()));
     }
 }
 
 void PluginProcessor::processBlock(juce::AudioBuffer<double> &buffer,
-                                   juce::MidiBuffer &midiMessages) {
-    juce::ignoreUnused(midiMessages);
+                                   juce::MidiBuffer &) {
+    juce::ScopedNoDenormals no_denormals;
+    double_in_pointers[0] = buffer.getWritePointer(0);
+    double_in_pointers[1] = buffer.getWritePointer(1);
 
-    juce::ScopedNoDenormals noDenormals;
-    controller.process(buffer);
+    double_controller_.process(double_in_pointers, double_out_pointers,
+                               static_cast<size_t>(buffer.getNumSamples()));
+
+    for (size_t chan = 0; chan < static_cast<size_t>(std::min(4, buffer.getNumChannels())); ++chan) {
+        zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
+                            double_out_pointers[chan], static_cast<size_t>(buffer.getNumSamples()));
+    }
 }
 
 //==============================================================================
@@ -151,24 +153,24 @@ bool PluginProcessor::hasEditor() const {
 }
 
 juce::AudioProcessorEditor *PluginProcessor::createEditor() {
-    return new PluginEditor(*this);
-    // return new juce::GenericAudioProcessorEditor(*this);
+    // return new PluginEditor(*this);
+    return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
-void PluginProcessor::getStateInformation(juce::MemoryBlock &destData) {
-    auto tempTree = juce::ValueTree("ZLSplitterParaState");
-    tempTree.appendChild(parameters.copyState(), nullptr);
+void PluginProcessor::getStateInformation(juce::MemoryBlock &dest_data) {
+    auto temp_tree = juce::ValueTree("ZLSplitterParaState");
+    temp_tree.appendChild(parameters_.copyState(), nullptr);
     // tempTree.appendChild(parametersNA.copyState(), nullptr);
-    const std::unique_ptr<juce::XmlElement> xml(tempTree.createXml());
-    copyXmlToBinary(*xml, destData);
+    const std::unique_ptr<juce::XmlElement> xml(temp_tree.createXml());
+    copyXmlToBinary(*xml, dest_data);
 }
 
-void PluginProcessor::setStateInformation(const void *data, int sizeInBytes) {
-    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
-    if (xmlState != nullptr && xmlState->hasTagName("ZLSplitterParaState")) {
-        auto tempTree = juce::ValueTree::fromXml(*xmlState);
-        parameters.replaceState(tempTree.getChildWithName(parameters.state.getType()));
+void PluginProcessor::setStateInformation(const void *data, const int size_in_bytes) {
+    std::unique_ptr<juce::XmlElement> xml_state(getXmlFromBinary(data, size_in_bytes));
+    if (xml_state != nullptr && xml_state->hasTagName("ZLSplitterParaState")) {
+        const auto temp_tree = juce::ValueTree::fromXml(*xml_state);
+        parameters_.replaceState(temp_tree.getChildWithName(parameters_.state.getType()));
         // parametersNA.replaceState(tempTree.getChildWithName(parametersNA.state.getType()));
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2024 - zsliu98
+// Copyright (C) 2025 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -7,12 +7,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef ZL_CONTAINER_CIRCULAR_BUFFER_HPP
-#define ZL_CONTAINER_CIRCULAR_BUFFER_HPP
+#pragma once
 
 #include <vector>
 
-namespace zlContainer {
+namespace zldsp::container {
     /**
      * a circular buffer
      * @tparam T the type of elements
@@ -21,39 +20,68 @@ namespace zlContainer {
     class CircularBuffer {
     public:
         explicit CircularBuffer(const size_t capacity) {
-            data.resize(capacity);
+            setCapacity(capacity);
         }
 
-        [[nodiscard]] size_t capacity() const { return data.size(); }
+        [[nodiscard]] size_t capacity() const { return data_.size() - 1; }
 
-        [[nodiscard]] size_t size() const { return static_cast<size_t>(currentNum); }
+        [[nodiscard]] size_t size() const {
+            return tail_ >= head_
+            ? static_cast<size_t>(tail_ - head_)
+            : static_cast<size_t>(tail_ + static_cast<unsigned int>(data_.size()) - head_);
+        }
 
-        void set_capacity(const size_t capacity) {
-            data.resize(capacity);
+        [[nodiscard]] bool isEmpty() const {
+            return tail_ == head_;
+        }
+
+        void setCapacity(const size_t capacity) {
+            data_.resize(capacity + 1);
+            clear();
         }
 
         void clear() {
-            std::fill(data.begin(), data.end(), T());
-            pos = 0;
-            currentNum = 0;
+            head_ = 0;
+            tail_ = 0;
         }
 
-        void push_back(T x) {
-            data[static_cast<size_t>(pos)] = x;
-            pos = (pos + 1) % static_cast<int>(data.size());
-            currentNum = std::min(currentNum + 1, static_cast<int>(data.size()));
+        void pushBack(T x) {
+            tail_ = (tail_ + 1) % static_cast<unsigned int>(data_.size());
+            data_[static_cast<size_t>(tail_)] = x;
+            if (tail_ == head_) {
+                popFront();
+            }
         }
 
-        T pop_front() {
-            const auto frontPos = (pos - currentNum + static_cast<int>(data.size())) % static_cast<int>(data.size());
-            currentNum -= 1;
-            return data[static_cast<size_t>(frontPos)];
+        T popBack() {
+            const auto t = data_[static_cast<size_t>(tail_)];
+            tail_ = tail_ > 0 ? tail_ - 1 : static_cast<unsigned int>(data_.size()) - 1;
+            return t;
+        }
+
+        T getBack() {
+            return data_[static_cast<size_t>(tail_)];
+        }
+
+        void pushFront(T x) {
+            data_[static_cast<size_t>(head_)] = x;
+            head_ = head_ > 0 ? head_ - 1 : static_cast<unsigned int>(data_.size()) - 1;
+            if (head_ == tail_) {
+                popBack();
+            }
+        }
+
+        T popFront() {
+            head_ = (head_ + 1) % static_cast<unsigned int>(data_.size());
+            return data_[static_cast<size_t>(head_)];
+        }
+
+        T getFront() {
+            return data_[static_cast<size_t>((head_ + 1) % static_cast<unsigned int>(data_.size()))];
         }
 
     private:
-        std::vector<T> data;
-        int pos = 0, currentNum = 0;
+        std::vector<T> data_;
+        unsigned int head_{0}, tail_{0};
     };
 }
-
-#endif //ZL_CONTAINER_CIRCULAR_BUFFER_HPP
