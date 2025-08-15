@@ -28,9 +28,22 @@ namespace zldsp::filter {
     public:
         explicit Ideal() = default;
 
-        void prepare(const double sampleRate) {
-            fs_.store(sampleRate, std::memory_order::relaxed);
+        void prepare(const double sample_rate) {
+            fs_.store(sample_rate, std::memory_order::relaxed);
             to_update_.store(true, std::memory_order::release);
+        }
+
+        bool prepareBuffer() {
+            if (to_update_.exchange(false, std::memory_order::acquire)) {
+                current_filter_num_ = updateIIRCoeffs(
+                    filter_type_.load(std::memory_order::relaxed),
+                    order_.load(std::memory_order::relaxed),
+                    freq_.load(std::memory_order::relaxed), fs_.load(std::memory_order::relaxed),
+                    gain_.load(std::memory_order::relaxed), q_.load(std::memory_order::relaxed),
+                    coeffs_);
+                return true;
+            }
+            return false;
         }
 
         void setFreq(const FloatType x) {
@@ -82,28 +95,46 @@ namespace zldsp::filter {
             return order_.load(std::memory_order::relaxed);
         }
 
-        void updateParas() {
-            current_filter_num_ = updateIIRCoeffs(filter_type_.load(), order_.load(),
-                                                  freq_.load(), fs_.load(),
-                                                  gain_.load(), q_.load(), coeffs_);
+        void updateResponse(std::span<std::complex<FloatType> > wis,
+                            std::span<std::complex<FloatType> > response) {
+            if (current_filter_num_ == 0) {
+                std::fill(response.begin(), response.end(), std::complex(FloatType(1), FloatType(0)));
+            } else {
+                IdealBase<FloatType>::updateResponse(coeffs_[0], wis, response);
+                for (size_t i = 1; i < current_filter_num_; ++i) {
+                    IdealBase<FloatType>::multiplyResponse(coeffs_[i], wis, response);
+                }
+            }
         }
 
-        void updateResponse(const std::span<const std::complex<FloatType>> wis,
-                            std::span<const std::complex<FloatType>> response) {
-            std::fill(response.begin(), response.end(), std::complex(FloatType(1), FloatType(0)));
-            for (size_t i = 0; i < current_filter_num_; ++i) {
-                IdealBase<FloatType>::updateResponse(coeffs_[i], wis, response);
+        void multiplyResponse(std::span<std::complex<FloatType> > wis,
+                            std::span<std::complex<FloatType> > response) {
+            if (current_filter_num_ > 0) {
+                for (size_t i = 0; i < current_filter_num_; ++i) {
+                    IdealBase<FloatType>::multiplyResponse(coeffs_[i], wis, response);
+                }
             }
         }
 
         void updateMagnitude(const std::span<const FloatType> ws,
                              std::span<FloatType> dbs) {
-            std::fill(dbs.begin(), dbs.end(), FloatType(1));
-            for (size_t i = 0; i < current_filter_num_; ++i) {
-                IdealBase<FloatType>::updateMagnitude(coeffs_[i], ws, dbs);
+            if (current_filter_num_ == 0) {
+                std::fill(dbs.begin(), dbs.end(), FloatType(0));
+            } else {
+                IdealBase<FloatType>::updateMagnitude(coeffs_[0], ws, dbs);
+                for (size_t i = 1; i < current_filter_num_; ++i) {
+                    IdealBase<FloatType>::multiplyMagnitude(coeffs_[i], ws, dbs);
+                }
             }
-            auto db_v = kfr::make_univector(dbs);
-            db_v = FloatType(20) * kfr::log10(kfr::max(db_v, FloatType(1e-12)));
+        }
+
+        void multiplyMagnitude(const std::span<const FloatType> ws,
+                             std::span<FloatType> dbs) {
+            if (current_filter_num_ > 0) {
+                for (size_t i = 0; i < current_filter_num_; ++i) {
+                    IdealBase<FloatType>::multiplyMagnitude(coeffs_[i], ws, dbs);
+                }
+            }
         }
 
         FloatType getDB(FloatType w) {
@@ -113,8 +144,6 @@ namespace zldsp::filter {
             }
             return static_cast<FloatType>(chore::gainToDecibels(g0));
         }
-
-        std::atomic<bool> &getUpdateFlag() { return to_update_; }
 
     private:
         std::array<std::array<double, 6>, FilterSize> coeffs_{};

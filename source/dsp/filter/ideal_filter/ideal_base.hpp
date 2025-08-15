@@ -21,13 +21,29 @@ namespace zldsp::filter {
             const std::array<double, 6> &coeff,
             const std::span<const SampleType> ws, std::span<SampleType> gains) {
             for (size_t idx = 0; idx < ws.size(); ++idx) {
+                gains[idx] = getMagnitude(coeff, ws[idx]);
+            }
+        }
+
+        static void multiplyMagnitude(
+            const std::array<double, 6> &coeff,
+            const std::span<const SampleType> ws, std::span<SampleType> gains) {
+            for (size_t idx = 0; idx < ws.size(); ++idx) {
                 gains[idx] *= getMagnitude(coeff, ws[idx]);
             }
         }
 
         static void updateResponse(
             const std::array<double, 6> &coeff,
-            const std::span<const std::complex<SampleType> > wis, std::span<std::complex<SampleType> > response) {
+            std::span<std::complex<SampleType> > wis, std::span<std::complex<SampleType> > response) {
+            for (size_t idx = 0; idx < wis.size(); ++idx) {
+                response[idx] = getResponse(coeff, wis[idx]);
+            }
+        }
+
+        static void multiplyResponse(
+            const std::array<double, 6> &coeff,
+            std::span<std::complex<SampleType> > wis, std::span<std::complex<SampleType> > response) {
             for (size_t idx = 0; idx < wis.size(); ++idx) {
                 response[idx] *= getResponse(coeff, wis[idx]);
             }

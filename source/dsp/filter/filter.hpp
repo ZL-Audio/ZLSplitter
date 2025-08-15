@@ -11,5 +11,7 @@
 
 #include "iir_filter/iir_filter.hpp"
 #include "svf_filter/svf_filter.hpp"
+#include "fir_filter/fir_filter.hpp"
 #include "ideal_filter/ideal_filter.hpp"
 #include "filter_design/filter_design.hpp"
+#include "reverse_iir_filter/reverse_iir_filter.hpp"

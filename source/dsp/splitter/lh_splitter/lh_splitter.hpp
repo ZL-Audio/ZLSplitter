@@ -82,6 +82,7 @@ namespace zldsp::splitter {
             } else if (c_order_ == 4) {
                 processOrder4(in_buffer, low_buffer, high_buffer, num_samples);
             }
+
             if (mix_.isSmoothing()) {
                 for (size_t i = 0; i < num_samples; ++i) {
                     const auto mix = mix_.getNext();
@@ -110,10 +111,10 @@ namespace zldsp::splitter {
         }
 
     private:
-        zldsp::chore::SmoothedValue<FloatType, chore::SmoothedTypes::kLin> mix_{static_cast<FloatType>(0)};
-
         std::array<FirstOrderTPTFilter<FloatType>, 2> low1, high1;
         std::array<TPTFilter<FloatType>, 4> low2, high2;
+
+        zldsp::chore::SmoothedValue<FloatType, chore::SmoothedTypes::kLin> mix_{static_cast<FloatType>(0)};
 
         std::atomic<double> freq_{1000.0};
         zldsp::chore::SmoothedValue<double, zldsp::chore::kFixMul> c_freq_{1000.0};

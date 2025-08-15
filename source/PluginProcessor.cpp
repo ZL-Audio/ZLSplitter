@@ -23,9 +23,9 @@ PluginProcessor::PluginProcessor()
              juce::Identifier("ZLSplitState"),
              zlstate::getStateParameterLayout()),
       swap_ref_(*parameters_.getRawParameterValue(zlp::PSwap::kID)),
-      float_controller_(),
+      float_controller_(*this),
       float_controller_attach_(*this, parameters_, float_controller_),
-      double_controller_(),
+      double_controller_(*this),
       double_controller_attach_(*this, parameters_, double_controller_) {
 }
 

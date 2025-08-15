@@ -12,3 +12,4 @@
 #include "lr_splitter/lr_splitter.hpp"
 #include "ms_splitter/ms_splitter.hpp"
 #include "lh_splitter/lh_splitter.hpp"
+#include "lh_splitter/lh_fir_splitter.hpp"

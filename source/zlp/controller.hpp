@@ -19,9 +19,9 @@
 
 namespace zlp {
     template<typename FloatType>
-    class Controller {
+    class Controller : private juce::AsyncUpdater {
     public:
-        explicit Controller() = default;
+        explicit Controller(juce::AudioProcessor &processor);
 
         void prepare(double sample_rate, size_t max_num_samples);
 
@@ -40,20 +40,36 @@ namespace zlp {
         void setMix(FloatType mix) {
             mix_.store(mix, std::memory_order::relaxed);
             to_update_mix_.store(true, std::memory_order::release);
+        }
+
+        void setLHOrder(size_t order) {
+            lh_splitter_.setOrder(order);
+            lh_fir_splitter_.setOrder(order);
             to_update_.store(true, std::memory_order::release);
         }
 
-        zldsp::splitter::LHSplitter<FloatType>& getLHSplitter() {
+        void setUseFIR(const bool f) {
+            use_fir_.store(f, std::memory_order::relaxed);
+            to_update_.store(true, std::memory_order::release);
+        }
+
+        zldsp::splitter::LHSplitter<FloatType> &getLHSplitter() {
             return lh_splitter_;
         }
 
+        zldsp::splitter::LHFIRSplitter<FloatType> &getLHFIRSplitter() {
+            return lh_fir_splitter_;
+        }
+
     private:
-        std::array<FloatType*, 2> out_buffer1_, out_buffer2_;
+        juce::AudioProcessor &p_ref_;
+        std::array<FloatType *, 2> out_buffer1_, out_buffer2_;
         zldsp::splitter::LRSplitter<FloatType> lr_splitter_;
         zldsp::splitter::MSSplitter<FloatType> ms_splitter_;
         zldsp::splitter::LHSplitter<FloatType> lh_splitter_;
+        zldsp::splitter::LHFIRSplitter<FloatType> lh_fir_splitter_;
 
-        std::atomic<bool> to_update_{false};
+        std::atomic<bool> to_update_{true};
 
         std::atomic<zlp::PSplitType::SplitType> split_type_{PSplitType::SplitType::kLRight};
         zlp::PSplitType::SplitType c_split_type_{PSplitType::SplitType::kLRight};
@@ -61,5 +77,14 @@ namespace zlp {
 
         std::atomic<FloatType> mix_{};
         std::atomic<bool> to_update_mix_{false};
+
+        std::atomic<bool> use_fir_{false};
+        bool c_use_fir_{false};
+
+        std::atomic<int> latency_{0};
+
+        void checkUpdateLatency();
+
+        void handleAsyncUpdate() override;
     };
 }
