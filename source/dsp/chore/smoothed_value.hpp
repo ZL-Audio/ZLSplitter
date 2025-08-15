@@ -48,7 +48,7 @@ namespace zldsp::chore {
                     break;
                 }
             }
-            setCurrentAndTarget(getTarget());
+            setTarget(getTarget());
         }
 
         void setTarget(const FloatType x) {

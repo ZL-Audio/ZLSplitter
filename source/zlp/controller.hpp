@@ -43,9 +43,15 @@ namespace zlp {
             to_update_.store(true, std::memory_order::release);
         }
 
+        zldsp::splitter::LHSplitter<FloatType>& getLHSplitter() {
+            return lh_splitter_;
+        }
+
     private:
+        std::array<FloatType*, 2> out_buffer1_, out_buffer2_;
         zldsp::splitter::LRSplitter<FloatType> lr_splitter_;
         zldsp::splitter::MSSplitter<FloatType> ms_splitter_;
+        zldsp::splitter::LHSplitter<FloatType> lh_splitter_;
 
         std::atomic<bool> to_update_{false};
 

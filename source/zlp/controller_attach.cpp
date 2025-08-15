@@ -34,6 +34,11 @@ namespace zlp {
             controller_ref_.setSplitType(static_cast<zlp::PSplitType::SplitType>(std::round(new_value)));
         } else if (parameter_ID == zlp::PMix::kID) {
             controller_ref_.setMix(static_cast<FloatType>(new_value * 0.005f));
+        } else if (parameter_ID == zlp::PLHFreq::kID) {
+            controller_ref_.getLHSplitter().setFreq(static_cast<double>(new_value));
+        } else if (parameter_ID == zlp::PLHSlope::kID) {
+            controller_ref_.getLHSplitter().setOrder(
+                zlp::PLHSlope::kOrders[static_cast<size_t>(std::round(new_value))]);
         }
     }
 

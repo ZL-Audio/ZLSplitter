@@ -15,22 +15,37 @@ namespace zlp {
                                         const size_t max_num_samples) {
         lr_splitter_.prepare(sample_rate);
         ms_splitter_.prepare(sample_rate);
+        lh_splitter_.prepare(sample_rate, 2);
         juce::ignoreUnused(max_num_samples);
     }
 
     template<typename FloatType>
     void Controller<FloatType>::prepareBuffer() {
-        if (!to_update_.exchange(false, std::memory_order::acquire)) {
-            return;
+        if (to_update_.exchange(false, std::memory_order::acquire)) {
+            if (to_update_split_type_.exchange(false, std::memory_order::acquire)) {
+                c_split_type_ = split_type_.load(std::memory_order::relaxed);
+            }
+            if (to_update_mix_.exchange(false, std::memory_order::acquire)) {
+                const auto mix = std::clamp(mix_.load(std::memory_order::relaxed),
+                                            static_cast<FloatType>(0.0), static_cast<FloatType>(0.5));
+                lr_splitter_.setMix(mix);
+                ms_splitter_.setMix(mix);
+                lh_splitter_.setMix(mix);
+            }
         }
-        if (to_update_split_type_.exchange(false, std::memory_order::acquire)) {
-            c_split_type_ = split_type_.load(std::memory_order::relaxed);
-        }
-        if (to_update_mix_.exchange(false, std::memory_order::acquire)) {
-            const auto mix = std::clamp(mix_.load(std::memory_order::relaxed),
-                                        static_cast<FloatType>(0.0), static_cast<FloatType>(0.5));
-            lr_splitter_.setMix(mix);
-            ms_splitter_.setMix(mix);
+        switch (c_split_type_) {
+            case zlp::PSplitType::kLRight:
+            case zlp::PSplitType::kMSide: {
+                break;
+            }
+            case zlp::PSplitType::kLHigh: {
+                lh_splitter_.prepareBuffer();
+                break;
+            }
+            case zlp::PSplitType::kTSteady:
+            case zlp::PSplitType::kPSteady: {
+                break;
+            }
         }
     }
 
@@ -39,16 +54,24 @@ namespace zlp {
                                         std::array<FloatType *, 4> &out_buffer,
                                         const size_t num_samples) {
         prepareBuffer();
+        out_buffer1_[0] = out_buffer[0];
+        out_buffer1_[1] = out_buffer[1];
+        out_buffer2_[0] = out_buffer[2];
+        out_buffer2_[1] = out_buffer[3];
+
         switch (c_split_type_) {
             case zlp::PSplitType::kLRight: {
-                lr_splitter_.process(in_buffer, out_buffer, num_samples);
+                lr_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
                 break;
             }
             case zlp::PSplitType::kMSide: {
-                ms_splitter_.process(in_buffer, out_buffer, num_samples);
+                ms_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
                 break;
             }
-            case zlp::PSplitType::kLHigh:
+            case zlp::PSplitType::kLHigh: {
+                lh_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
+                break;
+            }
             case zlp::PSplitType::kTSteady:
             case zlp::PSplitType::kPSteady: {
                 break;

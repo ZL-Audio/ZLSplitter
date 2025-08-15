@@ -28,38 +28,36 @@ namespace zldsp::splitter {
         }
 
         void process(std::array<FloatType *, 2> &in_buffer,
-                     std::array<FloatType *, 4> &out_buffer, const size_t num_samples) {
+                     std::array<FloatType *, 2> &left_buffer,
+                     std::array<FloatType *, 2> &right_buffer,
+                     const size_t num_samples) {
             const auto in_l = in_buffer[0], in_r = in_buffer[1];
-            const auto out_l1 = out_buffer[0], out_r1 = out_buffer[1];
-            const auto out_l2 = out_buffer[2], out_r2 = out_buffer[3];
+            const auto left_l = left_buffer[0], left_r = left_buffer[1];
+            const auto right_l = right_buffer[0], right_r = right_buffer[1];
             if (mix_.isSmoothing()) {
                 for (size_t i = 0; i < num_samples; ++i) {
                     const auto mix = mix_.getNext();
                     const auto l = in_l[i], r = in_r[i];
                     const auto l_mix = l * mix, r_mix = r * (static_cast<FloatType>(1.0) - mix);
-                    out_l2[i] = l_mix;
-                    out_r2[i] = r_mix;
-                    out_l1[i] = l - l_mix;
-                    out_r1[i] = r - r_mix;
+                    right_l[i] = l_mix;
+                    right_r[i] = r_mix;
+                    left_l[i] = l - l_mix;
+                    left_r[i] = r - r_mix;
                 }
             } else {
                 const auto mix = mix_.getCurrent();
                 const auto c_mix = static_cast<FloatType>(1.0) - mix;
                 auto in_l_v = kfr::make_univector(in_l, num_samples);
                 auto in_r_v = kfr::make_univector(in_r, num_samples);
-                auto out_l1_v = kfr::make_univector(out_l1, num_samples);
-                auto out_r1_v = kfr::make_univector(out_r1, num_samples);
-                auto out_l2_v = kfr::make_univector(out_l2, num_samples);
-                auto out_r2_v = kfr::make_univector(out_r2, num_samples);
+                auto left_l_v = kfr::make_univector(left_l, num_samples);
+                auto left_r_v = kfr::make_univector(left_r, num_samples);
+                auto right_l_v = kfr::make_univector(right_l, num_samples);
+                auto right_r_v = kfr::make_univector(right_r, num_samples);
 
-                out_l2_v = in_l_v * mix;
-                out_r2_v = in_r_v * c_mix;
-                out_l1_v = in_l_v - out_l2_v;
-                out_r1_v = in_r_v - out_r2_v;
-                // zldsp::vector::multiply(out_l2, in_l, mix, num_samples);
-                // zldsp::vector::multiply(out_r2, in_r, c_mix, num_samples);
-                // zldsp::vector::multiply(out_l1, in_l, c_mix, num_samples);
-                // zldsp::vector::multiply(out_r1, in_r, mix, num_samples);
+                right_l_v = in_l_v * mix;
+                right_r_v = in_r_v * c_mix;
+                left_l_v = in_l_v - right_l_v;
+                left_r_v = in_r_v - right_r_v;
             }
         }
 
