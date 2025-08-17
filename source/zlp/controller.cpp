@@ -15,7 +15,6 @@ namespace zlp {
         : p_ref_(processor) {
     }
 
-
     template<typename FloatType>
     void Controller<FloatType>::prepare(const double sample_rate,
                                         const size_t max_num_samples) {
@@ -23,6 +22,8 @@ namespace zlp {
         ms_splitter_.prepare(sample_rate);
         lh_splitter_.prepare(sample_rate, 2);
         lh_fir_splitter_.prepare(sample_rate, 2, max_num_samples);
+        ts_splitter_[0].prepare(sample_rate, 1, max_num_samples);
+        ts_splitter_[1].prepare(sample_rate, 1, max_num_samples);
     }
 
     template<typename FloatType>
@@ -47,7 +48,10 @@ namespace zlp {
                     }
                     break;
                 }
-                case zlp::PSplitType::kTSteady:
+                case zlp::PSplitType::kTSteady: {
+                    latency_.store(ts_splitter_[0].getTSLatency(), std::memory_order::relaxed);
+                    break;
+                }
                 case zlp::PSplitType::kPSteady: {
                     latency_.store(0, std::memory_order::relaxed);
                     break;
@@ -110,7 +114,11 @@ namespace zlp {
                 }
                 break;
             }
-            case zlp::PSplitType::kTSteady:
+            case zlp::PSplitType::kTSteady: {
+                ts_splitter_[0].process(in_buffer[0], out_buffer1_[0], out_buffer2_[0], num_samples);
+                ts_splitter_[1].process(in_buffer[1], out_buffer1_[1], out_buffer2_[1], num_samples);
+                break;
+            }
             case zlp::PSplitType::kPSteady: {
                 break;
             }

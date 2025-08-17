@@ -15,9 +15,11 @@ namespace zlp {
                                                   juce::AudioProcessorValueTreeState &parameters,
                                                   Controller<FloatType> &controller)
         : p_ref_(processor), parameters_ref_(parameters),
-          controller_ref_(controller) {
-        for (auto &ID: kIDs) {
-            parameters_ref_.addParameterListener(ID, this);
+          controller_ref_(controller),
+          ts_splitter_(controller_ref_.getTSSplitter()) {
+        for (size_t i = 0; i < kDefaultVs.size(); ++i) {
+            parameters_ref_.addParameterListener(kIDs[i], this);
+            parameterChanged(kIDs[i], kDefaultVs[i]);
         }
     }
 
@@ -41,6 +43,22 @@ namespace zlp {
             controller_ref_.setLHOrder(zlp::PLHSlope::kOrders[static_cast<size_t>(std::round(new_value))]);
         } else if (parameter_ID == zlp::PLHFilterType::kID) {
             controller_ref_.setUseFIR(new_value > .5f);
+        } else if (parameter_ID == zlp::PTSBalance::kID) {
+            const auto x = new_value / 100.f + .5f;
+            ts_splitter_[0].setBalance(x);
+            ts_splitter_[1].setBalance(x);
+        } else if (parameter_ID == zlp::PTSSmooth::kID) {
+            const auto x = new_value / 100.f;
+            ts_splitter_[0].setSmooth(x);
+            ts_splitter_[1].setSmooth(x);
+        } else if (parameter_ID == zlp::PTSHold::kID) {
+            const auto x = new_value / 100.f;
+            ts_splitter_[0].setHold(x);
+            ts_splitter_[1].setHold(x);
+        } else if (parameter_ID == zlp::PTSSeparation::kID) {
+            const auto x = new_value / 100.f;
+            ts_splitter_[0].setSeparation(x);
+            ts_splitter_[1].setSeparation(x);
         }
     }
 

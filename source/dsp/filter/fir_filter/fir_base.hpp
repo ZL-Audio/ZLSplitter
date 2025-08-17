@@ -28,6 +28,7 @@ namespace zldsp::filter {
             } else {
                 setOrder(num_channels, DefaultFFTOrder + 3);
             }
+            reset();
         }
 
         void reset() {
@@ -90,7 +91,7 @@ namespace zldsp::filter {
         size_t fft_data_pos_ = 0;
         int latency_{0};
 
-        void setFFTOrder(const size_t channel_num, const size_t order) {
+        void setFFTOrder(const size_t num_channels, const size_t order) {
             fft_order_ = order;
             fft_size_ = static_cast<size_t>(1) << fft_order_;
             num_bins_ = fft_size_ / 2 + 1;
@@ -108,8 +109,8 @@ namespace zldsp::filter {
             zldsp::fft::fillCycleHanningWindow(window2_, static_cast<size_t>(fft_size_));
             window2_ = window2_ * kWindowCorrection;
 
-            input_fifo_.resize(channel_num);
-            output_fifo_.resize(channel_num);
+            input_fifo_.resize(num_channels);
+            output_fifo_.resize(num_channels);
             fft_in_.resize(fft_size_);
             fft_data_.resize(fft_size_ * 2);
         }
@@ -145,7 +146,7 @@ namespace zldsp::filter {
             }
         }
 
-        virtual void setOrder(size_t channelNum, size_t order) = 0;
+        virtual void setOrder(size_t num_channels, size_t order) = 0;
 
         virtual void processSpectrum() = 0;
     };

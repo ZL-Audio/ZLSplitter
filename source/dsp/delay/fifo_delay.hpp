@@ -29,6 +29,10 @@ namespace zldsp::delay {
             num_delay_ = x;
         }
 
+        int getDelay() const {
+            return num_delay_;
+        }
+
         void reset() {
             std::fill(state_.begin(), state_.end(), FloatType(0));
             pos_ = 0;

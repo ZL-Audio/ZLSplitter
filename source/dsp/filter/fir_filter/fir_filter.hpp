@@ -45,8 +45,8 @@ namespace zldsp::filter {
         std::vector<std::complex<FloatType> > wis_, response_;
         kfr::univector<float> corrections_{};
 
-        void setOrder(const size_t channel_num, const size_t order) override {
-            FIRBase<FloatType, DefaultFFTOrder>::setFFTOrder(channel_num, order);
+        void setOrder(const size_t num_channels, const size_t order) override {
+            FIRBase<FloatType, DefaultFFTOrder>::setFFTOrder(num_channels, order);
 
             wis_.resize(FIRBase<FloatType, DefaultFFTOrder>::num_bins_);
             response_.resize(FIRBase<FloatType, DefaultFFTOrder>::num_bins_);
