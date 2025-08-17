@@ -65,6 +65,10 @@ namespace zlp {
             return ts_splitter_;
         }
 
+        std::array<zldsp::splitter::PSSplitter<FloatType>, 2> &getPSSplitter() {
+            return ps_splitter_;
+        }
+
     private:
         juce::AudioProcessor &p_ref_;
         std::array<FloatType *, 2> out_buffer1_, out_buffer2_;
@@ -73,6 +77,7 @@ namespace zlp {
         zldsp::splitter::LHSplitter<FloatType> lh_splitter_;
         zldsp::splitter::LHFIRSplitter<FloatType> lh_fir_splitter_;
         std::array<zldsp::splitter::TSSplitter<FloatType>, 2> ts_splitter_;
+        std::array<zldsp::splitter::PSSplitter<FloatType>, 2> ps_splitter_;
 
         std::atomic<bool> to_update_{true};
 

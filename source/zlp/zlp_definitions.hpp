@@ -273,7 +273,7 @@ namespace zlp {
     class PTSBalance : public FloatParameters<PTSBalance> {
     public:
         auto static constexpr kID = "ts_balance";
-        auto static constexpr kName = "Balance";
+        auto static constexpr kName = "TS Balance";
         inline auto static const kRange = juce::NormalisableRange<float>(-50.f, 50.f, .1f);
         auto static constexpr kDefaultV = 0.f;
     };
@@ -281,7 +281,7 @@ namespace zlp {
     class PTSSmooth : public FloatParameters<PTSSmooth> {
     public:
         auto static constexpr kID = "ts_smooth";
-        auto static constexpr kName = "Smooth";
+        auto static constexpr kName = "TS Smooth";
         inline auto static const kRange = juce::NormalisableRange<float>(0.f, 100.f, .1f);
         auto static constexpr kDefaultV = 50.f;
     };
@@ -289,7 +289,7 @@ namespace zlp {
     class PTSHold : public FloatParameters<PTSHold> {
     public:
         auto static constexpr kID = "ts_hold";
-        auto static constexpr kName = "Hold";
+        auto static constexpr kName = "TS Hold";
         inline auto static const kRange = juce::NormalisableRange<float>(0.f, 100.f, .1f);
         auto static constexpr kDefaultV = 50.f;
     };
@@ -297,7 +297,7 @@ namespace zlp {
     class PTSSeparation : public FloatParameters<PTSSeparation> {
     public:
         auto static constexpr kID = "ts_strength";
-        auto static constexpr kName = "Strength";
+        auto static constexpr kName = "TS Strength";
         inline auto static const kRange = juce::NormalisableRange<float>(0.f, 100.f, .1f);
         auto static constexpr kDefaultV = 50.f;
     };
@@ -305,7 +305,7 @@ namespace zlp {
     class PPSBalance : public FloatParameters<PPSBalance> {
     public:
         auto static constexpr kID = "ps_balance";
-        auto static constexpr kName = "Balance";
+        auto static constexpr kName = "PS Balance";
         inline auto static const kRange = juce::NormalisableRange<float>(-50.f, 50.f, .1f);
         auto static constexpr kDefaultV = 0.f;
     };
@@ -313,15 +313,15 @@ namespace zlp {
     class PPSSmooth : public FloatParameters<PPSSmooth> {
     public:
         auto static constexpr kID = "ps_smooth";
-        auto static constexpr kName = "Smooth";
-        inline auto static const kRange = juce::NormalisableRange<float>(0.f, 100.f, .1f);
-        auto static constexpr kDefaultV = 50.f;
+        auto static constexpr kName = "PS Smooth";
+        inline auto static const kRange = getLogMidRange(1.f, 100.f, 10.f, 0.1f);
+        auto static constexpr kDefaultV = 10.f;
     };
 
     class PPSAttack : public FloatParameters<PPSAttack> {
     public:
         auto static constexpr kID = "ps_attack";
-        auto static constexpr kName = "Attack";
+        auto static constexpr kName = "PS Attack";
         inline auto static const kRange = juce::NormalisableRange<float>(0.f, 100.f, .1f);
         auto static constexpr kDefaultV = 50.f;
     };
@@ -329,7 +329,7 @@ namespace zlp {
     class PPSHold : public FloatParameters<PPSHold> {
     public:
         auto static constexpr kID = "ps_hold";
-        auto static constexpr kName = "Hold";
+        auto static constexpr kName = "PS Hold";
         inline auto static const kRange = juce::NormalisableRange<float>(0.f, 100.f, .1f);
         auto static constexpr kDefaultV = 50.f;
     };

@@ -24,6 +24,8 @@ namespace zlp {
         lh_fir_splitter_.prepare(sample_rate, 2, max_num_samples);
         ts_splitter_[0].prepare(sample_rate, 1, max_num_samples);
         ts_splitter_[1].prepare(sample_rate, 1, max_num_samples);
+        ps_splitter_[0].prepare(sample_rate);
+        ps_splitter_[1].prepare(sample_rate);
     }
 
     template<typename FloatType>
@@ -80,8 +82,12 @@ namespace zlp {
                 }
                 break;
             }
-            case zlp::PSplitType::kTSteady:
+            case zlp::PSplitType::kTSteady: {
+                break;
+            }
             case zlp::PSplitType::kPSteady: {
+                ps_splitter_[0].prepareBuffer();
+                ps_splitter_[1].prepareBuffer();
                 break;
             }
         }
@@ -120,6 +126,8 @@ namespace zlp {
                 break;
             }
             case zlp::PSplitType::kPSteady: {
+                ps_splitter_[0].process(in_buffer[0], out_buffer1_[0], out_buffer2_[0], num_samples);
+                ps_splitter_[1].process(in_buffer[1], out_buffer1_[1], out_buffer2_[1], num_samples);
                 break;
             }
         }

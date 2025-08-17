@@ -28,6 +28,7 @@ namespace zlp {
 
         zlp::Controller<FloatType> &controller_ref_;
         std::array<zldsp::splitter::TSSplitter<FloatType>, 2> &ts_splitter_;
+        std::array<zldsp::splitter::PSSplitter<FloatType>, 2> &ps_splitter_;
 
         static constexpr std::array kIDs{
             PSplitType::kID, PMix::kID, PSwap::kID,

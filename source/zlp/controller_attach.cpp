@@ -16,7 +16,8 @@ namespace zlp {
                                                   Controller<FloatType> &controller)
         : p_ref_(processor), parameters_ref_(parameters),
           controller_ref_(controller),
-          ts_splitter_(controller_ref_.getTSSplitter()) {
+          ts_splitter_(controller_ref_.getTSSplitter()),
+          ps_splitter_(controller_ref_.getPSSplitter()) {
         for (size_t i = 0; i < kDefaultVs.size(); ++i) {
             parameters_ref_.addParameterListener(kIDs[i], this);
             parameterChanged(kIDs[i], kDefaultVs[i]);
@@ -59,6 +60,22 @@ namespace zlp {
             const auto x = new_value / 100.f;
             ts_splitter_[0].setSeparation(x);
             ts_splitter_[1].setSeparation(x);
+        } else if (parameter_ID == zlp::PPSAttack::kID) {
+            const auto x = new_value / 100.f;
+            ps_splitter_[0].setAttack(x);
+            ps_splitter_[1].setAttack(x);
+        } else if (parameter_ID == zlp::PPSBalance::kID) {
+            const auto x = new_value / 100.f + .5f;
+            ps_splitter_[0].setBalance(x);
+            ps_splitter_[1].setBalance(x);
+        } else if (parameter_ID == zlp::PPSHold::kID) {
+            const auto x = new_value / 100.f;
+            ps_splitter_[0].setHold(x);
+            ps_splitter_[1].setHold(x);
+        } else if (parameter_ID == zlp::PPSSmooth::kID) {
+            const auto x = new_value / 100.f;
+            ps_splitter_[0].setSmooth(x);
+            ps_splitter_[1].setSmooth(x);
         }
     }
 

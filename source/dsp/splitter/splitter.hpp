@@ -14,3 +14,4 @@
 #include "lh_splitter/lh_splitter.hpp"
 #include "lh_splitter/lh_fir_splitter.hpp"
 #include "ts_splitter/ts_splitter.hpp"
+#include "ps_splitter/ps_splitter.hpp"
