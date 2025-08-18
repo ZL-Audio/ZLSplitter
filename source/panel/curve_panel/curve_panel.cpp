@@ -13,8 +13,8 @@ namespace zlpanel {
     CurvePanel::CurvePanel(PluginProcessor &p, zlgui::UIBase &base,
                            multilingual::TooltipHelper &tooltip_helper)
         : Thread("curve_panel"), p_ref_(p), base_(base),
-          fft_analyzer_panel_(p, base) {
-        addAndMakeVisible(fft_analyzer_panel_);
+          fft_panel_(p, base) {
+        addAndMakeVisible(fft_panel_);
         startThread(juce::Thread::Priority::low);
     }
 
@@ -37,7 +37,7 @@ namespace zlpanel {
         // const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
         // const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
         // const auto button_height = juce::roundToInt(base_.getFontSize() * kButtonScale);
-        fft_analyzer_panel_.setBounds(getLocalBounds());
+        fft_panel_.setBounds(getLocalBounds());
     }
 
     void CurvePanel::run() {
@@ -45,7 +45,7 @@ namespace zlpanel {
         while (!threadShouldExit()) {
             const auto flag = wait(-1);
             juce::ignoreUnused(flag);
-            fft_analyzer_panel_.run();
+            fft_panel_.run();
             if (threadShouldExit()) {
                 return;
             }

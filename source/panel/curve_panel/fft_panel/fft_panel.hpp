@@ -9,20 +9,14 @@
 
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-
-#include "../../PluginProcessor.hpp"
-#include "../../gui/gui.hpp"
-#include "../helper/helper.hpp"
+#include "fft_analyzer_panel.hpp"
+#include "fft_background_panel.hpp"
 
 namespace zlpanel {
-    class FFTAnalyzerPanel final : public juce::Component {
+    class FFTPanel final : public juce::Component,
+                           private juce::Timer {
     public:
-        explicit FFTAnalyzerPanel(PluginProcessor &processor, zlgui::UIBase &base);
-
-        ~FFTAnalyzerPanel() override;
-
-        void paint(juce::Graphics &g) override;
+        explicit FFTPanel(PluginProcessor &processor, zlgui::UIBase &base);
 
         void run();
 
@@ -30,18 +24,16 @@ namespace zlpanel {
 
     private:
         PluginProcessor &p_ref_;
-        zlgui::UIBase &base_;
-        std::atomic<float> &split_type_ref_, &swap_ref_;
+        FFTBackgroundPanel fft_background_panel_;
+        FFTAnalyzerPanel fft_analyzer_panel_;
 
-        bool skip_next_repaint_{false};
-        AtomicBound<float> atomic_bound_;
-        float width_{-.1f};
+        void mouseEnter(const juce::MouseEvent &event) override;
 
-        std::vector<float> xs_{};
-        std::vector<float> y1_{}, y2_{};
-        juce::Path out_path1_, next_out_path1_;
-        juce::Path out_path2_, next_out_path2_;
-        std::mutex mutex_;
+        void mouseMove(const juce::MouseEvent &event) override;
+
+        void mouseExit(const juce::MouseEvent &event) override;
+
+        void timerCallback() override;
 
         void visibilityChanged() override;
     };

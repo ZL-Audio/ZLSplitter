@@ -13,7 +13,7 @@
 #include "../../gui/gui.hpp"
 #include "../multilingual/tooltip_helper.hpp"
 
-#include "fft_analyzer_panel.hpp"
+#include "fft_panel/fft_panel.hpp"
 
 namespace zlpanel {
     class CurvePanel final : public juce::Component,
@@ -38,7 +38,7 @@ namespace zlpanel {
         PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
 
-        FFTAnalyzerPanel fft_analyzer_panel_;
+        FFTPanel fft_panel_;
 
         void run() override;
     };
