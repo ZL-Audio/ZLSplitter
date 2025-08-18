@@ -15,12 +15,15 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include "../dsp/splitter/splitter.hpp"
+#include "../dsp/fft_analyzer/fft_analyzer.hpp"
 #include "zlp_definitions.hpp"
 
 namespace zlp {
     template<typename FloatType>
     class Controller : private juce::AsyncUpdater {
     public:
+        static constexpr size_t kAnalyzerPointNum = 251;
+
         explicit Controller(juce::AudioProcessor &processor);
 
         void prepare(double sample_rate, size_t max_num_samples);
@@ -69,6 +72,10 @@ namespace zlp {
             return ps_splitter_;
         }
 
+        zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 4, 251> &getFFTAnalyzer() {
+            return fft_analyzer_;
+        }
+
     private:
         juce::AudioProcessor &p_ref_;
         std::array<FloatType *, 2> out_buffer1_, out_buffer2_;
@@ -92,6 +99,10 @@ namespace zlp {
         bool c_use_fir_{false};
 
         std::atomic<int> latency_{0};
+
+        std::array<std::array<FloatType *, 1>, 4> fft_pointers_;
+        std::array<std::span<FloatType*>, 4> fft_spans_;
+        zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 4, kAnalyzerPointNum> fft_analyzer_;
 
         void checkUpdateLatency();
 

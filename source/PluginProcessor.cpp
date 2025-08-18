@@ -19,12 +19,14 @@ PluginProcessor::PluginProcessor()
       parameters_(*this, nullptr,
                   juce::Identifier("ZLSplitParameters"),
                   zlp::getParameterLayout()),
+      na_parameters_(dummy_processor_, nullptr,
+                     juce::Identifier("ZLSplitNAParameters"),
+                     zlstate::getNAParameterLayout()),
       state_(dummy_processor_, nullptr,
              juce::Identifier("ZLSplitState"),
              zlstate::getStateParameterLayout()),
+      property_(state_),
       swap_ref_(*parameters_.getRawParameterValue(zlp::PSwap::kID)),
-      float_controller_(*this),
-      float_controller_attach_(*this, parameters_, float_controller_),
       double_controller_(*this),
       double_controller_attach_(*this, parameters_, double_controller_) {
 }
@@ -88,16 +90,11 @@ void PluginProcessor::changeProgramName(int, const juce::String &) {
 //==============================================================================
 void PluginProcessor::prepareToPlay(const double sample_rate, const int samples_per_block) {
     const auto max_num_samples = static_cast<size_t>(samples_per_block);
-    for (size_t chan = 0; chan < 4; ++chan) {
-        float_out_buffer[chan].resize(max_num_samples);
-        float_out_pointers1[chan] = float_out_buffer[chan].data();
-    }
-    float_out_pointers2[0] = float_out_pointers1[2];
-    float_out_pointers2[1] = float_out_pointers1[3];
-    float_out_pointers2[2] = float_out_pointers1[0];
-    float_out_pointers2[3] = float_out_pointers1[1];
-    float_controller_.prepare(sample_rate, max_num_samples);
 
+    for (size_t chan = 0; chan < 2; ++chan) {
+        double_in_buffer[chan].resize(max_num_samples);
+        double_in_pointers[chan] = double_in_buffer[chan].data();
+    }
     for (size_t chan = 0; chan < 4; ++chan) {
         double_out_buffer[chan].resize(max_num_samples);
         double_out_pointers1[chan] = double_out_buffer[chan].data();
@@ -129,20 +126,22 @@ bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
 void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                    juce::MidiBuffer &) {
     juce::ScopedNoDenormals no_denormals;
-    float_in_pointers[0] = buffer.getWritePointer(0);
-    float_in_pointers[1] = buffer.getWritePointer(1);
+    zldsp::vector::copy(double_in_pointers[0], buffer.getWritePointer(0),
+                        static_cast<size_t>(buffer.getNumSamples()));
+    zldsp::vector::copy(double_in_pointers[1], buffer.getWritePointer(1),
+                        static_cast<size_t>(buffer.getNumSamples()));
 
     if (swap_ref_.load(std::memory_order::relaxed) < .5f) {
-        float_controller_.process(float_in_pointers, float_out_pointers1,
-                                  static_cast<size_t>(buffer.getNumSamples()));
+        double_controller_.process(double_in_pointers, double_out_pointers1,
+                                   static_cast<size_t>(buffer.getNumSamples()));
     } else {
-        float_controller_.process(float_in_pointers, float_out_pointers2,
-                                  static_cast<size_t>(buffer.getNumSamples()));
+        double_controller_.process(double_in_pointers, double_out_pointers2,
+                                   static_cast<size_t>(buffer.getNumSamples()));
     }
 
     for (size_t chan = 0; chan < static_cast<size_t>(std::min(4, buffer.getNumChannels())); ++chan) {
         zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
-                            float_out_pointers1[chan], static_cast<size_t>(buffer.getNumSamples()));
+                            double_out_pointers1[chan], static_cast<size_t>(buffer.getNumSamples()));
     }
 }
 
@@ -172,15 +171,15 @@ bool PluginProcessor::hasEditor() const {
 }
 
 juce::AudioProcessorEditor *PluginProcessor::createEditor() {
-    // return new PluginEditor(*this);
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new PluginEditor(*this);
+    // return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
 void PluginProcessor::getStateInformation(juce::MemoryBlock &dest_data) {
     auto temp_tree = juce::ValueTree("ZLSplitterParaState");
     temp_tree.appendChild(parameters_.copyState(), nullptr);
-    // tempTree.appendChild(parametersNA.copyState(), nullptr);
+    temp_tree.appendChild(na_parameters_.copyState(), nullptr);
     const std::unique_ptr<juce::XmlElement> xml(temp_tree.createXml());
     copyXmlToBinary(*xml, dest_data);
 }
@@ -190,7 +189,7 @@ void PluginProcessor::setStateInformation(const void *data, const int size_in_by
     if (xml_state != nullptr && xml_state->hasTagName("ZLSplitterParaState")) {
         const auto temp_tree = juce::ValueTree::fromXml(*xml_state);
         parameters_.replaceState(temp_tree.getChildWithName(parameters_.state.getType()));
-        // parametersNA.replaceState(tempTree.getChildWithName(parametersNA.state.getType()));
+        na_parameters_.replaceState(temp_tree.getChildWithName(na_parameters_.state.getType()));
     }
 }
 

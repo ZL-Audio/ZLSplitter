@@ -1,0 +1,61 @@
+// Copyright (C) 2025 - zsliu98
+// This file is part of ZLCompressor
+//
+// ZLCompressor is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
+//
+// ZLCompressor is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License along with ZLCompressor. If not, see <https://www.gnu.org/licenses/>.
+
+#include "curve_panel.hpp"
+
+namespace zlpanel {
+    CurvePanel::CurvePanel(PluginProcessor &p, zlgui::UIBase &base,
+                           multilingual::TooltipHelper &tooltip_helper)
+        : Thread("curve_panel"), p_ref_(p), base_(base),
+          fft_analyzer_panel_(p, base) {
+        addAndMakeVisible(fft_analyzer_panel_);
+        startThread(juce::Thread::Priority::low);
+    }
+
+    CurvePanel::~CurvePanel() {
+        if (isThreadRunning()) {
+            stopThread(-1);
+        }
+    }
+
+    void CurvePanel::paint(juce::Graphics &g) {
+        g.fillAll(base_.getBackgroundColor());
+    }
+
+    void CurvePanel::paintOverChildren(juce::Graphics &g) {
+        juce::ignoreUnused(g);
+        notify();
+    }
+
+    void CurvePanel::resized() {
+        // const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
+        // const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
+        // const auto button_height = juce::roundToInt(base_.getFontSize() * kButtonScale);
+        fft_analyzer_panel_.setBounds(getLocalBounds());
+    }
+
+    void CurvePanel::run() {
+        juce::ScopedNoDenormals no_denormals;
+        while (!threadShouldExit()) {
+            const auto flag = wait(-1);
+            juce::ignoreUnused(flag);
+            fft_analyzer_panel_.run();
+            if (threadShouldExit()) {
+                return;
+            }
+        }
+    }
+
+    void CurvePanel::repaintCallBackSlow() {
+    }
+
+    void CurvePanel::repaintCallBack(const double time_stamp) {
+        repaint();
+    }
+} // zlpanel

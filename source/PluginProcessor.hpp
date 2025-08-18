@@ -21,7 +21,10 @@
 class PluginProcessor : public juce::AudioProcessor {
 public:
     zlstate::DummyProcessor dummy_processor_;
-    juce::AudioProcessorValueTreeState parameters_, state_;
+    juce::AudioProcessorValueTreeState parameters_;
+    juce::AudioProcessorValueTreeState na_parameters_;
+    juce::AudioProcessorValueTreeState state_;
+    zlstate::Property property_;
 
     PluginProcessor();
 
@@ -67,20 +70,18 @@ public:
 
     bool supportsDoublePrecisionProcessing() const override { return true; }
 
+    zlp::Controller<double> &getController() {
+        return double_controller_;
+    }
+
 private:
     std::atomic<float> &swap_ref_;
-    std::array<std::vector<float>, 4> float_out_buffer;
-    std::array<float*, 2> float_in_pointers{};
-    std::array<float*, 4> float_out_pointers1{};
-    std::array<float*, 4> float_out_pointers2{};
 
+    std::array<std::vector<double>, 2> double_in_buffer;
     std::array<std::vector<double>, 4> double_out_buffer;
     std::array<double*, 2> double_in_pointers{};
     std::array<double*, 4> double_out_pointers1{};
     std::array<double*, 4> double_out_pointers2{};
-
-    zlp::Controller<float> float_controller_;
-    zlp::ControllerAttach<float> float_controller_attach_;
 
     zlp::Controller<double> double_controller_;
     zlp::ControllerAttach<double> double_controller_attach_;
