@@ -70,10 +70,8 @@ namespace zlpanel {
         const size_t n = analyzer.getInterplotSize();
         if (akima_reset_flag || n != xs_.size()) {
             xs_.resize(n);
-            y11_.resize(n);
-            y12_.resize(n);
-            y21_.resize(n);
-            y22_.resize(n);
+            y1_.resize(n);
+            y2_.resize(n);
             width_ = -1.f;
         }
 
@@ -83,35 +81,18 @@ namespace zlpanel {
             width_ = bound.getWidth();
             analyzer.createPathXs(xs_, width_);
         }
-        analyzer.createPathYs({
-                                  std::span{y11_}, std::span{y12_}, std::span{y21_}, std::span{y22_}
-                              },
-                              bound.getHeight());
+        analyzer.createPathYs({std::span{y1_}, std::span{y2_}}, bound.getHeight());
         analyzer.getLock().unlock();
 
         next_out_path1_.clear();
         next_out_path1_.startNewSubPath(bound.getBottomLeft());
         next_out_path2_.clear();
         next_out_path2_.startNewSubPath(bound.getBottomLeft());
-        if (split_type_ref_.load(std::memory_order::relaxed) > .5f) {
-            for (size_t i = 0; i < xs_.size(); ++i) {
-                if (std::isfinite(y11_[i]) && std::isfinite(y12_[i])) {
-                    next_out_path1_.lineTo(xs_[i], (y11_[i] + y12_[i]) * .5f);
-                }
-                if (std::isfinite(y21_[i]) && std::isfinite(y22_[i])) {
-                    next_out_path2_.lineTo(xs_[i], (y21_[i] + y22_[i]) * .5f);
-                }
-            }
-        } else {
-            for (size_t i = 0; i < xs_.size(); ++i) {
-                if (std::isfinite(y11_[i])) {
-                    next_out_path1_.lineTo(xs_[i], y11_[i]);
-                }
-                if (std::isfinite(y22_[i])) {
-                    next_out_path2_.lineTo(xs_[i], y22_[i]);
-                }
-            }
+        for (size_t i = 0; i < xs_.size(); ++i) {
+            next_out_path1_.lineTo(xs_[i], y1_[i]);
+            next_out_path2_.lineTo(xs_[i], y2_[i]);
         }
+
         next_out_path1_.lineTo(bound.getBottomRight());
         next_out_path2_.lineTo(bound.getBottomRight());
 
@@ -123,9 +104,9 @@ namespace zlpanel {
     void FFTAnalyzerPanel::visibilityChanged() {
         auto &analyzer{p_ref_.getController().getFFTAnalyzer()};
         if (isVisible()) {
-            analyzer.setON({true, true, true, true});
+            analyzer.setON({true, true});
         } else {
-            analyzer.setON({false, false, false, false});
+            analyzer.setON({false, false});
         }
     }
 } // zlpanel

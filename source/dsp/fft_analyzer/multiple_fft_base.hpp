@@ -47,17 +47,17 @@ namespace zldsp::analyzer {
 
         ~MultipleFFTBase() = default;
 
-        void prepare(const double sample_rate) {
+        void prepare(const double sample_rate, std::array<size_t, FFTNum> num_channels) {
             lock_.lock();
             sample_rate_.store(static_cast<float>(sample_rate), std::memory_order::relaxed);
             if (sample_rate <= 50000) {
-                setOrder(static_cast<int>(default_fft_order_));
+                setOrder(static_cast<int>(default_fft_order_), num_channels);
             } else if (sample_rate <= 100000) {
-                setOrder(static_cast<int>(default_fft_order_) + 1);
+                setOrder(static_cast<int>(default_fft_order_) + 1, num_channels);
             } else if (sample_rate <= 200000) {
-                setOrder(static_cast<int>(default_fft_order_) + 2);
+                setOrder(static_cast<int>(default_fft_order_) + 2, num_channels);
             } else {
-                setOrder(static_cast<int>(default_fft_order_) + 3);
+                setOrder(static_cast<int>(default_fft_order_) + 3, num_channels);
             }
             reset();
             to_update_akima_.store(true, std::memory_order::release);
@@ -84,26 +84,21 @@ namespace zldsp::analyzer {
             if (free_space == 0) { return; }
             const auto range = abstract_fifo_.prepareToWrite(free_space);
             for (size_t i = 0; i < FFTNum; ++i) {
-                if (!is_on_[i].load()) continue;
-                int j = 0;
+                if (!is_on_[i].load(std::memory_order::relaxed)) continue;
                 const auto buffer = buffers[i];
-                int shift = 0;
-                for (; j < range.block_size1; ++j) {
-                    FloatType sample{0};
-                    for (size_t channel = 0; channel < buffer.size(); ++channel) {
-                        sample += buffer[channel][static_cast<size_t>(j)];
+                if (range.block_size1 > 0) {
+                    for (size_t chan = 0; chan < buffer.size(); ++chan) {
+                        zldsp::vector::copy(sample_fifos_[i][chan].data() + static_cast<size_t>(range.start_index1),
+                                            buffer[chan],
+                                            static_cast<size_t>(range.block_size1));
                     }
-                    sample_fifos_[i][static_cast<size_t>(shift + range.start_index1)] = static_cast<float>(sample);
-                    shift += 1;
                 }
-                shift = 0;
-                for (; j < range.block_size1 + range.block_size2; ++j) {
-                    FloatType sample{0};
-                    for (size_t channel = 0; channel < buffer.size(); ++channel) {
-                        sample += buffer[channel][static_cast<size_t>(j)];
+                if (range.block_size2 > 0) {
+                    for (size_t chan = 0; chan < buffer.size(); ++chan) {
+                        zldsp::vector::copy(sample_fifos_[i][chan].data() + static_cast<size_t>(range.start_index2),
+                                            buffer[chan] + static_cast<size_t>(range.block_size1),
+                                            static_cast<size_t>(range.block_size2));
                     }
-                    sample_fifos_[i][static_cast<size_t>(shift + range.start_index2)] = static_cast<float>(sample);
-                    shift += 1;
                 }
             }
             abstract_fifo_.finishWrite(free_space);
@@ -130,25 +125,27 @@ namespace zldsp::analyzer {
             // pull data from FIFO
             const int num_ready = abstract_fifo_.getNumReady();
             const auto range = abstract_fifo_.prepareToRead(num_ready);
-            const auto num_replace = static_cast<int>(circular_buffers_[0].size()) - num_ready;
+            const auto num_replace = static_cast<int>(circular_buffers_[0][0].size()) - num_ready;
             for (const auto &i: is_on_vector) {
-                auto &circular_buffer{circular_buffers_[i]};
-                auto &sample_fifo{sample_fifos_[i]};
-                std::memmove(circular_buffer.data(),
-                             circular_buffer.data() + static_cast<std::ptrdiff_t>(num_ready),
-                             sizeof(float) * static_cast<size_t>(num_replace));
-                if (range.block_size1 > 0) {
-                    std::copy(sample_fifo.begin() + static_cast<std::ptrdiff_t>(range.start_index1),
-                              sample_fifo.begin() + static_cast<std::ptrdiff_t>(
-                                  range.start_index1 + range.block_size1),
-                              circular_buffer.begin() + static_cast<std::ptrdiff_t>(num_replace));
-                }
-                if (range.block_size2 > 0) {
-                    std::copy(sample_fifo.begin() + static_cast<std::ptrdiff_t>(range.start_index2),
-                              sample_fifo.begin() + static_cast<std::ptrdiff_t>(
-                                  range.start_index2 + range.block_size2),
-                              circular_buffer.begin() + static_cast<std::ptrdiff_t>(
-                                  num_replace + range.block_size1));
+                for (size_t chan = 0; chan < circular_buffers_[i].size(); ++chan) {
+                    auto &circular_buffer{circular_buffers_[i][chan]};
+                    auto &sample_fifo{sample_fifos_[i][chan]};
+                    std::memmove(circular_buffer.data(),
+                                 circular_buffer.data() + static_cast<std::ptrdiff_t>(num_ready),
+                                 sizeof(float) * static_cast<size_t>(num_replace));
+                    if (range.block_size1 > 0) {
+                        std::copy(sample_fifo.begin() + static_cast<std::ptrdiff_t>(range.start_index1),
+                                  sample_fifo.begin() + static_cast<std::ptrdiff_t>(
+                                      range.start_index1 + range.block_size1),
+                                  circular_buffer.begin() + static_cast<std::ptrdiff_t>(num_replace));
+                    }
+                    if (range.block_size2 > 0) {
+                        std::copy(sample_fifo.begin() + static_cast<std::ptrdiff_t>(range.start_index2),
+                                  sample_fifo.begin() + static_cast<std::ptrdiff_t>(
+                                      range.start_index2 + range.block_size2),
+                                  circular_buffer.begin() + static_cast<std::ptrdiff_t>(
+                                      num_replace + range.block_size1));
+                    }
                 }
             }
             abstract_fifo_.finishRead(num_ready);
@@ -159,10 +156,24 @@ namespace zldsp::analyzer {
             }
             // run forward FFT & interpolate
             for (const auto &i: is_on_vector) {
-                std::copy(circular_buffers_[i].begin(), circular_buffers_[i].end(), fft_buffer_.begin());
-                auto temp = kfr::make_univector(fft_buffer_.data(), window_.size());
-                temp = temp * window_;
-                fft_.forwardMagnitudeOnly(fft_buffer_.data());
+                auto ms_v = kfr::make_univector(ms_fft_buffer_.data(), ms_fft_buffer_.size());
+                for (size_t chan = 0; chan < circular_buffers_[i].size(); ++chan) {
+                    std::copy(circular_buffers_[i][chan].begin(), circular_buffers_[i][chan].end(), fft_buffer_.begin());
+                    auto temp = kfr::make_univector(fft_buffer_.data(), window_.size());
+                    temp = temp * window_;
+                    fft_.forwardMagnitudeOnly(fft_buffer_.data());
+                    auto v = kfr::make_univector(fft_buffer_.data(), ms_fft_buffer_.size());
+                    if (chan == 0) {
+                        ms_v = kfr::sqr(v);
+                    } else {
+                        ms_v = ms_v + kfr::sqr(v);
+                    }
+                }
+                if (circular_buffers_[i].size() > 1) {
+                    const auto chan_inverse = 1.f / static_cast<float>(circular_buffers_[i].size());
+                    ms_v = ms_v * chan_inverse;
+                }
+
                 const auto decay = is_frozen_[i].load(std::memory_order::relaxed)
                                        ? 1.f
                                        : actual_decay_rates_[i].load(std::memory_order::relaxed);
@@ -177,11 +188,11 @@ namespace zldsp::analyzer {
                     const auto range_length = end_idx - start_idx;
                     if (range_length < 4) {
                         for (size_t k = start_idx; k < end_idx; ++k) {
-                            mean_square += fft_buffer_[k] * fft_buffer_[k];
+                            mean_square += ms_fft_buffer_[k];
                         }
                     } else {
-                        auto v = kfr::make_univector(&fft_buffer_[start_idx], range_length);
-                        mean_square = kfr::sumsqr(v);
+                        auto v = kfr::make_univector(ms_fft_buffer_.data() + start_idx, range_length);
+                        mean_square = kfr::sum(v);
                     }
                     mean_square = mean_square / static_cast<float>(range_length);
                     const auto current_db = chore::squareGainToDecibels(mean_square);
@@ -252,10 +263,10 @@ namespace zldsp::analyzer {
         size_t default_fft_order_ = 12;
         zldsp::lock::SpinLock lock_;
 
-        std::array<std::vector<float>, FFTNum> sample_fifos_;
-        std::array<std::vector<float>, FFTNum> circular_buffers_;
+        std::array<std::vector<std::vector<float> >, FFTNum> sample_fifos_;
+        std::array<std::vector<std::vector<float> >, FFTNum> circular_buffers_;
         zldsp::container::AbstractFIFO abstract_fifo_{0};
-        std::vector<float> fft_buffer_;
+        std::vector<float> fft_buffer_, ms_fft_buffer_;
 
         // smooth dbs over high frequency for Akimas input
         std::atomic<double> sample_rate_{48000.}, min_freq_{10.}, max_freq_{22000.};
@@ -385,7 +396,7 @@ namespace zldsp::analyzer {
             }
         }
 
-        void setOrder(const int fft_order) {
+        void setOrder(const int fft_order, std::array<size_t, FFTNum> &num_channels) {
             fft_.setOrder(static_cast<size_t>(fft_order));
             const auto fft_size = fft_.getSize();
 
@@ -395,12 +406,17 @@ namespace zldsp::analyzer {
             window_ = window_ * scale;
 
             fft_buffer_.resize(fft_size * 2);
+            ms_fft_buffer_.resize(fft_size / 2 + 1);
             abstract_fifo_.setCapacity(static_cast<int>(fft_size));
             for (size_t i = 0; i < FFTNum; ++i) {
-                sample_fifos_[i].resize(fft_size);
-                std::fill(sample_fifos_[i].begin(), sample_fifos_[i].end(), 0.f);
-                circular_buffers_[i].resize(fft_size);
-                std::fill(circular_buffers_[i].begin(), circular_buffers_[i].end(), 0.f);
+                sample_fifos_[i].resize(num_channels[i]);
+                circular_buffers_[i].resize(num_channels[i]);
+                for (size_t chan = 0; chan < num_channels[i]; ++chan) {
+                    sample_fifos_[i][chan].resize(fft_size);
+                    std::fill(sample_fifos_[i][chan].begin(), sample_fifos_[i][chan].end(), 0.f);
+                    circular_buffers_[i][chan].resize(fft_size);
+                    std::fill(circular_buffers_[i][chan].begin(), circular_buffers_[i][chan].end(), 0.f);
+                }
             }
         }
 

@@ -38,7 +38,7 @@ namespace zlpanel {
         float width_{-.1f};
 
         std::vector<float> xs_{};
-        std::vector<float> y11_{}, y12_{}, y21_{}, y22_{};
+        std::vector<float> y1_{}, y2_{};
         juce::Path out_path1_, next_out_path1_;
         juce::Path out_path2_, next_out_path2_;
         std::mutex mutex_;

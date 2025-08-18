@@ -72,7 +72,7 @@ namespace zlp {
             return ps_splitter_;
         }
 
-        zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 4, 251> &getFFTAnalyzer() {
+        zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 2, kAnalyzerPointNum> &getFFTAnalyzer() {
             return fft_analyzer_;
         }
 
@@ -100,9 +100,8 @@ namespace zlp {
 
         std::atomic<int> latency_{0};
 
-        std::array<std::array<FloatType *, 1>, 4> fft_pointers_;
-        std::array<std::span<FloatType*>, 4> fft_spans_;
-        zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 4, kAnalyzerPointNum> fft_analyzer_;
+        std::array<std::span<FloatType*>, 2> fft_spans_;
+        zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 2, kAnalyzerPointNum> fft_analyzer_;
 
         void checkUpdateLatency();
 

@@ -27,7 +27,7 @@ namespace zlp {
         ps_splitter_[0].prepare(sample_rate);
         ps_splitter_[1].prepare(sample_rate);
 
-        fft_analyzer_.prepare(sample_rate);
+        fft_analyzer_.prepare(sample_rate, {2, 2});
     }
 
     template<typename FloatType>
@@ -134,10 +134,8 @@ namespace zlp {
             }
         }
 
-        for (size_t chan = 0; chan < 4; ++chan) {
-            fft_pointers_[chan][0] = out_buffer[chan];
-            fft_spans_[chan] = std::span(fft_pointers_[chan]);
-        }
+        fft_spans_[0] = std::span(out_buffer1_);
+        fft_spans_[1] = std::span(out_buffer2_);
         fft_analyzer_.process(fft_spans_, num_samples);
 
     }
