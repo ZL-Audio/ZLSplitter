@@ -24,6 +24,10 @@ namespace zlpanel {
         addAndMakeVisible(fft_analyzer_panel_);
     }
 
+    FFTPanel::~FFTPanel() {
+        p_ref_.getController().setFFTAnalyzerOn(false);
+    }
+
     void FFTPanel::run() {
         fft_analyzer_panel_.run();
     }
@@ -99,11 +103,6 @@ namespace zlpanel {
     }
 
     void FFTPanel::visibilityChanged() {
-        auto &analyzer{p_ref_.getController().getFFTAnalyzer()};
-        if (isVisible()) {
-            analyzer.setON({true, true});
-        } else {
-            analyzer.setON({false, false});
-        }
+        p_ref_.getController().setFFTAnalyzerOn(isVisible());
     }
 }

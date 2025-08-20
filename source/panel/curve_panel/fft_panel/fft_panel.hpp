@@ -20,6 +20,8 @@ namespace zlpanel {
 
         explicit FFTPanel(PluginProcessor &processor, zlgui::UIBase &base);
 
+        ~FFTPanel() override;
+
         void run();
 
         void resized() override;

@@ -72,6 +72,10 @@ namespace zlp {
             return ps_splitter_;
         }
 
+        void setFFTAnalyzerOn(const bool f) {
+            is_fft_on_.store(f, std::memory_order::relaxed);
+        }
+
         zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 2, kAnalyzerPointNum> &getFFTAnalyzer() {
             return fft_analyzer_;
         }
@@ -100,6 +104,7 @@ namespace zlp {
 
         std::atomic<int> latency_{0};
 
+        std::atomic<bool> is_fft_on_{false};
         std::array<std::span<FloatType*>, 2> fft_spans_;
         zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 2, kAnalyzerPointNum> fft_analyzer_;
 

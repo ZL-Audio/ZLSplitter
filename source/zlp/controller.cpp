@@ -28,6 +28,7 @@ namespace zlp {
         ps_splitter_[1].prepare(sample_rate);
 
         fft_analyzer_.prepare(sample_rate, {2, 2});
+        fft_analyzer_.setON({true, true});
     }
 
     template<typename FloatType>
@@ -134,10 +135,11 @@ namespace zlp {
             }
         }
 
-        fft_spans_[0] = std::span(out_buffer1_);
-        fft_spans_[1] = std::span(out_buffer2_);
-        fft_analyzer_.process(fft_spans_, num_samples);
-
+        if (is_fft_on_.load(std::memory_order::relaxed)) {
+            fft_spans_[0] = std::span(out_buffer1_);
+            fft_spans_[1] = std::span(out_buffer2_);
+            fft_analyzer_.process(fft_spans_, num_samples);
+        }
     }
 
     template<typename FloatType>
