@@ -49,7 +49,7 @@ namespace zlpanel {
             b.setDrawable(split_mode_drawables_[i].get());
             b.getLAF().enableShadow(false);
             b.getLAF().setShrinkScale(.0f);
-            b.getLAF().setScale(1.25f);
+            b.getLAF().setScale(1.66f);
             b.setBufferedToImage(true);
             addAndMakeVisible(b);
         }

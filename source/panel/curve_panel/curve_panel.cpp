@@ -76,6 +76,8 @@ namespace zlpanel {
 
     void CurvePanel::repaintCallBack(const double time_stamp) {
         juce::ignoreUnused(time_stamp);
-        repaint();
+        if (fft_panel_.isVisible()) {
+            fft_panel_.repaint();
+        }
     }
 } // zlpanel

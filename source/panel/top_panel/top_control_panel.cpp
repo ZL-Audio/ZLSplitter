@@ -25,6 +25,9 @@ namespace zlpanel {
         bypass_button_.setDrawable(bypass_drawable_.get());
         bypass_button_.getLAF().setReverse(true);
 
+        swap_button_.getLAF().setScale(1.15f);
+        bypass_button_.getLAF().setScale(1.25f);
+
         for (auto &b: {&swap_button_, &bypass_button_}) {
             b->getLAF().enableShadow(false);
             b->getLAF().setShrinkScale(.0f);
