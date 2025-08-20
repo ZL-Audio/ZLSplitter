@@ -47,10 +47,15 @@ namespace zlpanel {
                 max_freq_ = x;
             }
 
+            void setMinDB(const float x) {
+                min_db_ = x;
+            }
+
         private:
             zlgui::UIBase &base_;
 
             double min_freq_{10.0}, max_freq_{22000.0};
+            float min_db_{-72.f};
         };
 
         zlgui::UIBase &base_;
@@ -59,9 +64,13 @@ namespace zlpanel {
         zlgui::attachment::ComponentUpdater updater_;
 
         zlgui::combobox::CompactCombobox fft_min_freq_box_;
-        zlgui::attachment::ComboBoxAttachment<true> fft_min_freq_attach;
+        zlgui::attachment::ComboBoxAttachment<true> fft_min_freq_attach_;
 
         zlgui::combobox::CompactCombobox fft_max_freq_box_;
-        zlgui::attachment::ComboBoxAttachment<true> fft_max_freq_attach;
+        zlgui::attachment::ComboBoxAttachment<true> fft_max_freq_attach_;
+
+        zlgui::combobox::CompactCombobox fft_min_db_box_;
+        zlgui::attachment::ComboBoxAttachment<true> fft_min_db_attach_;
+        int c_min_db_index_{-1};
     };
 } // zlpanel

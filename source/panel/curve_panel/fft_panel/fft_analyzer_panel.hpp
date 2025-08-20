@@ -31,7 +31,7 @@ namespace zlpanel {
     private:
         PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
-        std::atomic<float> &split_type_ref_, &swap_ref_;
+        std::atomic<float> &split_type_ref_, &swap_ref_, &fft_min_db_ref_;
 
         bool skip_next_repaint_{false};
         AtomicBound<float> atomic_bound_;

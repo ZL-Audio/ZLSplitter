@@ -14,7 +14,8 @@ namespace zlpanel {
         : p_ref_(processor),
           base_(base),
           split_type_ref_(*p_ref_.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          swap_ref_(*p_ref_.parameters_.getRawParameterValue(zlp::PSwap::kID)) {
+          swap_ref_(*p_ref_.parameters_.getRawParameterValue(zlp::PSwap::kID)),
+          fft_min_db_ref_(*p_ref_.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
         for (auto &path: {&out_path1_, &out_path2_, &next_out_path1_, &next_out_path2_}) {
             path->preallocateSpace(preallocateSpace);
@@ -81,7 +82,9 @@ namespace zlpanel {
             width_ = bound.getWidth();
             analyzer.createPathXs(xs_, width_);
         }
-        analyzer.createPathYs({std::span{y1_}, std::span{y2_}}, bound.getHeight());
+        const auto min_db = zlstate::PFFTMinDB::kDBs[static_cast<size_t>(std::round(
+            fft_min_db_ref_.load(std::memory_order::relaxed)))];
+        analyzer.createPathYs({std::span{y1_}, std::span{y2_}}, bound.getHeight(), min_db);
         analyzer.getLock().unlock();
 
         if (xs_.empty()) {
