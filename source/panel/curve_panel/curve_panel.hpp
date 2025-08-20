@@ -14,6 +14,8 @@
 #include "../multilingual/tooltip_helper.hpp"
 
 #include "fft_panel/fft_panel.hpp"
+#include "left_control_panel/left_control_panel.hpp"
+#include "left_pop_panel/left_pop_panel.hpp"
 
 namespace zlpanel {
     class CurvePanel final : public juce::Component,
@@ -34,11 +36,15 @@ namespace zlpanel {
 
         void repaintCallBackSlow();
 
+        void mouseDown(const juce::MouseEvent &event) override;
+
     private:
         PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
 
         FFTPanel fft_panel_;
+        LeftControlPanel left_control_panel_;
+        LeftPopPanel left_pop_panel_;
 
         void run() override;
     };

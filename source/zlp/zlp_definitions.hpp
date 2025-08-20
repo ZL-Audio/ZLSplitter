@@ -261,7 +261,7 @@ namespace zlp {
         auto static constexpr kID = "lh_slope";
         auto static constexpr kName = "LH Slope";
         inline auto static const kChoices = juce::StringArray{
-            "12 dB", "24 dB", "48 dB"
+            "12", "24", "48"
         };
 
         int static constexpr kDefaultI = 1;
@@ -301,7 +301,7 @@ namespace zlp {
         auto static constexpr kDefaultV = 50.f;
     };
 
-    class PTSSeparation : public FloatParameters<PTSSeparation> {
+    class PTSStrength : public FloatParameters<PTSStrength> {
     public:
         auto static constexpr kID = "ts_strength";
         auto static constexpr kName = "TS Strength";
@@ -345,7 +345,7 @@ namespace zlp {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(PSplitType::get(), PMix::get(), PSwap::get(), PBypass::get(),
                    PLHFilterType::get(), PLHSlope::get(), PLHFreq::get(),
-                   PTSBalance::get(), PTSSeparation::get(), PTSHold::get(), PTSSmooth::get(),
+                   PTSBalance::get(), PTSStrength::get(), PTSHold::get(), PTSSmooth::get(),
                    PPSBalance::get(), PPSAttack::get(), PPSHold::get(), PPSSmooth::get());
         return layout;
     }

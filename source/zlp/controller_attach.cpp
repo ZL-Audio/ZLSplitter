@@ -56,7 +56,7 @@ namespace zlp {
             const auto x = new_value / 100.f;
             ts_splitter_[0].setHold(x);
             ts_splitter_[1].setHold(x);
-        } else if (parameter_ID == zlp::PTSSeparation::kID) {
+        } else if (parameter_ID == zlp::PTSStrength::kID) {
             const auto x = new_value / 100.f;
             ts_splitter_[0].setSeparation(x);
             ts_splitter_[1].setSeparation(x);

@@ -13,9 +13,14 @@ namespace zlpanel {
     CurvePanel::CurvePanel(PluginProcessor &p, zlgui::UIBase &base,
                            multilingual::TooltipHelper &tooltip_helper)
         : Thread("curve_panel"), p_ref_(p), base_(base),
-          fft_panel_(p, base) {
+          fft_panel_(p, base),
+          left_control_panel_(p, base),
+          left_pop_panel_(p, base) {
         juce::ignoreUnused(p_ref_, tooltip_helper);
         addAndMakeVisible(fft_panel_);
+        fft_panel_.addMouseListener(this, false);
+        addAndMakeVisible(left_control_panel_);
+        addChildComponent(left_pop_panel_);
         startThread(juce::Thread::Priority::low);
     }
 
@@ -35,10 +40,13 @@ namespace zlpanel {
     }
 
     void CurvePanel::resized() {
-        // const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
-        // const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
-        // const auto button_height = juce::roundToInt(base_.getFontSize() * kButtonScale);
-        fft_panel_.setBounds(getLocalBounds());
+        const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
+        const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
+        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale);
+        auto bound = getLocalBounds();
+        left_control_panel_.setBounds(bound.removeFromLeft(button_width));
+        fft_panel_.setBounds(bound);
+        left_pop_panel_.setBounds(bound.removeFromLeft(slider_width + 2 * padding));
     }
 
     void CurvePanel::run() {
@@ -53,8 +61,17 @@ namespace zlpanel {
         }
     }
 
+    void CurvePanel::mouseDown(const juce::MouseEvent &) {
+        left_pop_panel_.setVisible(false);
+    }
+
     void CurvePanel::repaintCallBackSlow() {
         fft_panel_.repaintCallBackSlow();
+        left_control_panel_.repaintCallBackSlow();
+        if (left_control_panel_.isMouseOver(true)) {
+            left_pop_panel_.setVisible(true);
+        }
+        left_pop_panel_.repaintCallBackSlow();
     }
 
     void CurvePanel::repaintCallBack(const double time_stamp) {

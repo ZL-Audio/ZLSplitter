@@ -84,11 +84,14 @@ namespace zlpanel {
         analyzer.createPathYs({std::span{y1_}, std::span{y2_}}, bound.getHeight());
         analyzer.getLock().unlock();
 
+        if (xs_.empty()) {
+            return;
+        }
         next_out_path1_.clear();
-        next_out_path1_.startNewSubPath(bound.getBottomLeft());
+        next_out_path1_.startNewSubPath(xs_[0], std::isfinite(y1_[0]) ? y1_[0] : bound.getBottom());
         next_out_path2_.clear();
-        next_out_path2_.startNewSubPath(bound.getBottomLeft());
-        for (size_t i = 0; i < xs_.size(); ++i) {
+        next_out_path2_.startNewSubPath(xs_[0], std::isfinite(y2_[0]) ? y2_[0] : bound.getBottom());
+        for (size_t i = 1; i < xs_.size(); ++i) {
             if (std::isfinite(y1_[i])) {
                 next_out_path1_.lineTo(xs_[i], y1_[i]);
             }

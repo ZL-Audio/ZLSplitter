@@ -42,6 +42,7 @@ namespace zlpanel::multilingual {
     }
 
     std::string TooltipHelper::getToolTipText(const TooltipLabel label) const {
+        juce::ignoreUnused(label);
         switch (language_) {
             case kOff: {
                 return std::string();

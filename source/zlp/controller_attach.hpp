@@ -33,7 +33,7 @@ namespace zlp {
         static constexpr std::array kIDs{
             PSplitType::kID, PMix::kID, PSwap::kID,
             PLHFilterType::kID, PLHSlope::kID, PLHFreq::kID,
-            PTSSeparation::kID, PTSBalance::kID, PTSHold::kID, PTSSmooth::kID,
+            PTSStrength::kID, PTSBalance::kID, PTSHold::kID, PTSSmooth::kID,
             PPSAttack::kID, PPSBalance::kID, PPSHold::kID, PPSSmooth::kID
         };
 
@@ -41,7 +41,7 @@ namespace zlp {
             static_cast<float>(PSplitType::kDefaultI),
             PMix::kDefaultV, static_cast<float>(PSwap::kDefaultV),
             static_cast<float>(PLHFilterType::kDefaultI), static_cast<float>(PLHSlope::kDefaultI), PLHFreq::kDefaultV,
-            PTSSeparation::kDefaultV, PTSBalance::kDefaultV, PTSHold::kDefaultV, PTSSmooth::kDefaultV,
+            PTSStrength::kDefaultV, PTSBalance::kDefaultV, PTSHold::kDefaultV, PTSSmooth::kDefaultV,
             PPSAttack::kDefaultV, PPSBalance::kDefaultV, PPSHold::kDefaultV, PPSSmooth::kDefaultV
         };
 
