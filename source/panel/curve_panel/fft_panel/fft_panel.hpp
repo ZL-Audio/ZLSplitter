@@ -16,14 +16,23 @@ namespace zlpanel {
     class FFTPanel final : public juce::Component,
                            private juce::Timer {
     public:
+        static constexpr int kHoverDurationMS = 2000;
+
         explicit FFTPanel(PluginProcessor &processor, zlgui::UIBase &base);
 
         void run();
 
         void resized() override;
 
+        void repaintCallBackSlow();
+
     private:
         PluginProcessor &p_ref_;
+
+        std::atomic<float> &fft_min_freq_ref_, &fft_max_freq_ref_;
+        float c_fft_min_freq_index{-1.f}, c_fft_max_freq_index{-1.f};
+        double c_sample_rate_{0.0};
+
         FFTBackgroundPanel fft_background_panel_;
         FFTAnalyzerPanel fft_analyzer_panel_;
 

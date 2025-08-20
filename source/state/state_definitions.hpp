@@ -105,15 +105,36 @@ namespace zlstate {
         }
     };
 
-    class PEQMaxDB : public ChoiceParameters<PEQMaxDB> {
+    class PFFTMinDB : public ChoiceParameters<PFFTMinDB> {
     public:
-        auto static constexpr kID = "eq_max_db";
+        auto static constexpr kID = "fft_min_db";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "6 dB", "12 dB", "30 dB"
+            "-60", "-72", "-96", "-120"
         };
-        static constexpr std::array kDBs = {6.f, 12.f, 30.f};
+        static constexpr std::array kDBs = {-60.f, -72.f, -96.f, -120.f};
         int static constexpr kDefaultI = 1;
+    };
+
+    class PFFTMinFreq : public ChoiceParameters<PFFTMinFreq> {
+    public:
+        auto static constexpr kID = "fft_min_freq";
+        auto static constexpr kName = "";
+        inline auto static const kChoices = juce::StringArray{
+            "10", "20", "50", "100"
+        };
+        static constexpr std::array kFreqs = {10.0, 20.0, 50.0, 100.0};
+        int static constexpr kDefaultI = 0;
+    };
+
+    class PFFTMaxFreq : public ChoiceParameters<PFFTMaxFreq> {
+    public:
+        auto static constexpr kID = "fft_max_freq";
+        auto static constexpr kName = "";
+        inline auto static const kChoices = juce::StringArray{
+            "10k", "20k", "Auto"
+        };
+        int static constexpr kDefaultI = 2;
     };
 
     class PAnalyzerMagType : public ChoiceParameters<PAnalyzerMagType> {
@@ -156,63 +177,10 @@ namespace zlstate {
         }
     };
 
-    class PSideControlDisplay : public ChoiceParameters<PSideControlDisplay> {
-    public:
-        auto static constexpr kID = "side_control_display";
-        auto static constexpr kName = "";
-        inline auto static const kChoices = juce::StringArray{
-            "OFF", "ON"
-        };
-        int static constexpr kDefaultI = 0;
-    };
-
-    class PSideEQDisplay : public ChoiceParameters<PSideEQDisplay> {
-    public:
-        auto static constexpr kID = "side_eq_display";
-        auto static constexpr kName = "";
-        inline auto static const kChoices = juce::StringArray{
-            "OFF", "ON"
-        };
-        int static constexpr kDefaultI = 0;
-    };
-
-    class PComputerCurveDisplay : public ChoiceParameters<PComputerCurveDisplay> {
-    public:
-        auto static constexpr kID = "computer_curve_display";
-        auto static constexpr kName = "";
-        inline auto static const kChoices = juce::StringArray{
-            "OFF", "ON"
-        };
-        int static constexpr kDefaultI = 1;
-    };
-
-    class PRMSAnalyzerDisplay : public ChoiceParameters<PRMSAnalyzerDisplay> {
-    public:
-        auto static constexpr kID = "rms_analyzer_display";
-        auto static constexpr kName = "";
-        inline auto static const kChoices = juce::StringArray{
-            "OFF", "ON"
-        };
-        int static constexpr kDefaultI = 1;
-    };
-
-    class PRMSPanelDisplay : public ChoiceParameters<PRMSPanelDisplay> {
-    public:
-        auto static constexpr kID = "rms_panel_display";
-        auto static constexpr kName = "";
-        inline auto static const kChoices = juce::StringArray{
-            "OFF", "ON"
-        };
-        int static constexpr kDefaultI = 0;
-    };
-
     inline juce::AudioProcessorValueTreeState::ParameterLayout getNAParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
-        layout.add(PEQMaxDB::get(),
-                   PAnalyzerMagType::get(), PAnalyzerMinDB::get(), PAnalyzerTimeLength::get(),
-                   PSideControlDisplay::get(), PSideEQDisplay::get(),
-                   PComputerCurveDisplay::get(), PRMSAnalyzerDisplay::get(),
-                   PRMSPanelDisplay::get());
+        layout.add(PFFTMinDB::get(), PFFTMinFreq::get(), PFFTMaxFreq::get(),
+                   PAnalyzerMagType::get(), PAnalyzerMinDB::get(), PAnalyzerTimeLength::get());
         return layout;
     }
 
@@ -220,20 +188,22 @@ namespace zlstate {
     public:
         auto static constexpr kID = "window_w";
         auto static constexpr kName = "";
-        inline static constexpr float minV = 600.f;
-        inline static constexpr float maxV = 6000.f;
+        inline static constexpr int kMinV = 600.f;
+        inline static constexpr int kMaxV = 6000.f;
         inline static constexpr float kDefaultV = 600.f;
-        inline auto static const kRange = juce::NormalisableRange<float>(minV, maxV, 1.f);
+        inline auto static const kRange = juce::NormalisableRange<float>(
+            static_cast<float>(kMinV), static_cast<float>(kMaxV), 1.f);
     };
 
     class PWindowH : public FloatParameters<PWindowH> {
     public:
         auto static constexpr kID = "window_h";
         auto static constexpr kName = "";
-        inline static constexpr float minV = 282.f;
-        inline static constexpr float maxV = 6000.f;
+        inline static constexpr int kMinV = 282.f;
+        inline static constexpr int kMaxV = 6000.f;
         inline static constexpr float kDefaultV = 371.f;
-        inline auto static const kRange = juce::NormalisableRange<float>(minV, maxV, 1.f);
+        inline auto static const kRange = juce::NormalisableRange<float>(
+            static_cast<float>(kMinV), static_cast<float>(kMaxV), 1.f);
     };
 
     class PWheelSensitivity : public FloatParameters<PWheelSensitivity> {
@@ -347,9 +317,9 @@ namespace zlstate {
         auto static constexpr kDefaultV = 1.f;
     };
 
-    class PEQCurveThickness : public FloatParameters<PEQCurveThickness> {
+    class PFFTCurveThickness : public FloatParameters<PFFTCurveThickness> {
     public:
-        auto static constexpr kID = "eq_curve_thickness";
+        auto static constexpr kID = "fft_curve_thickness";
         auto static constexpr kName = "";
         inline auto static const kRange = juce::NormalisableRange<float>(0.f, 4.f, .01f);
         auto static constexpr kDefaultV = 1.f;
@@ -466,7 +436,7 @@ namespace zlstate {
                    PSliderDoubleClickFunc::get(),
                    PTargetRefreshSpeed::get(),
                    PFFTExtraTilt::get(), PFFTExtraSpeed::get(),
-                   PMagCurveThickness::get(), PEQCurveThickness::get(),
+                   PMagCurveThickness::get(), PFFTCurveThickness::get(),
                    PTooltipLang::get());
 
         for (size_t i = 0; i < kColourNames.size(); ++i) {

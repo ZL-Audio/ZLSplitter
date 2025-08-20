@@ -17,7 +17,7 @@ namespace zlpanel {
           fft_tilt_slider_("Tilt", base),
           fft_speed_slider_("Speed", base),
           mag_curve_slider_("Mag", base),
-          eq_curve_slider_("EQ", base),
+          fft_curve_slider_("FFT", base),
           tooltip_box_(zlstate::PTooltipLang::kChoices, base) {
         juce::ignoreUnused(p_ref_);
         name_laf_.setFontScale(zlgui::kFontHuge);
@@ -46,9 +46,9 @@ namespace zlpanel {
         mag_curve_slider_.getSlider().setNormalisableRange(juce::NormalisableRange<double>(0., 4., .01));
         mag_curve_slider_.getSlider().setDoubleClickReturnValue(true, 1.0);
         addAndMakeVisible(mag_curve_slider_);
-        eq_curve_slider_.getSlider().setNormalisableRange(juce::NormalisableRange<double>(0., 4., .01));
-        eq_curve_slider_.getSlider().setDoubleClickReturnValue(true, 1.0);
-        addAndMakeVisible(eq_curve_slider_);
+        fft_curve_slider_.getSlider().setNormalisableRange(juce::NormalisableRange<double>(0., 4., .01));
+        fft_curve_slider_.getSlider().setDoubleClickReturnValue(true, 1.0);
+        addAndMakeVisible(fft_curve_slider_);
 
         tooltip_label_.setText("Tooltip", juce::dontSendNotification);
         tooltip_label_.setJustificationType(juce::Justification::centredRight);
@@ -63,7 +63,7 @@ namespace zlpanel {
         fft_speed_slider_.getSlider().setValue(static_cast<double>(base_.getFFTExtraSpeed()));
         mag_curve_slider_.getSlider().setValue(base_.getMagCurveThickness());
         tooltip_box_.getBox().setSelectedItemIndex(static_cast<int>(base_.getTooltipLangID()));
-        eq_curve_slider_.getSlider().setValue(base_.getEQCurveThickness());
+        fft_curve_slider_.getSlider().setValue(base_.getFFTCurveThickness());
     }
 
     void OtherUISettingPanel::saveSetting() {
@@ -71,7 +71,7 @@ namespace zlpanel {
         base_.setFFTExtraTilt(static_cast<float>(fft_tilt_slider_.getSlider().getValue()));
         base_.setFFTExtraSpeed(static_cast<float>(fft_speed_slider_.getSlider().getValue()));
         base_.setMagCurveThickness(static_cast<float>(mag_curve_slider_.getSlider().getValue()));
-        base_.setEQCurveThickness(static_cast<float>(eq_curve_slider_.getSlider().getValue()));
+        base_.setFFTCurveThickness(static_cast<float>(fft_curve_slider_.getSlider().getValue()));
         base_.setTooltipLandID(static_cast<size_t>(tooltip_box_.getBox().getSelectedItemIndex()));
         base_.saveToAPVTS();
     }
@@ -112,7 +112,7 @@ namespace zlpanel {
             local_bound.removeFromLeft(padding);
             mag_curve_slider_.setBounds(local_bound.removeFromLeft(slider_width));
             local_bound.removeFromLeft(padding);
-            eq_curve_slider_.setBounds(local_bound.removeFromLeft(slider_width));
+            fft_curve_slider_.setBounds(local_bound.removeFromLeft(slider_width));
         } {
             bound.removeFromTop(padding);
             auto local_bound = bound.removeFromTop(slider_height);

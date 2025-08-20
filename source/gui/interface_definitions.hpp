@@ -306,12 +306,12 @@ namespace zlgui {
             mag_curve_thickness_.store(x, std::memory_order::relaxed);
         }
 
-        float getEQCurveThickness() const {
-            return eq_curve_thickness_.load(std::memory_order::relaxed);
+        float getFFTCurveThickness() const {
+            return fft_curve_thickness_.load(std::memory_order::relaxed);
         }
 
-        void setEQCurveThickness(const float x) {
-            eq_curve_thickness_.store(x, std::memory_order::relaxed);
+        void setFFTCurveThickness(const float x) {
+            fft_curve_thickness_.store(x, std::memory_order::relaxed);
         }
 
         size_t getTooltipLangID() {
@@ -375,7 +375,7 @@ namespace zlgui {
         std::atomic<size_t> refresh_rate_id_{2};
         float rotary_drag_sensitivity_{1.f};
         std::atomic<float> fft_extra_tilt_{0.f}, fft_extra_speed_{1.f};
-        std::atomic<float> mag_curve_thickness_{1.f}, eq_curve_thickness_{1.f};
+        std::atomic<float> mag_curve_thickness_{1.f}, fft_curve_thickness_{1.f};
         std::atomic<size_t> tooltip_lang_id_{1};
 
         std::array<std::atomic<bool>, zlstate::kBandNUM> is_band_selected_{};

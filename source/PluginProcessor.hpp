@@ -74,8 +74,15 @@ public:
         return double_controller_;
     }
 
+    double getAtomicSampleRate() const  {
+        return sample_rate_.load(std::memory_order::relaxed);
+    }
+
 private:
     std::atomic<float> &swap_ref_;
+    std::atomic<float> &bypass_ref_;
+
+    std::atomic<double> sample_rate_{48000.0};
 
     std::array<std::vector<double>, 2> double_in_buffer;
     std::array<std::vector<double>, 4> double_out_buffer;

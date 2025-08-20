@@ -234,6 +234,13 @@ namespace zlp {
         auto static constexpr kDefaultV = false;
     };
 
+    class PBypass : public BoolParameters<PBypass> {
+    public:
+        auto static constexpr kID = "bypass";
+        auto static constexpr kName = "Bypass";
+        auto static constexpr kDefaultV = false;
+    };
+
     class PLHFilterType : public ChoiceParameters<PLHFilterType> {
     public:
         auto static constexpr kID = "lh_filter_type";
@@ -336,7 +343,7 @@ namespace zlp {
 
     inline juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
-        layout.add(PSplitType::get(), PMix::get(), PSwap::get(),
+        layout.add(PSplitType::get(), PMix::get(), PSwap::get(), PBypass::get(),
                    PLHFilterType::get(), PLHSlope::get(), PLHFreq::get(),
                    PTSBalance::get(), PTSSeparation::get(), PTSHold::get(), PTSSmooth::get(),
                    PPSBalance::get(), PPSAttack::get(), PPSHold::get(), PPSSmooth::get());

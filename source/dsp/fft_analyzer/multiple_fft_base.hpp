@@ -11,6 +11,7 @@
 
 #include <atomic>
 #include <span>
+#include <iostream>
 
 #include "../container/container.hpp"
 #include "../interpolation/interpolation.hpp"
@@ -184,17 +185,12 @@ namespace zldsp::analyzer {
                 for (size_t j = 0; j < input_dbs.size(); ++j) {
                     const auto start_idx = seq_input_starts_[j];
                     const auto end_idx = seq_input_ends_[j];
-                    float mean_square = 0.0;
+
                     const auto range_length = end_idx - start_idx;
-                    if (range_length < 4) {
-                        for (size_t k = start_idx; k < end_idx; ++k) {
-                            mean_square += ms_fft_buffer_[k];
-                        }
-                    } else {
-                        auto v = kfr::make_univector(ms_fft_buffer_.data() + start_idx, range_length);
-                        mean_square = kfr::sum(v);
-                    }
+                    auto v = kfr::make_univector(ms_fft_buffer_.data() + start_idx, range_length);
+                    float mean_square = kfr::sum(v);
                     mean_square = mean_square / static_cast<float>(range_length);
+
                     const auto current_db = chore::squareGainToDecibels(mean_square);
                     input_dbs[j] = current_db < input_dbs[j]
                                        ? input_dbs[j] * decay + current_db * (1 - decay)
@@ -204,7 +200,7 @@ namespace zldsp::analyzer {
                 seq_akima_[i]->eval(interplot_freqs_.data(), interplot_dbs_[i].data(), interplot_freqs_.size());
             }
             // apply tilt
-            if (to_update_tilt_.exchange(false, std::memory_order::acquire)) {
+            if (to_update_tilt_.exchange(false, std::memory_order::acquire) || to_update) {
                 prepareTilt();
             }
             for (const auto &i: is_on_vector) {
@@ -251,8 +247,12 @@ namespace zldsp::analyzer {
             updateActualDecayRate();
         }
 
-        void setMinMaxFreq(const double min_freq, const double max_freq) {
+        void setMinFreq(const double min_freq) {
             min_freq_.store(min_freq, std::memory_order::relaxed);
+            to_update_akima_.store(true, std::memory_order::release);
+        }
+
+        void setMaxFreq(const double max_freq) {
             max_freq_.store(max_freq, std::memory_order::relaxed);
             to_update_akima_.store(true, std::memory_order::release);
         }
@@ -299,10 +299,11 @@ namespace zldsp::analyzer {
         void prepareAkima() {
             // cache sample rate and frequency values
             const auto sample_rate = sample_rate_.load(std::memory_order::relaxed);
-            const auto min_freq = min_freq_.load(std::memory_order::relaxed);
             const auto max_freq = std::min(max_freq_.load(std::memory_order::relaxed), sample_rate * .5);
+            const auto min_freq = std::min(min_freq_.load(std::memory_order::relaxed), max_freq * .5);
             const auto fft_size = fft_.getSize();
             // calculate start/end indices
+            bool force_last_range = false;
             {
                 const auto freq_delta = sample_rate / static_cast<double>(fft_size);
                 const auto freq_mul = std::pow(max_freq / min_freq, 2. / static_cast<double>(PointNum));
@@ -326,9 +327,11 @@ namespace zldsp::analyzer {
                         seq_input_ends_.emplace_back(new_index);
                     }
                 }
+
                 if (freq > sample_rate * .5) {
-                    seq_input_starts_.emplace_back(seq_input_ends_.back());
+                    seq_input_starts_.emplace_back(limit + 1 - (seq_input_ends_.back() - seq_input_starts_.back()) / 2);
                     seq_input_ends_.emplace_back(limit + 1);
+                    force_last_range = true;
                 }
             }
             // calculate medium of each start-end range, which is served as Akima input x
@@ -339,6 +342,9 @@ namespace zldsp::analyzer {
                 for (size_t i = 0; i < seq_input_starts_.size(); ++i) {
                     seq_input_freqs_[i] = static_cast<float>(
                         static_cast<double>(seq_input_starts_[i] + seq_input_ends_[i] - 1) * freq_delta);
+                }
+                if (force_last_range) {
+                    seq_input_freqs_.back() = static_cast<float>(0.5 * sample_rate);
                 }
                 for (size_t i = 0; i < FFTNum; ++i) {
                     seq_input_dbs_[i].resize(seq_input_freqs_.size());

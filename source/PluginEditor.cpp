@@ -24,21 +24,22 @@ PluginEditor::PluginEditor(PluginProcessor &p)
     addAndMakeVisible(main_panel_);
 
     // set size & size listener
-    setResizeLimits(static_cast<int>(zlstate::PWindowW::minV),
-                    static_cast<int>(zlstate::PWindowH::minV),
-                    static_cast<int>(zlstate::PWindowW::maxV),
-                    static_cast<int>(zlstate::PWindowH::maxV));
+    setResizeLimits(zlstate::PWindowW::kMinV - 1, zlstate::PWindowH::kMinV - 1,
+                    zlstate::PWindowW::kMaxV, zlstate::PWindowH::kMaxV);
     setResizable(true, p.wrapperType != PluginProcessor::wrapperType_AudioUnitv3);
 
     this->resizableCorner = std::make_unique<zlgui::ResizeCorner>(base_, this, getConstrainer(),
-                                                                  zlgui::ResizeCorner::kScaleWithWidth, 0.025f);
+                                                                  zlgui::ResizeCorner::kScaleWithWidth, 0.016f);
     addChildComponent(this->resizableCorner.get());
     this->resizableCorner->setAlwaysOnTop(true);
     this->resizableCorner->resized();
 
     last_ui_width_.referTo(p.state_.getParameterAsValue(zlstate::PWindowW::kID));
     last_ui_height_.referTo(p.state_.getParameterAsValue(zlstate::PWindowH::kID));
-    setSize(last_ui_width_.getValue(), last_ui_height_.getValue());
+    setSize(
+        std::clamp(static_cast<int>(last_ui_width_.getValue()), zlstate::PWindowW::kMinV, zlstate::PWindowW::kMaxV),
+        std::clamp(static_cast<int>(last_ui_height_.getValue()), zlstate::PWindowH::kMinV, zlstate::PWindowH::kMaxV)
+    );
 
     startTimerHz(2);
     updateIsShowing();
@@ -59,8 +60,8 @@ void PluginEditor::paint(juce::Graphics &g) {
 
 void PluginEditor::resized() {
     main_panel_.setBounds(getLocalBounds());
-    last_ui_width_ = getWidth();
-    last_ui_height_ = getHeight();
+    last_ui_width_ =  std::clamp(getWidth(), zlstate::PWindowW::kMinV, zlstate::PWindowW::kMaxV);
+    last_ui_height_ = std::clamp(getHeight(), zlstate::PWindowH::kMinV, zlstate::PWindowH::kMaxV);
     triggerAsyncUpdate();
 }
 

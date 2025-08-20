@@ -27,6 +27,7 @@ PluginProcessor::PluginProcessor()
              zlstate::getStateParameterLayout()),
       property_(state_),
       swap_ref_(*parameters_.getRawParameterValue(zlp::PSwap::kID)),
+      bypass_ref_(*parameters_.getRawParameterValue(zlp::PBypass::kID)),
       double_controller_(*this),
       double_controller_attach_(*this, parameters_, double_controller_) {
 }
@@ -90,6 +91,7 @@ void PluginProcessor::changeProgramName(int, const juce::String &) {
 //==============================================================================
 void PluginProcessor::prepareToPlay(const double sample_rate, const int samples_per_block) {
     const auto max_num_samples = static_cast<size_t>(samples_per_block);
+    sample_rate_.store(sample_rate, std::memory_order::relaxed);
 
     for (size_t chan = 0; chan < 2; ++chan) {
         double_in_buffer[chan].resize(max_num_samples);
@@ -126,6 +128,8 @@ bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
 void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                    juce::MidiBuffer &) {
     juce::ScopedNoDenormals no_denormals;
+    double_in_pointers[0] = double_in_buffer[0].data();
+    double_in_pointers[1] = double_in_buffer[1].data();
     zldsp::vector::copy(double_in_pointers[0], buffer.getWritePointer(0),
                         static_cast<size_t>(buffer.getNumSamples()));
     zldsp::vector::copy(double_in_pointers[1], buffer.getWritePointer(1),
@@ -139,9 +143,15 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer,
                                    static_cast<size_t>(buffer.getNumSamples()));
     }
 
-    for (size_t chan = 0; chan < static_cast<size_t>(std::min(4, buffer.getNumChannels())); ++chan) {
-        zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
-                            double_out_pointers1[chan], static_cast<size_t>(buffer.getNumSamples()));
+    if (bypass_ref_.load(std::memory_order::relaxed) < .5f) {
+        for (size_t chan = 0; chan < static_cast<size_t>(std::min(4, buffer.getNumChannels())); ++chan) {
+            zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
+                                double_out_pointers1[chan], static_cast<size_t>(buffer.getNumSamples()));
+        }
+    } else {
+        for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i) {
+            buffer.clear (i, 0, buffer.getNumSamples());
+        }
     }
 }
 
@@ -159,9 +169,15 @@ void PluginProcessor::processBlock(juce::AudioBuffer<double> &buffer,
                                    static_cast<size_t>(buffer.getNumSamples()));
     }
 
-    for (size_t chan = 0; chan < static_cast<size_t>(std::min(4, buffer.getNumChannels())); ++chan) {
-        zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
-                            double_out_pointers1[chan], static_cast<size_t>(buffer.getNumSamples()));
+    if (bypass_ref_.load(std::memory_order::relaxed) < .5f) {
+        for (size_t chan = 0; chan < static_cast<size_t>(std::min(4, buffer.getNumChannels())); ++chan) {
+            zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
+                                double_out_pointers1[chan], static_cast<size_t>(buffer.getNumSamples()));
+        }
+    } else {
+        for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i) {
+            buffer.clear (i, 0, buffer.getNumSamples());
+        }
     }
 }
 

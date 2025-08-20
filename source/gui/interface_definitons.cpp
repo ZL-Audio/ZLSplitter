@@ -271,7 +271,7 @@ namespace zlgui {
         fft_extra_tilt_.store(loadPara(zlstate::PFFTExtraTilt::kID));
         fft_extra_speed_.store(loadPara(zlstate::PFFTExtraSpeed::kID));
         mag_curve_thickness_.store(loadPara(zlstate::PMagCurveThickness::kID));
-        eq_curve_thickness_.store(loadPara(zlstate::PEQCurveThickness::kID));
+        fft_curve_thickness_.store(loadPara(zlstate::PFFTCurveThickness::kID));
         tooltip_lang_id_.store(
             static_cast<size_t>(std::round(state.getRawParameterValue(zlstate::PTooltipLang::kID)->load())));
         colour_map1_idx_ = static_cast<size_t>(loadPara(zlstate::PColourMap1Idx::kID));
@@ -317,8 +317,8 @@ namespace zlgui {
         savePara(zlstate::PFFTExtraSpeed::kID, zlstate::PFFTExtraSpeed::convertTo01(fft_extra_speed_.load()));
         savePara(zlstate::PMagCurveThickness::kID,
                  zlstate::PMagCurveThickness::convertTo01(mag_curve_thickness_.load()));
-        savePara(zlstate::PEQCurveThickness::kID,
-                 zlstate::PEQCurveThickness::convertTo01(eq_curve_thickness_.load()));
+        savePara(zlstate::PFFTCurveThickness::kID,
+                 zlstate::PFFTCurveThickness::convertTo01(fft_curve_thickness_.load()));
         savePara(zlstate::PTooltipLang::kID,
                  zlstate::PTooltipLang::convertTo01(static_cast<int>(tooltip_lang_id_.load())));
         savePara(zlstate::PColourMap1Idx::kID, zlstate::PColourMapIdx::convertTo01(static_cast<int>(colour_map1_idx_)));

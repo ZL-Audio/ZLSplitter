@@ -38,7 +38,7 @@ namespace zlpanel {
         juce::Label fft_label_;
         zlgui::slider::CompactLinearSlider<true, true, true> fft_tilt_slider_, fft_speed_slider_;
         juce::Label curve_thick_label_;
-        zlgui::slider::CompactLinearSlider<true, true, true> mag_curve_slider_, eq_curve_slider_;
+        zlgui::slider::CompactLinearSlider<true, true, true> mag_curve_slider_, fft_curve_slider_;
         juce::Label tooltip_label_;
         zlgui::combobox::CompactCombobox tooltip_box_;
     };

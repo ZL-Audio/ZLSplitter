@@ -20,20 +20,17 @@ namespace zlpanel {
 
         void resized() override;
 
+        void repaintCallBackSlow();
+
+        void setMinMaxFreq(double min_freq, double max_freq);
+
     private:
-        /** stl does not support constexpr log/pow,
-         * (np.log([20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]) - np.log(10)) / (np.log(22000) - np.log(10)) */
-        static constexpr std::array<float, 10> kBackgroundFreqs = {
-            0.09006341f, 0.20912077f, 0.29918418f, 0.3892476f, 0.50830495f,
-            0.59836837f, 0.68843178f, 0.80748914f, 0.89755255f, 0.98761596f
+        static constexpr std::array<double, 11> kBackgroundFreqs = {
+            20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0, 20000.0, 50000.0
         };
 
-        static constexpr std::array<std::string, 10> kBackgroundFreqsNames = {
-            "20", "50", "100", "200", "500", "1k", "2k", "5k", "10k", "20k"
-        };
-
-        static constexpr std::array<float, 6> kBackgroundDBs = {
-            0.f, 1.f / 6.f, 2.f / 6.f, 0.5, 4.f / 6.f, 5.f / 6.f
+        static constexpr std::array<std::string, 11> kBackgroundFreqsNames = {
+            "20", "50", "100", "200", "500", "1k", "2k", "5k", "10k", "20k", "50k"
         };
 
         class Background1 final : public juce::Component {
@@ -42,15 +39,29 @@ namespace zlpanel {
 
             void paint(juce::Graphics &g) override;
 
-            void resized() override;
+            void setMinFreq(const double x) {
+                min_freq_ = x;
+            }
+
+            void setMaxFreq(const double x) {
+                max_freq_ = x;
+            }
 
         private:
             zlgui::UIBase &base_;
 
-            juce::RectangleList<float> rect_list_;
-            std::array<juce::Rectangle<float>, 10> text_bounds_;
+            double min_freq_{10.0}, max_freq_{22000.0};
         };
 
+        zlgui::UIBase &base_;
         Background1 background1_;
+
+        zlgui::attachment::ComponentUpdater updater_;
+
+        zlgui::combobox::CompactCombobox fft_min_freq_box_;
+        zlgui::attachment::ComboBoxAttachment<true> fft_min_freq_attach;
+
+        zlgui::combobox::CompactCombobox fft_max_freq_box_;
+        zlgui::attachment::ComboBoxAttachment<true> fft_max_freq_attach;
     };
 } // zlpanel

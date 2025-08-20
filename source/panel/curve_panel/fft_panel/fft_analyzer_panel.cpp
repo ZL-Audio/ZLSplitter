@@ -89,12 +89,13 @@ namespace zlpanel {
         next_out_path2_.clear();
         next_out_path2_.startNewSubPath(bound.getBottomLeft());
         for (size_t i = 0; i < xs_.size(); ++i) {
-            next_out_path1_.lineTo(xs_[i], y1_[i]);
-            next_out_path2_.lineTo(xs_[i], y2_[i]);
+            if (std::isfinite(y1_[i])) {
+                next_out_path1_.lineTo(xs_[i], y1_[i]);
+            }
+            if (std::isfinite(y2_[i])) {
+                next_out_path2_.lineTo(xs_[i], y2_[i]);
+            }
         }
-
-        next_out_path1_.lineTo(bound.getBottomRight());
-        next_out_path2_.lineTo(bound.getBottomRight());
 
         std::lock_guard<std::mutex> lock{mutex_};
         out_path1_.swapWithPath(next_out_path1_);

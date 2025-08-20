@@ -54,7 +54,11 @@ namespace zlgui::combobox {
         void drawLabel(juce::Graphics &g, juce::Label &label) override {
             g.setColour(base_.getTextColor());
             g.setFont(base_.getFontSize() * font_scale_);
-            g.drawText(label.getText(), label.getLocalBounds(), label_justification_);
+            if (label_string_.isEmpty()) {
+                g.drawText(label.getText(), label.getLocalBounds(), label_justification_);
+            } else {
+                g.drawText(label_string_, label.getLocalBounds(), label_justification_);
+            }
         }
 
         void drawPopupMenuBackground(juce::Graphics &g, int width, int height) override {
@@ -123,11 +127,16 @@ namespace zlgui::combobox {
 
         void setBoxAlpha(const float x) { box_alpha_ = x; }
 
+        void setLabelString(const juce::String &label_string) {
+            label_string_ = label_string;
+        }
+
         void setLabelJustification(const juce::Justification j) { label_justification_ = j; }
 
         void setItemJustification(const juce::Justification j) { item_justification_ = j; }
 
     private:
+        juce::String label_string_;
         float font_scale_{1.5f}, box_alpha_{0.f};
         juce::Justification label_justification_{juce::Justification::centred};
         juce::Justification item_justification_{juce::Justification::centred};

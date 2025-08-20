@@ -14,6 +14,7 @@ namespace zlpanel {
                            multilingual::TooltipHelper &tooltip_helper)
         : Thread("curve_panel"), p_ref_(p), base_(base),
           fft_panel_(p, base) {
+        juce::ignoreUnused(p_ref_, tooltip_helper);
         addAndMakeVisible(fft_panel_);
         startThread(juce::Thread::Priority::low);
     }
@@ -53,9 +54,11 @@ namespace zlpanel {
     }
 
     void CurvePanel::repaintCallBackSlow() {
+        fft_panel_.repaintCallBackSlow();
     }
 
     void CurvePanel::repaintCallBack(const double time_stamp) {
+        juce::ignoreUnused(time_stamp);
         repaint();
     }
 } // zlpanel
