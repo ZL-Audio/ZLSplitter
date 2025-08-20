@@ -62,10 +62,10 @@ namespace zldsp::splitter {
                     return static_cast<FloatType>(y_lp);
                 }
                 case kHighPass: {
-                    return x - static_cast<FloatType>(y_lp);
+                    return static_cast<FloatType>(y_lp) - x;
                 }
                 case kAllPass: {
-                    return static_cast<FloatType>(2.0 * y_lp) - x;
+                    return static_cast<FloatType>(y_lp + y_lp) - x;
                 }
                 default: {
                     return static_cast<FloatType>(0);

@@ -51,7 +51,7 @@ namespace zldsp::splitter {
 
         void updateCoeff() {
             g_ = std::tan(sample_rate_scale_ * freq_);
-            g2_ = g2_ * 2.0;
+            g2_ = g_ * 2.0;
             R2_ = 1.0 / q_;
             g_R2_ = g_ + R2_;
             h_ = 1.0 / (1.0 + R2_ * g_ + g_ * g_);
