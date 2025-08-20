@@ -17,6 +17,7 @@
 #include "helper/refresh_handler.hpp"
 #include "multilingual/tooltip_helper.hpp"
 #include "curve_panel/curve_panel.hpp"
+#include "top_panel/top_panel.hpp"
 #include "ui_setting_panel/ui_setting_panel.hpp"
 
 namespace zlpanel {
@@ -38,6 +39,7 @@ namespace zlpanel {
         multilingual::TooltipHelper tooltip_helper_;
 
         CurvePanel curve_panel_;
+        TopPanel top_panel_;
         UISettingPanel ui_setting_panel_;
 
         zlgui::tooltip::TooltipLookAndFeel tooltip_laf_;

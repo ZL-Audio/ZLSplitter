@@ -9,28 +9,32 @@
 
 #pragma once
 
-#include "../../../PluginProcessor.hpp"
-#include "../../../gui/gui.hpp"
-#include "../../helper/helper.hpp"
+#include "../../PluginProcessor.hpp"
+#include "../../gui/gui.hpp"
+#include "../helper/helper.hpp"
 #include "BinaryData.h"
 
 namespace zlpanel {
-    class LeftControlPanel final : public juce::Component {
+    class TopControlPanel final : public juce::Component {
     public:
-        explicit LeftControlPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit TopControlPanel(PluginProcessor &p, zlgui::UIBase &base);
+
+        int getIdealWidth() const;
 
         void resized() override;
 
         void repaintCallBackSlow();
 
     private:
-        PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
+        zlgui::attachment::ComponentUpdater updater_;
 
-        std::atomic<float> &split_type_ref_;
-        float c_split_type_{-1.f};
+        std::unique_ptr<juce::Drawable> swap_drawable_;
+        zlgui::button::CompactButton swap_button_;
+        zlgui::attachment::ButtonAttachment<true> swap_attach_;
 
-        std::array<std::unique_ptr<juce::Drawable>, 5> split_mode_drawables_;
-        std::array<zlgui::button::CompactButton, 5> split_mode_buttons_;
+        std::unique_ptr<juce::Drawable> bypass_drawable_;
+        zlgui::button::CompactButton bypass_button_;
+        zlgui::attachment::ButtonAttachment<true> bypass_attach_;
     };
 }

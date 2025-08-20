@@ -17,11 +17,13 @@ namespace zlpanel {
                   p_ref_.state_.getRawParameterValue(zlstate::PTooltipLang::kID)->load(std::memory_order::relaxed)))
           ),
           curve_panel_(processor, base_, tooltip_helper_),
+          top_panel_(processor, base_),
           ui_setting_panel_(processor, base_),
           tooltip_laf_(base_), tooltip_window_(&curve_panel_),
-          refresh_handler_(zlstate::PTargetRefreshSpeed::kRates[base_.getRefreshRateID()]){
+          refresh_handler_(zlstate::PTargetRefreshSpeed::kRates[base_.getRefreshRateID()]) {
         juce::ignoreUnused(base_);
         addAndMakeVisible(curve_panel_);
+        addAndMakeVisible(top_panel_);
         addChildComponent(ui_setting_panel_);
 
         tooltip_window_.setLookAndFeel(&tooltip_laf_);
@@ -46,6 +48,7 @@ namespace zlpanel {
 
         ui_setting_panel_.setBounds(bound);
 
+        top_panel_.setBounds(bound.removeFromTop(top_panel_.getIdealHeight()));
         curve_panel_.setBounds(bound);
     }
 
@@ -54,6 +57,7 @@ namespace zlpanel {
             if (time_stamp - previous_time_stamp_ > 0.1) {
                 previous_time_stamp_ = time_stamp;
                 curve_panel_.repaintCallBackSlow();
+                top_panel_.repaintCallBackSlow();
             }
 
             curve_panel_.repaintCallBack(time_stamp);

@@ -10,9 +10,9 @@
 #include "left_control_panel.hpp"
 
 namespace zlpanel {
-    LeftControlPanel::LeftControlPanel(PluginProcessor &processor, zlgui::UIBase &base)
-        : p_ref_(processor), base_(base),
-          split_type_ref_(*p_ref_.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+    LeftControlPanel::LeftControlPanel(PluginProcessor &p, zlgui::UIBase &base)
+        : p_ref_(p), base_(base),
+          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
           split_mode_drawables_{
               juce::Drawable::createFromImageData(BinaryData::leftright_svg, BinaryData::leftright_svgSize),
               juce::Drawable::createFromImageData(BinaryData::midside_svg, BinaryData::midside_svgSize),
