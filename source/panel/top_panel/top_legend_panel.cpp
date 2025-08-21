@@ -31,14 +31,14 @@ namespace zlpanel {
             colours.emplace_back(base_.getTextColor());
         } else if (c_swap_) {
             labels.emplace_back(kText2[idx]);
-            colours.emplace_back(base_.getColorMap1(0));
+            colours.emplace_back(base_.getColourByIdx(zlgui::ColourIdx::kOutput1Colour));
             labels.emplace_back(kText1[idx]);
-            colours.emplace_back(base_.getColorMap1(1));
+            colours.emplace_back(base_.getColourByIdx(zlgui::ColourIdx::kOutput2Colour));
         } else {
             labels.emplace_back(kText1[idx]);
-            colours.emplace_back(base_.getColorMap1(0));
+            colours.emplace_back(base_.getColourByIdx(zlgui::ColourIdx::kOutput1Colour));
             labels.emplace_back(kText2[idx]);
-            colours.emplace_back(base_.getColorMap1(1));
+            colours.emplace_back(base_.getColourByIdx(zlgui::ColourIdx::kOutput2Colour));
         }
 
         const auto padding = std::round(base_.getFontSize() * kPaddingScale);

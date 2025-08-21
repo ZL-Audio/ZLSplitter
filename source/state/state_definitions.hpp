@@ -402,11 +402,10 @@ namespace zlstate {
         }
     }
 
-    static constexpr std::array<std::string, 9> kColourNames{
+    static constexpr std::array<std::string, 7> kColourNames{
         "text", "background",
-        "shadow", "glow",
-        "pre", "post", "reduction",
-        "computer", "grid"
+        "shadow", "glow", "grid",
+        "output1", "output2"
     };
 
     struct ColourDefaultSetting {
@@ -415,16 +414,14 @@ namespace zlstate {
         float opacity;
     };
 
-    static constexpr std::array<ColourDefaultSetting, 9> kColourDefaults{
+    static constexpr std::array<ColourDefaultSetting, 7> kColourDefaults{
         ColourDefaultSetting{255 - 8, 255 - 9, 255 - 11, true, 1.f},
         ColourDefaultSetting{(255 - 214) / 2, (255 - 223) / 2, (255 - 236) / 2, true, 1.f},
         ColourDefaultSetting{0, 0, 0, true, 1.f},
         ColourDefaultSetting{70, 66, 62, true, 1.f},
-        ColourDefaultSetting{255 - 8, 255 - 9, 255 - 11, true, .25f},
-        ColourDefaultSetting{255 - 8, 255 - 9, 255 - 11, true, 1.f},
-        ColourDefaultSetting{252, 18, 197, true, 1.f},
-        ColourDefaultSetting{255, 165, 0, true, 1.f},
-        ColourDefaultSetting{255 - 8, 255 - 9, 255 - 11, true, .1f}
+        ColourDefaultSetting{255 - 8, 255 - 9, 255 - 11, true, .1f},
+        ColourDefaultSetting{224, 136, 75, true, 1.f},
+        ColourDefaultSetting{0, 128, 241, true, 1.f},
     };
 
     inline juce::AudioProcessorValueTreeState::ParameterLayout getStateParameterLayout() {

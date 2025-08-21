@@ -35,23 +35,24 @@ namespace zlpanel {
         if (!lock.owns_lock()) {
             return;
         }
+        const auto thickness = base_.getFontSize() * .2f * base_.getFFTCurveThickness();
         if (static_cast<zlp::PSplitType::SplitType>(
                 std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
             g.setColour(base_.getTextColor());
             g.strokePath(out_path1_,
-                         juce::PathStrokeType(base_.getFontSize() * .15f,
+                         juce::PathStrokeType(thickness,
                                               juce::PathStrokeType::curved,
                                               juce::PathStrokeType::rounded));
         } else {
             const auto swap = swap_ref_.load(std::memory_order::relaxed) > .5f;
-            g.setColour(base_.getColorMap1(1));
+            g.setColour(base_.getColourByIdx(zlgui::ColourIdx::kOutput2Colour));
             g.strokePath(swap ? out_path1_ : out_path2_,
-                         juce::PathStrokeType(base_.getFontSize() * .15f,
+                         juce::PathStrokeType(thickness,
                                               juce::PathStrokeType::curved,
                                               juce::PathStrokeType::rounded));
-            g.setColour(base_.getColorMap1(0));
+            g.setColour(base_.getColourByIdx(zlgui::ColourIdx::kOutput1Colour));
             g.strokePath(swap ? out_path2_ : out_path1_,
-                         juce::PathStrokeType(base_.getFontSize() * .15f,
+                         juce::PathStrokeType(thickness,
                                               juce::PathStrokeType::curved,
                                               juce::PathStrokeType::rounded));
         }

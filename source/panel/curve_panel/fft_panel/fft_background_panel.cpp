@@ -24,7 +24,8 @@ namespace zlpanel {
         g.setFont(base_.getFontSize());
 
         const auto grid_colour = base_.getColourByIdx(zlgui::ColourIdx::kGridColour);
-        const auto text_colour = grid_colour.withAlpha(grid_colour.getFloatAlpha() + .2f);
+        const auto text_colour = base_.getTextColor().withAlpha(
+            std::clamp(grid_colour.getFloatAlpha() + .2f, .2f, 1.f));
         for (size_t i = 0; i < kBackgroundFreqs.size(); ++i) {
             const auto p = std::log(kBackgroundFreqs[i] / min_freq_) / std::log(max_freq_ / min_freq_);
             const auto x = bound.getX() + static_cast<float>(p) * bound.getWidth();
@@ -71,19 +72,22 @@ namespace zlpanel {
         const auto popup_option = juce::PopupMenu::Options().withPreferredPopupDirection(
             juce::PopupMenu::Options::PopupDirection::upwards);
 
-        fft_min_freq_box_.setAlpha(.375f);
+        const auto box_alpha = std::clamp(
+            base_.getColourByIdx(zlgui::ColourIdx::kGridColour).getFloatAlpha() + .2f, .2f, 1.f);
+
+        fft_min_freq_box_.setAlpha(box_alpha);
         fft_min_freq_box_.getLAF().setOption(popup_option);
         fft_min_freq_box_.getLAF().setFontScale(1.f);
         fft_min_freq_box_.getLAF().setLabelJustification(juce::Justification::bottomLeft);
         addAndMakeVisible(fft_min_freq_box_);
 
-        fft_max_freq_box_.setAlpha(.375f);
+        fft_max_freq_box_.setAlpha(box_alpha);
         fft_max_freq_box_.getLAF().setOption(popup_option);
         fft_max_freq_box_.getLAF().setFontScale(1.f);
         fft_max_freq_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);
         addAndMakeVisible(fft_max_freq_box_);
 
-        fft_min_db_box_.setAlpha(.375f);
+        fft_min_db_box_.setAlpha(box_alpha);
         fft_min_db_box_.getLAF().setOption(popup_option);
         fft_min_db_box_.getLAF().setFontScale(1.f);
         fft_min_db_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);

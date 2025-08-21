@@ -14,12 +14,13 @@
 #include "fft_panel.hpp"
 
 namespace zlpanel {
-    FFTPanel::FFTPanel(PluginProcessor &processor, zlgui::UIBase &base)
-        : p_ref_(processor),
-          fft_min_freq_ref_(*processor.na_parameters_.getRawParameterValue(zlstate::PFFTMinFreq::kID)),
-          fft_max_freq_ref_(*processor.na_parameters_.getRawParameterValue(zlstate::PFFTMaxFreq::kID)),
-          fft_background_panel_(processor, base),
-          fft_analyzer_panel_(processor, base) {
+    FFTPanel::FFTPanel(PluginProcessor &p, zlgui::UIBase &base)
+        : p_ref_(p),
+          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+          fft_min_freq_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinFreq::kID)),
+          fft_max_freq_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMaxFreq::kID)),
+          fft_background_panel_(p, base),
+          fft_analyzer_panel_(p, base) {
         addAndMakeVisible(fft_background_panel_);
         addAndMakeVisible(fft_analyzer_panel_);
     }
@@ -40,19 +41,19 @@ namespace zlpanel {
 
     void FFTPanel::repaintCallBackSlow() {
         fft_background_panel_.repaintCallBackSlow();
-        const auto d1 = std::abs(c_fft_min_freq_index - fft_min_freq_ref_.load(std::memory_order::relaxed));
-        const auto d2 = std::abs(c_fft_max_freq_index - fft_max_freq_ref_.load(std::memory_order::relaxed));
+        const auto d1 = std::abs(c_fft_min_freq_index_ - fft_min_freq_ref_.load(std::memory_order::relaxed));
+        const auto d2 = std::abs(c_fft_max_freq_index_ - fft_max_freq_ref_.load(std::memory_order::relaxed));
         const auto d3 = std::abs(c_sample_rate_ - p_ref_.getAtomicSampleRate());
         if (d1 > .1f || d2 > .1f || d3 > 0.1) {
-            c_fft_min_freq_index = fft_min_freq_ref_.load(std::memory_order::relaxed);
-            c_fft_max_freq_index = fft_max_freq_ref_.load(std::memory_order::relaxed);
+            c_fft_min_freq_index_ = fft_min_freq_ref_.load(std::memory_order::relaxed);
+            c_fft_max_freq_index_ = fft_max_freq_ref_.load(std::memory_order::relaxed);
             c_sample_rate_ = p_ref_.getAtomicSampleRate();
 
-            const auto min_freq = zlstate::PFFTMinFreq::kFreqs[static_cast<size_t>(std::round(c_fft_min_freq_index))];
+            const auto min_freq = zlstate::PFFTMinFreq::kFreqs[static_cast<size_t>(std::round(c_fft_min_freq_index_))];
             double max_freq = 0.0;
-            if (c_fft_max_freq_index < .5f) {
+            if (c_fft_max_freq_index_ < .5f) {
                 max_freq = 10000.0;
-            } else if (c_fft_max_freq_index < 1.5f) {
+            } else if (c_fft_max_freq_index_ < 1.5f) {
                 max_freq = 20000.0;
             } else {
                 if (c_sample_rate_ < 45000.0) {
@@ -76,6 +77,16 @@ namespace zlpanel {
             p_ref_.getController().getFFTAnalyzer().setMinFreq(min_freq);
             p_ref_.getController().getFFTAnalyzer().setMaxFreq(max_freq);
             fft_background_panel_.setMinMaxFreq(min_freq, max_freq);
+        }
+        const auto new_split_type = split_type_ref_.load(std::memory_order::relaxed);
+        if (std::abs(new_split_type - c_split_type_) > .1f) {
+            c_split_type_ = new_split_type;
+            if (static_cast<zlp::PSplitType::SplitType>(
+                std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
+                p_ref_.getController().getFFTAnalyzer().setON({true, false});
+            } else {
+                p_ref_.getController().getFFTAnalyzer().setON({true, true});
+            }
         }
     }
 

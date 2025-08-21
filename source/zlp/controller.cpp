@@ -28,7 +28,6 @@ namespace zlp {
         ps_splitter_[1].prepare(sample_rate);
 
         fft_analyzer_.prepare(sample_rate, {2, 2});
-        fft_analyzer_.setON({true, true});
     }
 
     template<typename FloatType>

@@ -18,7 +18,7 @@ namespace zlpanel {
     public:
         static constexpr int kHoverDurationMS = 2000;
 
-        explicit FFTPanel(PluginProcessor &processor, zlgui::UIBase &base);
+        explicit FFTPanel(PluginProcessor &p, zlgui::UIBase &base);
 
         ~FFTPanel() override;
 
@@ -31,8 +31,8 @@ namespace zlpanel {
     private:
         PluginProcessor &p_ref_;
 
-        std::atomic<float> &fft_min_freq_ref_, &fft_max_freq_ref_;
-        float c_fft_min_freq_index{-1.f}, c_fft_max_freq_index{-1.f};
+        std::atomic<float> &split_type_ref_, &fft_min_freq_ref_, &fft_max_freq_ref_;
+        float c_split_type_{-1.f}, c_fft_min_freq_index_{-1.f}, c_fft_max_freq_index_{-1.f};
         double c_sample_rate_{0.0};
 
         FFTBackgroundPanel fft_background_panel_;
