@@ -20,8 +20,12 @@ namespace zlpanel {
         juce::ignoreUnused(p_ref_, tooltip_helper);
         addAndMakeVisible(fft_panel_);
         fft_panel_.addMouseListener(this, false);
+        left_control_panel_.setAlpha(0.f);
         addAndMakeVisible(left_control_panel_);
         addChildComponent(left_pop_panel_);
+
+        setOpaque(true);
+
         startThread(juce::Thread::Priority::low);
     }
 
@@ -32,7 +36,8 @@ namespace zlpanel {
     }
 
     void CurvePanel::paint(juce::Graphics &g) {
-        g.fillAll(base_.getBackgroundColor());
+        g.setColour(base_.getBackgroundColor());
+        g.fillRect(getLocalBounds());
     }
 
     void CurvePanel::paintOverChildren(juce::Graphics &g) {
@@ -45,8 +50,10 @@ namespace zlpanel {
         const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
         const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale);
         auto bound = getLocalBounds();
-        left_control_panel_.setBounds(bound.removeFromLeft(button_width));
         fft_panel_.setBounds(bound);
+        bound.removeFromBottom(button_width);
+        left_control_panel_.setBounds(bound.withRight(bound.getX() + button_width));
+        bound.removeFromLeft(left_control_panel_.getWidth());
         left_pop_panel_.setBounds(bound.removeFromLeft(slider_width + 2 * padding));
     }
 
@@ -63,18 +70,19 @@ namespace zlpanel {
     }
 
     void CurvePanel::mouseDown(const juce::MouseEvent &) {
+        left_control_panel_.setAlpha(0.f);
         left_pop_panel_.setVisible(false);
     }
 
     void CurvePanel::repaintCallBackSlow() {
         fft_panel_.repaintCallBackSlow();
-        left_control_panel_.repaintCallBackSlow();
-        if (static_cast<zlp::PSplitType::SplitType>(
-            std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
-            left_pop_panel_.setVisible(false);
-        } else if (left_control_panel_.isMouseOver(true)) {
-            left_pop_panel_.setVisible(true);
+        if (left_control_panel_.isMouseOver(true)) {
+            left_control_panel_.setAlpha(1.f);
+            left_pop_panel_.setVisible(static_cast<zlp::PSplitType::SplitType>(
+                                           std::round(split_type_ref_.load(std::memory_order_relaxed))) !=
+                                       zlp::PSplitType::kNone);
         }
+        left_control_panel_.repaintCallBackSlow();
         left_pop_panel_.repaintCallBackSlow();
     }
 

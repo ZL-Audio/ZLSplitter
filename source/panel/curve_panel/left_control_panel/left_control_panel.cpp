@@ -49,6 +49,7 @@ namespace zlpanel {
             auto &b{split_mode_buttons_[i]};
             b.setDrawable(split_mode_drawables_[i].get());
             b.getLAF().enableShadow(false);
+            b.getLAF().enableBackground(false);
             b.getLAF().setShrinkScale(.0f);
             b.getLAF().setScale(i == split_mode_buttons_.size() - 1 ? 1.f : 1.66f);
             b.setBufferedToImage(true);
@@ -56,6 +57,10 @@ namespace zlpanel {
         }
 
         setBufferedToImage(true);
+    }
+
+    void LeftControlPanel::paint(juce::Graphics &g) {
+        g.fillAll(base_.getBackgroundColor());
     }
 
     void LeftControlPanel::resized() {

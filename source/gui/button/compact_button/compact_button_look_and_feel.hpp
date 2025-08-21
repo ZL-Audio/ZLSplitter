@@ -23,17 +23,19 @@ namespace zlgui {
             const auto is_pressed = button.getToggleState() ^ reverse_;
 
             auto bounds = button.getLocalBounds().toFloat();
-            if (with_shadow_) {
-                bounds = base_.drawShadowEllipse(g, bounds, base_.getFontSize() * 0.4f * shrink_scale_, {});
-                bounds = base_.drawInnerShadowEllipse(g, bounds, base_.getFontSize() * 0.15f * shrink_scale_,
-                                                         {.flip = true});
-            } else {
-                bounds = base_.getShadowEllipseArea(bounds, base_.getFontSize() * 0.3f * shrink_scale_, {});
-                g.setColour(base_.getBackgroundColor());
-                g.fillEllipse(bounds);
+            if (with_background_) {
+                if (with_shadow_) {
+                    bounds = base_.drawShadowEllipse(g, bounds, base_.getFontSize() * 0.4f * shrink_scale_, {});
+                    bounds = base_.drawInnerShadowEllipse(g, bounds, base_.getFontSize() * 0.15f * shrink_scale_,
+                                                             {.flip = true});
+                } else {
+                    bounds = base_.getShadowEllipseArea(bounds, base_.getFontSize() * 0.3f * shrink_scale_, {});
+                    g.setColour(base_.getBackgroundColor());
+                    g.fillEllipse(bounds);
+                }
             }
             if (is_pressed) {
-                if (with_shadow_) {
+                if (with_background_ && with_shadow_) {
                     const auto innerBound = base_.getShadowEllipseArea(bounds, base_.getFontSize() * 0.1f, {});
                     base_.drawInnerShadowEllipse(g, innerBound, base_.getFontSize() * 0.375f, {
                                                         .dark_shadow_color = base_.getDarkShadowColor().
@@ -76,6 +78,8 @@ namespace zlgui {
 
         void enableShadow(const bool f) { with_shadow_ = f; }
 
+        void enableBackground(const bool f) { with_background_ = f; }
+
         void setScale(const float x) { scale_ = x; }
 
         void setReverse(const bool f) { reverse_ = f; }
@@ -92,7 +96,7 @@ namespace zlgui {
     private:
         UIBase &base_;
 
-        bool reverse_{false}, with_shadow_{true};
+        bool reverse_{false}, with_shadow_{true}, with_background_{true};
         float button_depth_{0.f}, shrink_scale_{1.f}, scale_{1.f};
         juce::Drawable *drawable_ = nullptr;
         std::unique_ptr<juce::Drawable> internal_img_;
