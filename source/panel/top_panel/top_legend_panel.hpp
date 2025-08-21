@@ -9,28 +9,14 @@
 
 #pragma once
 
-#include "../../../PluginProcessor.hpp"
-#include "../../../gui/gui.hpp"
-#include "../../helper/helper.hpp"
-#include "BinaryData.h"
+#include "../../PluginProcessor.hpp"
+#include "../../gui/gui.hpp"
+#include "../helper/helper.hpp"
 
 namespace zlpanel {
-    class LeftControlPanel final : public juce::Component {
-    public:
-        explicit LeftControlPanel(PluginProcessor &p, zlgui::UIBase &base);
 
-        void resized() override;
+class TopLegendPanel {
 
-        void repaintCallBackSlow();
+};
 
-    private:
-        PluginProcessor &p_ref_;
-        zlgui::UIBase &base_;
-
-        std::atomic<float> &split_type_ref_;
-        float c_split_type_{-1.f};
-
-        std::array<std::unique_ptr<juce::Drawable>, 6> split_mode_drawables_;
-        std::array<zlgui::button::CompactButton, 6> split_mode_buttons_;
-    };
 }

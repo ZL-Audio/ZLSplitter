@@ -41,6 +41,7 @@ namespace zlpanel {
     private:
         PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
+        std::atomic<float> &split_type_ref_;
 
         FFTPanel fft_panel_;
         LeftControlPanel left_control_panel_;

@@ -57,7 +57,8 @@ namespace zlp {
                     latency_.store(ts_splitter_[0].getTSLatency(), std::memory_order::relaxed);
                     break;
                 }
-                case zlp::PSplitType::kPSteady: {
+                case zlp::PSplitType::kPSteady:
+                case zlp::PSplitType::kNone: {
                     latency_.store(0, std::memory_order::relaxed);
                     break;
                 }
@@ -91,6 +92,9 @@ namespace zlp {
             case zlp::PSplitType::kPSteady: {
                 ps_splitter_[0].prepareBuffer();
                 ps_splitter_[1].prepareBuffer();
+                break;
+            }
+            case zlp::PSplitType::kNone: {
                 break;
             }
         }
@@ -132,6 +136,12 @@ namespace zlp {
                 ps_splitter_[0].process(in_buffer[0], out_buffer1_[0], out_buffer2_[0], num_samples);
                 ps_splitter_[1].process(in_buffer[1], out_buffer1_[1], out_buffer2_[1], num_samples);
                 break;
+            }
+            case zlp::PSplitType::kNone: {
+                zldsp::vector::copy(out_buffer1_[0], in_buffer[0], num_samples);
+                zldsp::vector::copy(out_buffer1_[1], in_buffer[1], num_samples);
+                std::fill(out_buffer2_[0], out_buffer2_[0] + num_samples, static_cast<FloatType>(0));
+                std::fill(out_buffer2_[1], out_buffer2_[1] + num_samples, static_cast<FloatType>(0));
             }
         }
 

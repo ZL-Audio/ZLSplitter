@@ -59,27 +59,11 @@ namespace zlpanel {
         const auto new_split_type = split_type_ref_.load(std::memory_order::relaxed);
         if (std::abs(new_split_type - c_split_type_) > .1f) {
             c_split_type_ = new_split_type;
-            if (c_split_type_ < 1.5f) {
-                lr_pop_panel_.setVisible(true);
-                lh_pop_panel_.setVisible(false);
-                ts_pop_panel_.setVisible(false);
-                ps_pop_panel_.setVisible(false);
-            } else if (c_split_type_ < 2.5f) {
-                lr_pop_panel_.setVisible(false);
-                lh_pop_panel_.setVisible(true);
-                ts_pop_panel_.setVisible(false);
-                ps_pop_panel_.setVisible(false);
-            } else if (c_split_type_ < 3.5f) {
-                lr_pop_panel_.setVisible(false);
-                lh_pop_panel_.setVisible(false);
-                ts_pop_panel_.setVisible(true);
-                ps_pop_panel_.setVisible(false);
-            } else {
-                lr_pop_panel_.setVisible(false);
-                lh_pop_panel_.setVisible(false);
-                ts_pop_panel_.setVisible(false);
-                ps_pop_panel_.setVisible(true);
-            }
+            const auto split_type = static_cast<zlp::PSplitType::SplitType>(std::round(c_split_type_));
+            lr_pop_panel_.setVisible(split_type == zlp::PSplitType::kLRight || split_type == zlp::PSplitType::kMSide);
+            lh_pop_panel_.setVisible(split_type == zlp::PSplitType::kLHigh);
+            ts_pop_panel_.setVisible(split_type == zlp::PSplitType::kTSteady);
+            ps_pop_panel_.setVisible(split_type == zlp::PSplitType::kPSteady);
         }
         if (isVisible()) {
             lr_pop_panel_.repaintCallBackSlow();

@@ -17,16 +17,17 @@ namespace zlpanel {
               juce::Drawable::createFromImageData(BinaryData::leftright_svg, BinaryData::leftright_svgSize),
               juce::Drawable::createFromImageData(BinaryData::midside_svg, BinaryData::midside_svgSize),
               juce::Drawable::createFromImageData(BinaryData::lowhigh_svg, BinaryData::lowhigh_svgSize),
-              juce::Drawable::createFromImageData(BinaryData::transientsteady_svg,
-                                                  BinaryData::transientsteady_svgSize),
-              juce::Drawable::createFromImageData(BinaryData::peaksteady_svg, BinaryData::peaksteady_svgSize)
+              juce::Drawable::createFromImageData(BinaryData::transteady_svg, BinaryData::transteady_svgSize),
+              juce::Drawable::createFromImageData(BinaryData::peaksteady_svg, BinaryData::peaksteady_svgSize),
+              juce::Drawable::createFromImageData(BinaryData::circle_svg, BinaryData::circle_svgSize)
           },
           split_mode_buttons_{
               zlgui::button::CompactButton("", base, ""),
               zlgui::button::CompactButton("", base, ""),
               zlgui::button::CompactButton("", base, ""),
               zlgui::button::CompactButton("", base, ""),
-              zlgui::button::CompactButton("", base, "")
+              zlgui::button::CompactButton("", base, ""),
+              zlgui::button::CompactButton("", base, ""),
           } {
         juce::ignoreUnused(base_);
         for (size_t i = 0; i < split_mode_buttons_.size(); ++i) {
@@ -49,7 +50,7 @@ namespace zlpanel {
             b.setDrawable(split_mode_drawables_[i].get());
             b.getLAF().enableShadow(false);
             b.getLAF().setShrinkScale(.0f);
-            b.getLAF().setScale(1.66f);
+            b.getLAF().setScale(i == split_mode_buttons_.size() - 1 ? 1.f : 1.66f);
             b.setBufferedToImage(true);
             addAndMakeVisible(b);
         }
@@ -61,8 +62,8 @@ namespace zlpanel {
         auto bound = getLocalBounds();
         const auto button_height = bound.getHeight() / static_cast<int>(split_mode_buttons_.size());
         bound.removeFromTop((bound.getHeight() - button_height * static_cast<int>(split_mode_buttons_.size())) / 2);
-        for (size_t i = 0; i < split_mode_buttons_.size(); ++i) {
-            split_mode_buttons_[i].setBounds(bound.removeFromTop(button_height));
+        for (const int &i : {5, 0, 1, 2, 3, 4}) {
+            split_mode_buttons_[static_cast<size_t>(i)].setBounds(bound.removeFromTop(button_height));
         }
     }
 

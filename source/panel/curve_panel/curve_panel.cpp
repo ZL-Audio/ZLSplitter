@@ -13,6 +13,7 @@ namespace zlpanel {
     CurvePanel::CurvePanel(PluginProcessor &p, zlgui::UIBase &base,
                            multilingual::TooltipHelper &tooltip_helper)
         : Thread("curve_panel"), p_ref_(p), base_(base),
+          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
           fft_panel_(p, base),
           left_control_panel_(p, base),
           left_pop_panel_(p, base) {
@@ -68,7 +69,10 @@ namespace zlpanel {
     void CurvePanel::repaintCallBackSlow() {
         fft_panel_.repaintCallBackSlow();
         left_control_panel_.repaintCallBackSlow();
-        if (left_control_panel_.isMouseOver(true)) {
+        if (static_cast<zlp::PSplitType::SplitType>(
+            std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
+            left_pop_panel_.setVisible(false);
+        } else if (left_control_panel_.isMouseOver(true)) {
             left_pop_panel_.setVisible(true);
         }
         left_pop_panel_.repaintCallBackSlow();

@@ -210,12 +210,12 @@ namespace zlp {
         auto static constexpr kID = "split_type";
         auto static constexpr kName = "Split Type";
         inline auto static const kChoices = juce::StringArray{
-            "Left Right", "Mid Side", "Low High", "Transient Steady", "Peak Steady"
+            "Left Right", "Mid Side", "Low High", "Transient Steady", "Peak Steady", "None"
         };
-        int static constexpr kDefaultI = 0;
+        int static constexpr kDefaultI = 5;
 
         enum SplitType {
-            kLRight, kMSide, kLHigh, kTSteady, kPSteady
+            kLRight, kMSide, kLHigh, kTSteady, kPSteady, kNone
         };
     };
 

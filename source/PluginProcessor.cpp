@@ -150,7 +150,7 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer,
         }
     } else {
         for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i) {
-            buffer.clear (i, 0, buffer.getNumSamples());
+            buffer.clear(i, 0, buffer.getNumSamples());
         }
     }
 }
@@ -176,7 +176,7 @@ void PluginProcessor::processBlock(juce::AudioBuffer<double> &buffer,
         }
     } else {
         for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i) {
-            buffer.clear (i, 0, buffer.getNumSamples());
+            buffer.clear(i, 0, buffer.getNumSamples());
         }
     }
 }
