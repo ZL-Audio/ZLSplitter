@@ -18,7 +18,7 @@
 namespace zlpanel {
     class FFTAnalyzerPanel final : public juce::Component {
     public:
-        explicit FFTAnalyzerPanel(PluginProcessor &processor, zlgui::UIBase &base);
+        explicit FFTAnalyzerPanel(PluginProcessor &p, zlgui::UIBase &base);
 
         ~FFTAnalyzerPanel() override;
 

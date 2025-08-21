@@ -60,7 +60,7 @@ namespace zlpanel {
 
     void LeftControlPanel::resized() {
         auto bound = getLocalBounds();
-        const auto button_height = bound.getHeight() / static_cast<int>(split_mode_buttons_.size());
+        const auto button_height = bound.getHeight() / static_cast<int>(split_mode_buttons_.size() + 1);
         bound.removeFromTop((bound.getHeight() - button_height * static_cast<int>(split_mode_buttons_.size())) / 2);
         for (const int &i : {5, 0, 1, 2, 3, 4}) {
             split_mode_buttons_[static_cast<size_t>(i)].setBounds(bound.removeFromTop(button_height));

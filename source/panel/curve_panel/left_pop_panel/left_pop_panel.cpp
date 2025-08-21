@@ -19,8 +19,10 @@ namespace zlpanel {
           ps_pop_panel_(p, base) {
         addChildComponent(lr_pop_panel_);
         addChildComponent(lh_pop_panel_);
-        addAndMakeVisible(ts_pop_panel_);
+        addChildComponent(ts_pop_panel_);
         addChildComponent(ps_pop_panel_);
+
+        setInterceptsMouseClicks(false, true);
     }
 
     void LeftPopPanel::paint(juce::Graphics &g) {

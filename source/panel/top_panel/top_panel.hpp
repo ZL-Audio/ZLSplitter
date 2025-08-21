@@ -10,6 +10,7 @@
 #pragma once
 
 #include "logo_panel.hpp"
+#include "top_legend_panel.hpp"
 #include "top_control_panel.hpp"
 
 namespace zlpanel {
@@ -28,6 +29,7 @@ namespace zlpanel {
     private:
         zlgui::UIBase &base_;
         LogoPanel logo_panel_;
+        TopLegendPanel top_legend_panel_;
         TopControlPanel top_control_panel_;
     };
 }

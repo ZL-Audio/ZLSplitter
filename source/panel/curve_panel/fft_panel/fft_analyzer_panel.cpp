@@ -10,12 +10,12 @@
 #include "fft_analyzer_panel.hpp"
 
 namespace zlpanel {
-    FFTAnalyzerPanel::FFTAnalyzerPanel(PluginProcessor &processor, zlgui::UIBase &base)
-        : p_ref_(processor),
+    FFTAnalyzerPanel::FFTAnalyzerPanel(PluginProcessor &p, zlgui::UIBase &base)
+        : p_ref_(p),
           base_(base),
-          split_type_ref_(*p_ref_.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          swap_ref_(*p_ref_.parameters_.getRawParameterValue(zlp::PSwap::kID)),
-          fft_min_db_ref_(*p_ref_.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)) {
+          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+          swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
+          fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
         for (auto &path: {&out_path1_, &out_path2_, &next_out_path1_, &next_out_path2_}) {
             path->preallocateSpace(preallocateSpace);

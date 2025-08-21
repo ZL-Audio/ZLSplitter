@@ -10,4 +10,70 @@
 #include "top_legend_panel.hpp"
 
 namespace zlpanel {
+    TopLegendPanel::TopLegendPanel(PluginProcessor &p, zlgui::UIBase &base)
+        : base_(base),
+          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+          swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)) {
+        setBufferedToImage(true);
+
+        setInterceptsMouseClicks(false, false);
+    }
+
+    void TopLegendPanel::paint(juce::Graphics &g) {
+        const auto idx = static_cast<size_t>(std::round(c_split_type_));
+        g.setFont(base_.getFontSize() * 1.5f);
+
+        std::vector<juce::String> labels;
+        std::vector<juce::Colour> colours;
+
+        if (idx >= 5) {
+            labels.emplace_back("Input");
+            colours.emplace_back(base_.getTextColor());
+        } else if (c_swap_) {
+            labels.emplace_back(kText2[idx]);
+            colours.emplace_back(base_.getColorMap1(0));
+            labels.emplace_back(kText1[idx]);
+            colours.emplace_back(base_.getColorMap1(1));
+        } else {
+            labels.emplace_back(kText1[idx]);
+            colours.emplace_back(base_.getColorMap1(0));
+            labels.emplace_back(kText2[idx]);
+            colours.emplace_back(base_.getColorMap1(1));
+        }
+
+        const auto padding = std::round(base_.getFontSize() * kPaddingScale);
+        const auto slider_width = std::round(base_.getFontSize() * kSliderScale);
+        const auto button_width = std::round(base_.getFontSize() * kButtonScale);
+
+        auto bound = getLocalBounds().toFloat();
+        const auto legend_size = button_width * .5f;
+        for (size_t i = 0; i < labels.size(); ++i) {
+            bound.removeFromLeft(padding);
+            g.setColour(base_.getTextColor());
+            g.drawText(labels[i], bound.removeFromLeft(slider_width), juce::Justification::centredRight);
+            bound.removeFromLeft(padding);
+            auto legend_bound = bound.removeFromLeft(button_width);
+            legend_bound = legend_bound.withSizeKeepingCentre(legend_size, legend_size);
+            g.setColour(colours[i]);
+            g.fillRoundedRectangle(legend_bound, legend_size * .2f);
+            bound.removeFromLeft(padding);
+        }
+    }
+
+    int TopLegendPanel::getIdealWidth() const {
+        const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
+        const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
+        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale);
+        return padding * 6 + slider_width * 2 + button_width * 2;
+    }
+
+    void TopLegendPanel::repaintCallBackSlow() {
+        const auto new_split_type = split_type_ref_.load(std::memory_order_relaxed);
+        const auto new_swap = swap_ref_.load(std::memory_order_relaxed) > .5f;
+        if (std::abs(new_split_type - c_split_type_) > .1f || new_swap != c_swap_) {
+            c_split_type_ = new_split_type;
+            c_swap_ = new_swap;
+            repaint();
+        }
+    }
 }

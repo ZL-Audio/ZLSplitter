@@ -14,9 +14,28 @@
 #include "../helper/helper.hpp"
 
 namespace zlpanel {
+    class TopLegendPanel final : public juce::Component {
+    public:
+        explicit TopLegendPanel(PluginProcessor &p, zlgui::UIBase &base);
 
-class TopLegendPanel {
+        int getIdealWidth() const;
 
-};
+        void paint(juce::Graphics &g) override;
+
+        void repaintCallBackSlow();
+
+    private:
+        zlgui::UIBase &base_;
+        std::atomic<float> &split_type_ref_, &swap_ref_;
+        float c_split_type_{static_cast<float>(zlp::PSplitType::kDefaultI)};
+        bool c_swap_{zlp::PSwap::kDefaultV};
+
+        static constexpr std::array kText1 = {
+            "Left", "Mid", "Low", "Transient", "Peak", "None"
+        };
+        static constexpr std::array kText2 = {
+            "Right", "Side", "High", "Steady", "Steady", "None"
+        };
+    };
 
 }
