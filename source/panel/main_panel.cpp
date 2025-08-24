@@ -43,6 +43,14 @@ namespace zlpanel {
     void MainPanel::resized() {
         auto bound = getLocalBounds();
 
+        const auto height = static_cast<float>(bound.getHeight());
+        const auto width = static_cast<float>(bound.getWidth());
+        if (height < width * 0.45f) {
+            bound.setHeight(juce::roundToInt(width * .45f));
+        } else if (height > width * 2.f) {
+            bound.setWidth(juce::roundToInt(height * .5f));
+        }
+
         const auto font_size = static_cast<float>(bound.getWidth()) * 0.016f;
         base_.setFontSize(font_size);
 
