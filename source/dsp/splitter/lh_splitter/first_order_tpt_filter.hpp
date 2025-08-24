@@ -57,20 +57,16 @@ namespace zldsp::splitter {
             const auto v = (static_cast<double>(x) - s_[chan]) * g_;
             const auto y_lp = v + s_[chan];
             s_[chan] = y_lp + v;
-            switch (FilterType) {
-                case kLowPass: {
-                    return static_cast<FloatType>(y_lp);
-                }
-                case kHighPass: {
-                    return static_cast<FloatType>(y_lp) - x;
-                }
-                case kAllPass: {
-                    return static_cast<FloatType>(y_lp + y_lp) - x;
-                }
-                default: {
-                    return static_cast<FloatType>(0);
-                }
+            if constexpr (FilterType == kLowPass) {
+                return static_cast<FloatType>(y_lp);
             }
+            if constexpr (FilterType == kHighPass) {
+                return static_cast<FloatType>(y_lp) - x;
+            }
+            if constexpr (FilterType == kAllPass) {
+                return static_cast<FloatType>(y_lp + y_lp) - x;
+            }
+            return static_cast<FloatType>(0);
         }
 
         void processSampleLowHigh(const size_t chan, FloatType x,

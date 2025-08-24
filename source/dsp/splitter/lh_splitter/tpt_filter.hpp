@@ -67,38 +67,34 @@ namespace zldsp::splitter {
 
         template<TPTFilterType FilterType>
         FloatType processSample(const size_t chan, FloatType x) {
-            switch (FilterType) {
-                case kLowPass: {
-                    const auto y_bp = (g_ * (static_cast<double>(x) - s2_[chan]) + s1_[chan]) * h_;
-                    const auto v1 = y_bp - s1_[chan];
-                    s1_[chan] = y_bp + v1;
-                    const auto v2 = g_ * y_bp;
-                    const auto y_lp = v2 + s2_[chan];
-                    s2_[chan] = y_lp + v2;
-                    return static_cast<FloatType>(y_lp);
-                }
-                case kHighPass: {
-                    const auto y_hp = h_ * (static_cast<double>(x) - s1_[chan] * g_R2_ - s2_[chan]);
-                    const auto y_hp_g = y_hp * g_;
-                    const auto y_bp = y_hp_g + s1_[chan];
-                    s1_[chan] = y_hp_g + y_bp;
-                    s2_[chan] = y_bp * g2_ + s2_[chan];
-                    return static_cast<FloatType>(y_hp);
-                }
-                case kAllPass: {
-                    const auto y_hp = h_ * (static_cast<double>(x) - s1_[chan] * g_R2_ - s2_[chan]);
-                    const auto y_hp_g = y_hp * g_;
-                    const auto y_bp = y_hp_g + s1_[chan];
-                    s1_[chan] = y_hp_g + y_bp;
-                    const auto y_bp_g = y_bp * g_;
-                    const auto y_lp = y_bp_g + s2_[chan];
-                    s2_[chan] = y_bp_g + y_lp;
-                    return static_cast<FloatType>(y_lp - R2_ * y_bp + y_hp);
-                }
-                default: {
-                    return static_cast<FloatType>(0);
-                }
+            if constexpr (FilterType == kLowPass) {
+                const auto y_bp = (g_ * (static_cast<double>(x) - s2_[chan]) + s1_[chan]) * h_;
+                const auto v1 = y_bp - s1_[chan];
+                s1_[chan] = y_bp + v1;
+                const auto v2 = g_ * y_bp;
+                const auto y_lp = v2 + s2_[chan];
+                s2_[chan] = y_lp + v2;
+                return static_cast<FloatType>(y_lp);
             }
+            if constexpr (FilterType == kHighPass) {
+                const auto y_hp = h_ * (static_cast<double>(x) - s1_[chan] * g_R2_ - s2_[chan]);
+                const auto y_hp_g = y_hp * g_;
+                const auto y_bp = y_hp_g + s1_[chan];
+                s1_[chan] = y_hp_g + y_bp;
+                s2_[chan] = y_bp * g2_ + s2_[chan];
+                return static_cast<FloatType>(y_hp);
+            }
+            if constexpr (FilterType == kAllPass) {
+                const auto y_hp = h_ * (static_cast<double>(x) - s1_[chan] * g_R2_ - s2_[chan]);
+                const auto y_hp_g = y_hp * g_;
+                const auto y_bp = y_hp_g + s1_[chan];
+                s1_[chan] = y_hp_g + y_bp;
+                const auto y_bp_g = y_bp * g_;
+                const auto y_lp = y_bp_g + s2_[chan];
+                s2_[chan] = y_bp_g + y_lp;
+                return static_cast<FloatType>(y_lp - R2_ * y_bp + y_hp);
+            }
+            return static_cast<FloatType>(0);
         }
 
         void processSampleLowHigh(const size_t chan, FloatType x,
