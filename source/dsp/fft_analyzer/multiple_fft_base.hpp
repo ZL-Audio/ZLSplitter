@@ -157,9 +157,11 @@ namespace zldsp::analyzer {
             }
             // run forward FFT & interpolate
             for (const auto &i: is_on_vector) {
+                // forward FFT and take average of each channel
                 auto ms_v = kfr::make_univector(ms_fft_buffer_.data(), ms_fft_buffer_.size());
                 for (size_t chan = 0; chan < circular_buffers_[i].size(); ++chan) {
-                    std::copy(circular_buffers_[i][chan].begin(), circular_buffers_[i][chan].end(), fft_buffer_.begin());
+                    std::copy(circular_buffers_[i][chan].begin(), circular_buffers_[i][chan].end(),
+                              fft_buffer_.begin());
                     auto temp = kfr::make_univector(fft_buffer_.data(), window_.size());
                     temp = temp * window_;
                     fft_.forwardMagnitudeOnly(fft_buffer_.data());
@@ -174,7 +176,7 @@ namespace zldsp::analyzer {
                     const auto chan_inverse = 1.f / static_cast<float>(circular_buffers_[i].size());
                     ms_v = ms_v * chan_inverse;
                 }
-
+                // smooth decay
                 const auto decay = is_frozen_[i].load(std::memory_order::relaxed)
                                        ? 1.f
                                        : actual_decay_rates_[i].load(std::memory_order::relaxed);
@@ -182,6 +184,7 @@ namespace zldsp::analyzer {
                 if (to_reset_[i].exchange(false)) {
                     std::fill(input_dbs.begin(), input_dbs.end(), kMinDB);
                 }
+                // aggregate
                 for (size_t j = 0; j < input_dbs.size(); ++j) {
                     const auto start_idx = seq_input_starts_[j];
                     const auto end_idx = seq_input_ends_[j];
@@ -196,8 +199,20 @@ namespace zldsp::analyzer {
                                        ? input_dbs[j] * decay + current_db * (1 - decay)
                                        : current_db;
                 }
+                // interpolate
                 seq_akima_[i]->prepare();
-                seq_akima_[i]->eval(interplot_freqs_.data(), interplot_dbs_[i].data(), interplot_freqs_.size());
+                seq_akima_[i]->eval(reduced_freqs_.data(), reduced_dbs_.data(), reduced_freqs_.size());
+                // calculate the final interpolation results
+                auto &interplot_dbs{interplot_dbs_[i]};
+                size_t reduced_j = 0;
+                for (size_t j = 0; j < interplot_dbs.size(); ++j) {
+                    if (reduced_pos_[j] > 0) {
+                        interplot_dbs[j] = input_dbs[reduced_pos_[j]];
+                    } else {
+                        interplot_dbs[j] = reduced_dbs_[reduced_j];
+                        reduced_j += 1;
+                    }
+                }
             }
             // apply tilt
             if (to_update_tilt_.exchange(false, std::memory_order::acquire) || to_update) {
@@ -278,6 +293,8 @@ namespace zldsp::analyzer {
         std::array<std::unique_ptr<zldsp::interpolation::SeqMakima<float> >, FFTNum> seq_akima_;
 
         std::vector<float> interplot_freqs_{}, interplot_freqs_p_{};
+        std::vector<float> reduced_freqs_{}, reduced_dbs_{};
+        std::vector<size_t> reduced_pos_{};
         std::array<std::vector<float>, FFTNum> interplot_dbs_{};
         std::array<std::vector<float>, FFTNum> result_dbs_{};
 
@@ -303,8 +320,7 @@ namespace zldsp::analyzer {
             const auto min_freq = std::min(min_freq_.load(std::memory_order::relaxed), max_freq * .5);
             const auto fft_size = fft_.getSize();
             // calculate start/end indices
-            bool force_last_range = false;
-            {
+            bool force_last_range = false; {
                 const auto freq_delta = sample_rate / static_cast<double>(fft_size);
                 const auto freq_mul = std::pow(max_freq / min_freq, 2. / static_cast<double>(PointNum));
                 auto freq = min_freq * std::sqrt(freq_mul);
@@ -320,8 +336,7 @@ namespace zldsp::analyzer {
                 const auto limit = fft_size / 2;
                 for (size_t i = 0; i < PointNum / 2 + 1; ++i) {
                     freq *= freq_mul;
-                    const auto new_index = std::min(
-                        static_cast<size_t>(std::round(freq / freq_delta)), limit);
+                    const auto new_index = std::min(static_cast<size_t>(std::round(freq / freq_delta)), limit);
                     if (new_index > seq_input_ends_.back()) {
                         seq_input_starts_.emplace_back(seq_input_ends_.back());
                         seq_input_ends_.emplace_back(new_index);
@@ -357,25 +372,39 @@ namespace zldsp::analyzer {
             {
                 auto freq = min_freq;
                 const auto freq_mul = std::pow(max_freq / min_freq, 1.1 / static_cast<double>(PointNum));
+                reduced_freqs_.clear();
+                reduced_pos_.clear();
+                reduced_pos_.reserve(PointNum);
                 interplot_freqs_.clear();
                 interplot_freqs_.reserve(PointNum);
                 for (size_t i = 1; i < seq_input_freqs_.size(); ++i) {
-                    while (freq < seq_input_freqs_[i]) {
+                    if (freq >= seq_input_freqs_[i]) {
+                        continue;
+                    }
+                    if (i != 1) {
                         interplot_freqs_.emplace_back(static_cast<float>(freq));
+                        reduced_pos_.emplace_back(i - 1);
                         freq *= freq_mul;
                     }
-                    if (std::abs(seq_input_freqs_[i] - interplot_freqs_.back()) > 1e-3f) {
-                        freq = seq_input_freqs_[i];
+                    while (freq < seq_input_freqs_[i]) {
+                        interplot_freqs_.emplace_back(static_cast<float>(freq));
+                        reduced_freqs_.emplace_back(static_cast<float>(freq));
+                        reduced_pos_.emplace_back(0);
+                        freq *= freq_mul;
                     }
+                    freq = seq_input_freqs_[i];
                 }
+                reduced_dbs_.resize(reduced_freqs_.size());
                 if (std::abs(seq_input_freqs_.back() - interplot_freqs_.back()) > 1e-3f) {
                     interplot_freqs_.emplace_back(seq_input_freqs_.back());
+                    reduced_pos_.emplace_back(seq_input_freqs_.size() - 1);
                 }
 
                 interplot_freqs_p_.resize(interplot_freqs_.size());
-                const auto temp_scale = static_cast<float>(std::log(max_freq / min_freq));
+                const auto temp_scale = static_cast<float>(1.0 / std::log(max_freq / min_freq));
+                const auto temp_bias = std::log(static_cast<float>(min_freq)) * temp_scale;
                 for (size_t i = 0; i < interplot_freqs_.size(); ++i) {
-                    interplot_freqs_p_[i] = std::log(interplot_freqs_[i] / static_cast<float>(min_freq)) / temp_scale;
+                    interplot_freqs_p_[i] = std::log(interplot_freqs_[i]) * temp_scale - temp_bias;
                 }
 
                 for (size_t i = 0; i < FFTNum; ++i) {
