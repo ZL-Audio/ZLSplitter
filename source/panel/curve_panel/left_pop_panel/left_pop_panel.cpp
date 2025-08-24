@@ -22,6 +22,7 @@ namespace zlpanel {
         addChildComponent(ts_pop_panel_);
         addChildComponent(ps_pop_panel_);
 
+        setBufferedToImage(true);
         setInterceptsMouseClicks(false, true);
     }
 
@@ -48,12 +49,25 @@ namespace zlpanel {
             ps_pop_panel_.setBounds(bound.withSizeKeepingCentre(bound.getWidth(), height));
         }
 
+        auto max_height = lr_pop_panel_.getBounds().getHeight();
+        max_height = std::max(max_height, lh_pop_panel_.getBounds().getHeight());
+        max_height = std::max(max_height, ts_pop_panel_.getBounds().getHeight());
+        max_height = std::max(max_height, ps_pop_panel_.getBounds().getHeight());
+
         const auto float_bound = getLocalBounds().toFloat();
+        const auto float_padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
+        std::array<float, 4> ys;
+
+        ys[1] = (float_bound.getHeight() - static_cast<float>(max_height)) * .5f - float_padding;
+        ys[0] = std::max(0.f, ys[1] - float_bound.getWidth());
+        ys[2] = float_bound.getHeight() - ys[1];
+        ys[3] = float_bound.getHeight() - ys[0];
+
         background_.clear();
-        background_.startNewSubPath(float_bound.getTopLeft());
-        background_.lineTo({float_bound.getRight(), float_bound.getY() + float_bound.getWidth()});
-        background_.lineTo({float_bound.getRight(), float_bound.getBottom() - float_bound.getWidth()});
-        background_.lineTo(float_bound.getBottomLeft());
+        background_.startNewSubPath(float_bound.getX(), float_bound.getY() + ys[0]);
+        background_.lineTo(float_bound.getRight(), float_bound.getY() + ys[1]);
+        background_.lineTo(float_bound.getRight(), float_bound.getY() + ys[2]);
+        background_.lineTo(float_bound.getX(), float_bound.getY() + ys[3]);
         background_.closeSubPath();
     }
 
