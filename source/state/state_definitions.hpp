@@ -105,6 +105,26 @@ namespace zlstate {
         }
     };
 
+    class PFFTShow : public ChoiceParameters<PFFTShow> {
+    public:
+        auto static constexpr kID = "fft_show";
+        auto static constexpr kName = "";
+        inline auto static const kChoices = juce::StringArray{
+            "OFF", "ON"
+        };
+        int static constexpr kDefaultI = 0;
+    };
+
+    class PMagShow : public ChoiceParameters<PMagShow> {
+    public:
+        auto static constexpr kID = "mag_show";
+        auto static constexpr kName = "";
+        inline auto static const kChoices = juce::StringArray{
+            "OFF", "ON"
+        };
+        int static constexpr kDefaultI = 1;
+    };
+
     class PFFTMinDB : public ChoiceParameters<PFFTMinDB> {
     public:
         auto static constexpr kID = "fft_min_db";
@@ -137,9 +157,9 @@ namespace zlstate {
         int static constexpr kDefaultI = 2;
     };
 
-    class PAnalyzerMagType : public ChoiceParameters<PAnalyzerMagType> {
+    class PMagType : public ChoiceParameters<PMagType> {
     public:
-        auto static constexpr kID = "analyzer_mag_type";
+        auto static constexpr kID = "mag_type";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
             "Peak", "RMS"
@@ -147,9 +167,9 @@ namespace zlstate {
         int static constexpr kDefaultI = 0;
     };
 
-    class PAnalyzerMinDB : public ChoiceParameters<PAnalyzerMinDB> {
+    class PMagMinDB : public ChoiceParameters<PMagMinDB> {
     public:
-        auto static constexpr kID = "analyzer_min_db";
+        auto static constexpr kID = "mag_min_db";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
             "-9", "-18", "-36", "-54", "-72"
@@ -162,9 +182,9 @@ namespace zlstate {
         }
     };
 
-    class PAnalyzerTimeLength : public ChoiceParameters<PAnalyzerTimeLength> {
+    class PMagTimeLength : public ChoiceParameters<PMagTimeLength> {
     public:
-        auto static constexpr kID = "analyzer_time_length";
+        auto static constexpr kID = "mag_time_length";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
             "6 s ", "9 s ", "12 s ", "18 s "
@@ -179,8 +199,9 @@ namespace zlstate {
 
     inline juce::AudioProcessorValueTreeState::ParameterLayout getNAParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
-        layout.add(PFFTMinDB::get(), PFFTMinFreq::get(), PFFTMaxFreq::get(),
-                   PAnalyzerMagType::get(), PAnalyzerMinDB::get(), PAnalyzerTimeLength::get());
+        layout.add(PFFTShow::get(), PMagShow::get(),
+                   PFFTMinDB::get(), PFFTMinFreq::get(), PFFTMaxFreq::get(),
+                   PMagType::get(), PMagMinDB::get(), PMagTimeLength::get());
         return layout;
     }
 

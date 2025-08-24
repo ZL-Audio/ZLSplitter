@@ -16,6 +16,7 @@
 
 #include "../dsp/splitter/splitter.hpp"
 #include "../dsp/fft_analyzer/fft_analyzer.hpp"
+#include "../dsp/mag_analyzer/mag_analyzer.hpp"
 #include "zlp_definitions.hpp"
 
 namespace zlp {
@@ -80,6 +81,14 @@ namespace zlp {
             return fft_analyzer_;
         }
 
+        void setMagAnalyzerOn(const bool f) {
+            is_mag_on_.store(f, std::memory_order::relaxed);
+        }
+
+        zldsp::analyzer::MultipleMagAnalyzer<FloatType, 2, kAnalyzerPointNum> &getMagAnalyzer() {
+            return mag_analyzer_;
+        }
+
     private:
         juce::AudioProcessor &p_ref_;
         std::array<FloatType *, 2> out_buffer1_, out_buffer2_;
@@ -105,8 +114,11 @@ namespace zlp {
         std::atomic<int> latency_{0};
 
         std::atomic<bool> is_fft_on_{false};
-        std::array<std::span<FloatType*>, 2> fft_spans_;
+        std::array<std::span<FloatType*>, 2> analyzer_spans_;
         zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 2, kAnalyzerPointNum> fft_analyzer_;
+
+        std::atomic<bool> is_mag_on_{false};
+        zldsp::analyzer::MultipleMagAnalyzer<FloatType, 2, kAnalyzerPointNum> mag_analyzer_;
 
         void checkUpdateLatency();
 

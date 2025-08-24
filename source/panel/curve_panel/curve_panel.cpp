@@ -14,11 +14,15 @@ namespace zlpanel {
                            multilingual::TooltipHelper &tooltip_helper)
         : Thread("curve_panel"), p_ref_(p), base_(base),
           split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+          fft_show_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTShow::kID)),
+          mag_show_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagShow::kID)),
           fft_panel_(p, base),
+          mag_panel_(p, base),
           left_control_panel_(p, base),
           left_pop_panel_(p, base) {
         juce::ignoreUnused(p_ref_, tooltip_helper);
-        addAndMakeVisible(fft_panel_);
+        addChildComponent(fft_panel_);
+        addChildComponent(mag_panel_);
         fft_panel_.addMouseListener(this, false);
         left_control_panel_.setAlpha(0.f);
         addAndMakeVisible(left_control_panel_);
@@ -51,6 +55,7 @@ namespace zlpanel {
         const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale);
         auto bound = getLocalBounds();
         fft_panel_.setBounds(bound);
+        mag_panel_.setBounds(bound);
         bound.removeFromBottom(button_width);
         left_control_panel_.setBounds(bound.withRight(bound.getX() + button_width));
         bound.removeFromLeft(left_control_panel_.getWidth());
@@ -62,7 +67,11 @@ namespace zlpanel {
         while (!threadShouldExit()) {
             const auto flag = wait(-1);
             juce::ignoreUnused(flag);
-            fft_panel_.run();
+            if (fft_show_ref_.load(std::memory_order::relaxed) > .5f) {
+                fft_panel_.run();
+            } else if (mag_show_ref_.load(std::memory_order::relaxed) > .5f) {
+                mag_panel_.run(next_time_stamp_.load(std::memory_order::relaxed));
+            }
             if (threadShouldExit()) {
                 return;
             }
@@ -75,6 +84,13 @@ namespace zlpanel {
     }
 
     void CurvePanel::repaintCallBackSlow() {
+        if (fft_show_ref_.load(std::memory_order::relaxed) > .5f) {
+            fft_panel_.setVisible(true);
+            mag_panel_.setVisible(false);
+        } else if (mag_show_ref_.load(std::memory_order::relaxed) > .5f) {
+            fft_panel_.setVisible(false);
+            mag_panel_.setVisible(true);
+        }
         fft_panel_.repaintCallBackSlow();
         if (left_control_panel_.isMouseOver(true)) {
             left_control_panel_.setAlpha(1.f);
@@ -87,10 +103,13 @@ namespace zlpanel {
     }
 
     void CurvePanel::repaintCallBack(const double time_stamp) {
-        juce::ignoreUnused(time_stamp);
+        next_time_stamp_.store(time_stamp, std::memory_order::relaxed);
         if (isVisible()) {
             if (fft_panel_.isVisible()) {
                 fft_panel_.repaint();
+            }
+            if (mag_panel_.isVisible()) {
+                mag_panel_.repaint();
             }
         }
     }

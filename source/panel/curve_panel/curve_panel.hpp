@@ -14,6 +14,7 @@
 #include "../multilingual/tooltip_helper.hpp"
 
 #include "fft_panel/fft_panel.hpp"
+#include "mag_panel/mag_panel.hpp"
 #include "left_control_panel/left_control_panel.hpp"
 #include "left_pop_panel/left_pop_panel.hpp"
 
@@ -42,8 +43,11 @@ namespace zlpanel {
         PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
         std::atomic<float> &split_type_ref_;
+        std::atomic<float> &fft_show_ref_, &mag_show_ref_;
+        std::atomic<double> next_time_stamp_{0.};
 
         FFTPanel fft_panel_;
+        MagPanel mag_panel_;
         LeftControlPanel left_control_panel_;
         LeftPopPanel left_pop_panel_;
 
