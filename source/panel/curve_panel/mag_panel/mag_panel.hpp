@@ -10,7 +10,7 @@
 #pragma once
 
 #include "mag_analyzer_panel.hpp"
-
+#include "mag_background_panel.hpp"
 
 namespace zlpanel {
     class MagPanel final : public juce::Component {
@@ -21,10 +21,13 @@ namespace zlpanel {
 
         void resized() override;
 
+        void repaintCallBackSlow();
+
     private:
         PluginProcessor &p_ref_;
 
-        MagAnalyzerPanel mag_analyzer_;
+        MagBackgroundPanel mag_background_panel_;
+        MagAnalyzerPanel mag_analyzer_panel_;
 
         void visibilityChanged() override;
     };

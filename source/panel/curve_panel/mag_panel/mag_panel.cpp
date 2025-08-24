@@ -11,18 +11,26 @@
 
 namespace zlpanel {
     MagPanel::MagPanel(PluginProcessor &p, zlgui::UIBase &base)
-        : p_ref_(p), mag_analyzer_(p, base) {
-        addAndMakeVisible(mag_analyzer_);
+        : p_ref_(p),
+          mag_background_panel_(p, base),
+          mag_analyzer_panel_(p, base) {
+        addAndMakeVisible(mag_background_panel_);
+        addAndMakeVisible(mag_analyzer_panel_);
 
         setInterceptsMouseClicks(false, true);
     }
 
-    void MagPanel::run(double next_time_stamp) {
-        mag_analyzer_.run(next_time_stamp);
+    void MagPanel::run(const double next_time_stamp) {
+        mag_analyzer_panel_.run(next_time_stamp);
     }
 
     void MagPanel::resized() {
-        mag_analyzer_.setBounds(getLocalBounds());
+        mag_background_panel_.setBounds(getLocalBounds());
+        mag_analyzer_panel_.setBounds(getLocalBounds());
+    }
+
+    void MagPanel::repaintCallBackSlow() {
+        mag_background_panel_.repaintCallBackSlow();
     }
 
     void MagPanel::visibilityChanged() {

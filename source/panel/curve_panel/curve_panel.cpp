@@ -92,6 +92,7 @@ namespace zlpanel {
             mag_panel_.setVisible(true);
         }
         fft_panel_.repaintCallBackSlow();
+        mag_panel_.repaintCallBackSlow();
         if (left_control_panel_.isMouseOver(true)) {
             left_control_panel_.setAlpha(1.f);
             left_pop_panel_.setVisible(static_cast<zlp::PSplitType::SplitType>(
