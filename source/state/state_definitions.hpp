@@ -112,7 +112,7 @@ namespace zlstate {
         inline auto static const kChoices = juce::StringArray{
             "OFF", "ON"
         };
-        int static constexpr kDefaultI = 0;
+        int static constexpr kDefaultI = 1;
     };
 
     class PMagShow : public ChoiceParameters<PMagShow> {
@@ -122,7 +122,7 @@ namespace zlstate {
         inline auto static const kChoices = juce::StringArray{
             "OFF", "ON"
         };
-        int static constexpr kDefaultI = 1;
+        int static constexpr kDefaultI = 0;
     };
 
     class PFFTMinDB : public ChoiceParameters<PFFTMinDB> {
