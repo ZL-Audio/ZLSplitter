@@ -55,19 +55,29 @@ namespace zlpanel {
         max_height = std::max(max_height, ps_pop_panel_.getBounds().getHeight());
 
         const auto float_bound = getLocalBounds().toFloat();
-        const auto float_padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
-        std::array<float, 4> ys;
+        const auto float_padding = std::round(base_.getFontSize() * kPaddingScale * 1.5f);
 
-        ys[1] = (float_bound.getHeight() - static_cast<float>(max_height)) * .5f - float_padding;
-        ys[0] = std::max(0.f, ys[1] - float_bound.getWidth());
-        ys[2] = float_bound.getHeight() - ys[1];
-        ys[3] = float_bound.getHeight() - ys[0];
+        std::array<float, 6> ys;
+        ys[4] = (float_bound.getHeight() - static_cast<float>(max_height)) * .5f - float_padding;
+        ys[1] = std::max(float_padding, ys[4] - float_bound.getWidth() * 0.618f);
+        ys[0] = ys[1] - float_padding;
+        ys[2] = ys[1] + float_padding / bound.getWidth() * (ys[4] - ys[1]);
+        ys[3] = ys[4] - (ys[2] - ys[1]);
+        ys[5] = ys[4] + float_padding;
 
         background_.clear();
-        background_.startNewSubPath(float_bound.getX(), float_bound.getY() + ys[0]);
-        background_.lineTo(float_bound.getRight(), float_bound.getY() + ys[1]);
-        background_.lineTo(float_bound.getRight(), float_bound.getY() + ys[2]);
-        background_.lineTo(float_bound.getX(), float_bound.getY() + ys[3]);
+        background_.startNewSubPath(0.f, ys[0] - float_padding);
+        background_.quadraticTo(0.f, ys[1],
+                                float_padding, ys[2]);
+        background_.lineTo(float_bound.getRight() - float_padding, ys[3]);
+        background_.quadraticTo(float_bound.getRight(),
+                                ys[4], float_bound.getRight(), ys[5]);
+        background_.lineTo(float_bound.getRight(), float_bound.getHeight() - ys[5]);
+        background_.quadraticTo(float_bound.getRight(), float_bound.getHeight() - ys[4],
+                                float_bound.getRight() - float_padding, float_bound.getHeight() - ys[3]);
+        background_.lineTo(float_padding, float_bound.getHeight() - ys[2]);
+        background_.quadraticTo(0.f, float_bound.getHeight() - ys[1],
+                                0.f, float_bound.getHeight() - ys[0]);
         background_.closeSubPath();
     }
 
