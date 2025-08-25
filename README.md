@@ -12,7 +12,7 @@ ZL Splitter is a splitter plugin.
 
 A short intro video is available at [here](https://www.youtube.com/watch?v=-RVm9mbbQtA).
 
-<img src="https://drive.google.com/uc?export=view&id=1tIUlmsWHyQXsIKHtnVANe4cnloAgyXp5" style="width:240px; max-width: 100%; height: auto"/>
+<img src="https://drive.google.com/uc?export=view&id=1agmMFD5BVylbJOr5ZJmP8dof7LkCXlhx" style="width:750px; max-width: 100%; height: auto" />
 
 ## Usage
 
