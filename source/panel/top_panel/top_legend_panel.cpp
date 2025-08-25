@@ -29,15 +29,10 @@ namespace zlpanel {
         if (idx >= 5) {
             labels.emplace_back("Input");
             colours.emplace_back(base_.getTextColor());
-        } else if (c_swap_) {
-            labels.emplace_back(kText2[idx]);
-            colours.emplace_back(base_.getColourByIdx(zlgui::ColourIdx::kOutput1Colour));
-            labels.emplace_back(kText1[idx]);
-            colours.emplace_back(base_.getColourByIdx(zlgui::ColourIdx::kOutput2Colour));
         } else {
-            labels.emplace_back(kText1[idx]);
+            labels.emplace_back(c_swap_ ? kText2[idx] : kText1[idx]);
             colours.emplace_back(base_.getColourByIdx(zlgui::ColourIdx::kOutput1Colour));
-            labels.emplace_back(kText2[idx]);
+            labels.emplace_back(c_swap_ ? kText1[idx] : kText2[idx]);
             colours.emplace_back(base_.getColourByIdx(zlgui::ColourIdx::kOutput2Colour));
         }
 

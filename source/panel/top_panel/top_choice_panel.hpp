@@ -9,29 +9,28 @@
 
 #pragma once
 
-#include "logo_panel.hpp"
-#include "top_legend_panel.hpp"
-#include "top_choice_panel.hpp"
-#include "top_control_panel.hpp"
+#include "../../PluginProcessor.hpp"
+#include "../../gui/gui.hpp"
+#include "../helper/helper.hpp"
 
 namespace zlpanel {
-    class TopPanel final : public juce::Component {
+    class TopChoicePanel final : public juce::Component {
     public:
-        explicit TopPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit TopChoicePanel(PluginProcessor &p, zlgui::UIBase &base);
 
-        void paint(juce::Graphics &g) override;
-
-        int getIdealHeight() const;
+        int getIdealWidth() const;
 
         void resized() override;
 
         void repaintCallBackSlow();
 
     private:
+        PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
-        LogoPanel logo_panel_;
-        TopLegendPanel top_legend_panel_;
-        TopChoicePanel top_choice_panel_;
-        TopControlPanel top_control_panel_;
+
+        std::atomic<float> &analyzer_type_ref_;
+        float c_analyzer_type_{-1.f};
+
+        std::array<zlgui::button::ClickTextButton, 2> analyzer_type_buttons_;
     };
 }

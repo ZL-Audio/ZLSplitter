@@ -105,22 +105,12 @@ namespace zlstate {
         }
     };
 
-    class PFFTShow : public ChoiceParameters<PFFTShow> {
+    class PAnalyzerShow : public ChoiceParameters<PAnalyzerShow> {
     public:
-        auto static constexpr kID = "fft_show";
+        auto static constexpr kID = "analyzer_show";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "OFF", "ON"
-        };
-        int static constexpr kDefaultI = 1;
-    };
-
-    class PMagShow : public ChoiceParameters<PMagShow> {
-    public:
-        auto static constexpr kID = "mag_show";
-        auto static constexpr kName = "";
-        inline auto static const kChoices = juce::StringArray{
-            "OFF", "ON"
+            "FFT", "MAG"
         };
         int static constexpr kDefaultI = 0;
     };
@@ -199,7 +189,7 @@ namespace zlstate {
 
     inline juce::AudioProcessorValueTreeState::ParameterLayout getNAParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
-        layout.add(PFFTShow::get(), PMagShow::get(),
+        layout.add(PAnalyzerShow::get(),
                    PFFTMinDB::get(), PFFTMinFreq::get(), PFFTMaxFreq::get(),
                    PMagType::get(), PMagMinDB::get(), PMagTimeLength::get());
         return layout;

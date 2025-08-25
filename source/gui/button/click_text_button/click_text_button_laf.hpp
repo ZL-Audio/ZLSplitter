@@ -26,8 +26,10 @@ namespace zlgui {
 
         void drawButtonText(juce::Graphics &g, juce::TextButton &button,
                             const bool highlight, const bool down) override {
-            if (highlight || down) {
+            if (down || button.getToggleState()) {
                 g.setColour(base_.getTextColor());
+            } else if (highlight) {
+                g.setColour(base_.getTextColor().withAlpha(.75f));
             } else {
                 g.setColour(base_.getTextInactiveColor());
             }

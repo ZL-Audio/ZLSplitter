@@ -43,7 +43,7 @@ namespace zlpanel {
         PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
         std::atomic<float> &split_type_ref_;
-        std::atomic<float> &fft_show_ref_, &mag_show_ref_;
+        std::atomic<float> &analyzer_show_ref_;
         std::atomic<double> next_time_stamp_{0.};
 
         FFTPanel fft_panel_;

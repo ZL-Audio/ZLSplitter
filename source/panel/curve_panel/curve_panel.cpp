@@ -14,8 +14,7 @@ namespace zlpanel {
                            multilingual::TooltipHelper &tooltip_helper)
         : Thread("curve_panel"), p_ref_(p), base_(base),
           split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          fft_show_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTShow::kID)),
-          mag_show_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagShow::kID)),
+          analyzer_show_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PAnalyzerShow::kID)),
           fft_panel_(p, base),
           mag_panel_(p, base),
           left_control_panel_(p, base),
@@ -67,9 +66,10 @@ namespace zlpanel {
         while (!threadShouldExit()) {
             const auto flag = wait(-1);
             juce::ignoreUnused(flag);
-            if (fft_show_ref_.load(std::memory_order::relaxed) > .5f) {
+            const auto c_analyzer_show = analyzer_show_ref_.load(std::memory_order::relaxed);
+            if (c_analyzer_show < .5f) {
                 fft_panel_.run();
-            } else if (mag_show_ref_.load(std::memory_order::relaxed) > .5f) {
+            } else {
                 mag_panel_.run(next_time_stamp_.load(std::memory_order::relaxed));
             }
             if (threadShouldExit()) {
@@ -84,10 +84,11 @@ namespace zlpanel {
     }
 
     void CurvePanel::repaintCallBackSlow() {
-        if (fft_show_ref_.load(std::memory_order::relaxed) > .5f) {
+        const auto c_analyzer_show = analyzer_show_ref_.load(std::memory_order::relaxed);
+        if (c_analyzer_show < .5f) {
             fft_panel_.setVisible(true);
             mag_panel_.setVisible(false);
-        } else if (mag_show_ref_.load(std::memory_order::relaxed) > .5f) {
+        } else {
             fft_panel_.setVisible(false);
             mag_panel_.setVisible(true);
         }

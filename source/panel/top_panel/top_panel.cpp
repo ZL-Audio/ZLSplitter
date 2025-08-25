@@ -14,9 +14,11 @@ namespace zlpanel {
         : base_(base),
           logo_panel_(p, base),
           top_legend_panel_(p, base),
+          top_choice_panel_(p, base),
           top_control_panel_(p, base) {
         addAndMakeVisible(logo_panel_);
         addAndMakeVisible(top_legend_panel_);
+        addAndMakeVisible(top_choice_panel_);
         addAndMakeVisible(top_control_panel_);
     }
 
@@ -31,13 +33,18 @@ namespace zlpanel {
 
     void TopPanel::resized() {
         auto bound = getLocalBounds();
+        const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
+
         logo_panel_.setBounds(bound.removeFromLeft(logo_panel_.getIdealWidth()));
         top_legend_panel_.setBounds(bound.removeFromLeft(top_legend_panel_.getIdealWidth()));
         top_control_panel_.setBounds(bound.removeFromRight(top_control_panel_.getIdealWidth()));
+        bound.removeFromRight(padding);
+        top_choice_panel_.setBounds(bound.removeFromRight(top_choice_panel_.getIdealWidth()));
     }
 
     void TopPanel::repaintCallBackSlow() {
         top_legend_panel_.repaintCallBackSlow();
+        top_choice_panel_.repaintCallBackSlow();
         top_control_panel_.repaintCallBackSlow();
     }
 }
