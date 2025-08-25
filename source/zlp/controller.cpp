@@ -28,6 +28,7 @@ namespace zlp {
         ps_splitter_[1].prepare(sample_rate);
 
         fft_analyzer_.prepare(sample_rate, {2, 2});
+        mag_analyzer_.prepare(sample_rate, max_num_samples);
     }
 
     template<typename FloatType>
