@@ -58,7 +58,7 @@ cmake --build Builds --config Release
 
 ## License
 
-ZL Splitter is licensed under AGPLv3, as found in the [LICENSE.md](LICENSE.md) file. However, the [logo of ZL Audio](assets/zlaudio.svg) and the [logo of ZL Equalizer](assets/logo.svg) are not covered by this license.
+ZL Splitter is licensed under AGPLv3, as found in the [LICENSE.md](LICENSE.md) file. However, the [logo of ZL Audio](assets/zlaudio.svg) and the [logo of ZL Splitter](assets/logo.svg) are not covered by this license.
 
 Copyright (c) 2024 - [zsliu98](https://github.com/zsliu98)
 
@@ -66,14 +66,11 @@ JUCE framework from [JUCE](https://github.com/juce-framework/JUCE)
 
 JUCE template from [pamplejuce](https://github.com/sudara/pamplejuce)
 
-[fft-juce](https://github.com/hollance/fft-juce) by [
-Matthijs Hollemans](https://github.com/hollance)
+[kfr](https://github.com/kfrlib/kfr) by [KFR](https://github.com/kfrlib)
 
 [median-filter](https://github.com/suomela/median-filter) by [suomela](https://github.com/suomela)
 
-[Friz](https://github.com/bgporter/animator) by [bgporter](https://github.com/bgporter)
-
-[RemixIcon](https://github.com/Remix-Design/RemixIcon) by [Remix Design](https://github.com/Remix-Design)
+[Material Symbols](https://github.com/google/material-design-icons) by [Google](https://github.com/google)
 
 Font from CMU Open Sans, Font Awesome and MiSans.
 
