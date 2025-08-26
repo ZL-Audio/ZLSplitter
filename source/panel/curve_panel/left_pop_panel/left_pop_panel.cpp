@@ -10,13 +10,14 @@
 #include "left_pop_panel.hpp"
 
 namespace zlpanel {
-    LeftPopPanel::LeftPopPanel(PluginProcessor &p, zlgui::UIBase &base)
+    LeftPopPanel::LeftPopPanel(PluginProcessor &p, zlgui::UIBase &base,
+                               multilingual::TooltipHelper &tooltip_helper)
         : base_(base),
           split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          lr_pop_panel_(p, base),
-          lh_pop_panel_(p, base),
-          ts_pop_panel_(p, base),
-          ps_pop_panel_(p, base) {
+          lr_pop_panel_(p, base, tooltip_helper),
+          lh_pop_panel_(p, base, tooltip_helper),
+          ts_pop_panel_(p, base, tooltip_helper),
+          ps_pop_panel_(p, base, tooltip_helper) {
         addChildComponent(lr_pop_panel_);
         addChildComponent(lh_pop_panel_);
         addChildComponent(ts_pop_panel_);

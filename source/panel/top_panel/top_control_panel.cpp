@@ -10,15 +10,18 @@
 #include "top_control_panel.hpp"
 
 namespace zlpanel {
-    TopControlPanel::TopControlPanel(PluginProcessor &p, zlgui::UIBase &base)
+    TopControlPanel::TopControlPanel(PluginProcessor &p, zlgui::UIBase &base,
+                                     multilingual::TooltipHelper &tooltip_helper)
         : base_(base), updater_(),
           swap_drawable_(juce::Drawable::createFromImageData(BinaryData::shuffle_svg, BinaryData::shuffle_svgSize)),
-          swap_button_("", base, ""),
+          swap_button_("", base,
+                       tooltip_helper.getToolTipText(multilingual::kSwap)),
           swap_attach_(swap_button_.getButton(), p.parameters_,
                        zlp::PSwap::kID, updater_),
           bypass_drawable_(
               juce::Drawable::createFromImageData(BinaryData::mode_off_on_svg, BinaryData::mode_off_on_svgSize)),
-          bypass_button_("", base, ""),
+          bypass_button_("", base,
+                         tooltip_helper.getToolTipText(multilingual::kBypass)),
           bypass_attach_(bypass_button_.getButton(), p.parameters_,
                          zlp::PBypass::kID, updater_) {
         swap_button_.setDrawable(swap_drawable_.get());

@@ -10,12 +10,15 @@
 #include "top_choice_panel.hpp"
 
 namespace zlpanel {
-    TopChoicePanel::TopChoicePanel(PluginProcessor &p, zlgui::UIBase &base)
+    TopChoicePanel::TopChoicePanel(PluginProcessor &p, zlgui::UIBase &base,
+                                   multilingual::TooltipHelper &tooltip_helper)
         : p_ref_(p), base_(base),
           analyzer_type_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PAnalyzerShow::kID)),
           analyzer_type_buttons_{
-              zlgui::button::ClickTextButton(base, "FFT", ""),
-              zlgui::button::ClickTextButton(base, "MAG", "")
+              zlgui::button::ClickTextButton(base, "FFT",
+                                             tooltip_helper.getToolTipText(multilingual::kFFTAnalyzer)),
+              zlgui::button::ClickTextButton(base, "MAG",
+                                             tooltip_helper.getToolTipText(multilingual::kMagAnalyzer))
           } {
         for (size_t i = 0; i < analyzer_type_buttons_.size(); ++i) {
             analyzer_type_buttons_[i].getButton().onStateChange = [this, i]() {
@@ -25,9 +28,9 @@ namespace zlpanel {
                     para->setValueNotifyingHost(para->convertTo0to1(static_cast<float>(i)));
                     para->endChangeGesture();
 
-                    this->analyzer_type_buttons_[i].setInterceptsMouseClicks(false, false);
+                    this->analyzer_type_buttons_[i].getButton().setClickingTogglesState(false);
                 } else {
-                    this->analyzer_type_buttons_[i].setInterceptsMouseClicks(true, true);
+                    this->analyzer_type_buttons_[i].getButton().setClickingTogglesState(true);
                 }
             };
         }

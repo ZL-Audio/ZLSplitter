@@ -17,7 +17,8 @@
 namespace zlpanel {
     class TopPanel final : public juce::Component {
     public:
-        explicit TopPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit TopPanel(PluginProcessor &p, zlgui::UIBase &base,
+                          multilingual::TooltipHelper &tooltip_helper);
 
         void paint(juce::Graphics &g) override;
 

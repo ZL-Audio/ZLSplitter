@@ -21,7 +21,8 @@
 namespace zlpanel {
     class LeftPopPanel final : public juce::Component {
     public:
-        explicit LeftPopPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit LeftPopPanel(PluginProcessor &p, zlgui::UIBase &base,
+                              multilingual::TooltipHelper &tooltip_helper);
 
         void paint(juce::Graphics &g) override;
 

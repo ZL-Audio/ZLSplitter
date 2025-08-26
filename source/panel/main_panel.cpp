@@ -1,11 +1,11 @@
 // Copyright (C) 2025 - zsliu98
-// This file is part of ZLCompressor
+// This file is part of ZLSplitter
 //
-// ZLCompressor is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
+// ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
 //
-// ZLCompressor is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+// ZLSplitter is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
 //
-// You should have received a copy of the GNU Affero General Public License along with ZLCompressor. If not, see <https://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
 #include "main_panel.hpp"
 
@@ -17,7 +17,7 @@ namespace zlpanel {
                   p_ref_.state_.getRawParameterValue(zlstate::PTooltipLang::kID)->load(std::memory_order::relaxed)))
           ),
           curve_panel_(processor, base_, tooltip_helper_),
-          top_panel_(processor, base_),
+          top_panel_(processor, base_, tooltip_helper_),
           ui_setting_panel_(processor, base_),
           tooltip_laf_(base_), tooltip_window_(&curve_panel_),
           refresh_handler_(zlstate::PTargetRefreshSpeed::kRates[base_.getRefreshRateID()]) {

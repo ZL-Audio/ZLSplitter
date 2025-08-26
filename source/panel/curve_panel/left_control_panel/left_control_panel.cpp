@@ -10,7 +10,8 @@
 #include "left_control_panel.hpp"
 
 namespace zlpanel {
-    LeftControlPanel::LeftControlPanel(PluginProcessor &p, zlgui::UIBase &base)
+    LeftControlPanel::LeftControlPanel(PluginProcessor &p, zlgui::UIBase &base,
+                                       multilingual::TooltipHelper &tooltip_helper)
         : p_ref_(p), base_(base),
           split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
           split_mode_drawables_{
@@ -22,36 +23,33 @@ namespace zlpanel {
               juce::Drawable::createFromImageData(BinaryData::circle_svg, BinaryData::circle_svgSize)
           },
           split_mode_buttons_{
-              zlgui::button::CompactButton("", base, ""),
-              zlgui::button::CompactButton("", base, ""),
-              zlgui::button::CompactButton("", base, ""),
-              zlgui::button::CompactButton("", base, ""),
-              zlgui::button::CompactButton("", base, ""),
-              zlgui::button::CompactButton("", base, ""),
+              zlgui::button::CompactButton("", base, tooltip_helper.getToolTipText(multilingual::kLRSplit)),
+              zlgui::button::CompactButton("", base, tooltip_helper.getToolTipText(multilingual::kMSSplit)),
+              zlgui::button::CompactButton("", base, tooltip_helper.getToolTipText(multilingual::kLHSplit)),
+              zlgui::button::CompactButton("", base, tooltip_helper.getToolTipText(multilingual::kTSSplit)),
+              zlgui::button::CompactButton("", base, tooltip_helper.getToolTipText(multilingual::kPSSplit)),
+              zlgui::button::CompactButton("", base, tooltip_helper.getToolTipText(multilingual::kNoneSplit)),
           } {
         juce::ignoreUnused(base_);
         for (size_t i = 0; i < split_mode_buttons_.size(); ++i) {
             auto &b{split_mode_buttons_[i]};
-            b.getButton().onStateChange = [this, i]() {
+            b.getButton().onClick = [this, i]() {
                 if (this->split_mode_buttons_[i].getButton().getToggleState()) {
                     auto *para = this->p_ref_.parameters_.getParameter(zlp::PSplitType::kID);
                     para->beginChangeGesture();
                     para->setValueNotifyingHost(para->convertTo0to1(static_cast<float>(i)));
                     para->endChangeGesture();
 
-                    this->split_mode_buttons_[i].setInterceptsMouseClicks(false, false);
+                    this->split_mode_buttons_[i].getButton().setClickingTogglesState(false);
                 } else {
-                    this->split_mode_buttons_[i].setInterceptsMouseClicks(true, true);
+                    this->split_mode_buttons_[i].getButton().setClickingTogglesState(true);
                 }
             };
         }
         for (size_t i = 0; i < split_mode_buttons_.size(); ++i) {
             auto &b{split_mode_buttons_[i]};
             b.setDrawable(split_mode_drawables_[i].get());
-            b.getLAF().enableShadow(false);
-            b.getLAF().enableBackground(false);
-            b.getLAF().setShrinkScale(.0f);
-            b.getLAF().setScale(i == split_mode_buttons_.size() - 1 ? 1.f : 1.66f);
+            b.getLAF().setScale(1.5f);
             b.setBufferedToImage(true);
             addAndMakeVisible(b);
         }
@@ -67,7 +65,7 @@ namespace zlpanel {
         auto bound = getLocalBounds();
         const auto button_height = bound.getHeight() / static_cast<int>(split_mode_buttons_.size() + 1);
         bound.removeFromTop((bound.getHeight() - button_height * static_cast<int>(split_mode_buttons_.size())) / 2);
-        for (const int &i : {5, 0, 1, 2, 3, 4}) {
+        for (const int &i: {5, 0, 1, 2, 3, 4}) {
             split_mode_buttons_[static_cast<size_t>(i)].setBounds(bound.removeFromTop(button_height));
         }
     }

@@ -12,11 +12,13 @@
 #include "../../../PluginProcessor.hpp"
 #include "../../../gui/gui.hpp"
 #include "../../helper/helper.hpp"
+#include "../../multilingual/tooltip_helper.hpp"
 
 namespace zlpanel {
     class TSPopPanel final : public juce::Component {
     public:
-        TSPopPanel(PluginProcessor &p, zlgui::UIBase &base);
+        TSPopPanel(PluginProcessor &p, zlgui::UIBase &base,
+                   multilingual::TooltipHelper &tooltip_helper);
 
         int getIdealHeight() const;
 

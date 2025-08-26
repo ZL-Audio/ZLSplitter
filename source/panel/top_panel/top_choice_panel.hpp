@@ -11,12 +11,14 @@
 
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
+#include "../multilingual/tooltip_helper.hpp"
 #include "../helper/helper.hpp"
 
 namespace zlpanel {
     class TopChoicePanel final : public juce::Component {
     public:
-        explicit TopChoicePanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit TopChoicePanel(PluginProcessor &p, zlgui::UIBase &base,
+                                multilingual::TooltipHelper &tooltip_helper);
 
         int getIdealWidth() const;
 

@@ -10,9 +10,11 @@
 #include "lr_pop_panel.hpp"
 
 namespace zlpanel {
-    LRPopPanel::LRPopPanel(PluginProcessor &p, zlgui::UIBase &base)
+    LRPopPanel::LRPopPanel(PluginProcessor &p, zlgui::UIBase &base,
+                           multilingual::TooltipHelper &tooltip_helper)
         : base_(base), updater_(),
-          mix_slider_("Mix", base),
+          mix_slider_("Mix", base,
+                      tooltip_helper.getToolTipText(multilingual::kMix)),
           mix_attach_(mix_slider_.getSlider1(), p.parameters_,
                       zlp::PMix::kID, updater_) {
         addAndMakeVisible(mix_slider_);

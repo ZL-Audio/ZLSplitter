@@ -10,12 +10,14 @@
 #include "top_panel.hpp"
 
 namespace zlpanel {
-    TopPanel::TopPanel(PluginProcessor &p, zlgui::UIBase &base)
+    TopPanel::TopPanel(PluginProcessor &p, zlgui::UIBase &base,
+                       multilingual::TooltipHelper &tooltip_helper)
         : base_(base),
           logo_panel_(p, base),
           top_legend_panel_(p, base),
-          top_choice_panel_(p, base),
-          top_control_panel_(p, base) {
+          top_choice_panel_(p, base, tooltip_helper),
+          top_control_panel_(p, base, tooltip_helper) {
+        logo_panel_.setTooltip(tooltip_helper.getToolTipText(multilingual::kLogo));
         addAndMakeVisible(logo_panel_);
         addAndMakeVisible(top_legend_panel_);
         addAndMakeVisible(top_choice_panel_);
