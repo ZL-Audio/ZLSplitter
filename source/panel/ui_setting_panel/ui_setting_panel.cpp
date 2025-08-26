@@ -92,6 +92,7 @@ namespace zlpanel {
             juce::dontSendNotification);
         version_label_.setJustificationType(juce::Justification::bottomLeft);
         version_label_.setLookAndFeel(&label_laf_);
+        version_label_.setInterceptsMouseClicks(false, false);
         addAndMakeVisible(version_label_);
     }
 
@@ -105,12 +106,13 @@ namespace zlpanel {
     }
 
     void UISettingPanel::resized() {
-        auto bound = getLocalBounds().toFloat();
-        bound = bound.withSizeKeepingCentre(bound.getWidth() * .75f, bound.getHeight()); {
-            auto label_bound = bound.removeFromTop(base_.getFontSize() * 3.f);
-            const auto label_width = label_bound.getWidth() / static_cast<float>(panel_labels_.size());
+        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale);
+        auto bound = getLocalBounds();
+        bound = bound.withSizeKeepingCentre(juce::roundToInt(static_cast<float>(bound.getWidth()) * .75f), bound.getHeight()); {
+            auto label_bound = bound.removeFromTop(button_width);
+            const auto label_width = label_bound.getWidth() / static_cast<int>(panel_labels_.size());
             for (auto &panel_label: panel_labels_) {
-                panel_label.setBounds(label_bound.removeFromLeft(label_width).toNearestInt());
+                panel_label.setBounds(label_bound.removeFromLeft(label_width));
             }
         }
 
@@ -124,26 +126,21 @@ namespace zlpanel {
                                juce::roundToInt(bound.getWidth()),
                                other_panel_.getIdealHeight());
 
-        view_port_.setBounds(bound.removeFromTop(bound.getHeight() * .9125f).toNearestInt());
+        view_port_.setBounds(bound.removeFromTop(bound.getHeight() - button_width - button_width / 2));
 
-        const auto left_bound = bound.removeFromLeft(
-            bound.getWidth() * .3333333f).withSizeKeepingCentre(
-            base_.getFontSize() * 2.f, base_.getFontSize() * 2.f);
-        const auto center_bound = bound.removeFromLeft(
-            bound.getWidth() * .5f).withSizeKeepingCentre(
-            base_.getFontSize() * 2.f, base_.getFontSize() * 2.f);
-        const auto right_bound = bound.withSizeKeepingCentre(
-            base_.getFontSize() * 1.95f, base_.getFontSize() * 1.95f);
-        save_button_.setBounds(left_bound.toNearestInt());
-        reset_button_.setBounds(center_bound.toNearestInt());
-        close_button_.setBounds(right_bound.toNearestInt());
+        bound = bound.withSizeKeepingCentre(bound.getWidth(), button_width);
+        const auto left_bound = bound.removeFromLeft(bound.getWidth() / 3);
+        const auto right_bound = bound.removeFromRight(bound.getWidth() / 2);
+        const auto center_bound = bound;
+        save_button_.setBounds(left_bound);
+        reset_button_.setBounds(center_bound);
+        close_button_.setBounds(right_bound);
 
-        bound = getLocalBounds().toFloat();
-        bound = bound.removeFromBottom(2.f * base_.getFontSize());
-        bound = bound.removeFromLeft(bound.getWidth() * .125f);
-        bound.removeFromLeft(base_.getFontSize() * .25f);
-        bound.removeFromBottom(base_.getFontSize() * .0625f);
-        version_label_.setBounds(bound.toNearestInt());
+        bound = getLocalBounds();
+        bound = bound.removeFromBottom(button_width);
+        bound.removeFromLeft(1);
+        bound.removeFromBottom(1);
+        version_label_.setBounds(bound);
     }
 
     void UISettingPanel::loadSetting() {

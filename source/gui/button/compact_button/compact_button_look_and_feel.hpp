@@ -27,7 +27,7 @@ namespace zlgui {
                 if (with_shadow_) {
                     bounds = base_.drawShadowEllipse(g, bounds, base_.getFontSize() * 0.4f * shrink_scale_, {});
                     bounds = base_.drawInnerShadowEllipse(g, bounds, base_.getFontSize() * 0.15f * shrink_scale_,
-                                                             {.flip = true});
+                                                          {.flip = true});
                 } else {
                     bounds = base_.getShadowEllipseArea(bounds, base_.getFontSize() * 0.3f * shrink_scale_, {});
                     g.setColour(base_.getBackgroundColor());
@@ -38,13 +38,13 @@ namespace zlgui {
                 if (with_background_ && with_shadow_) {
                     const auto innerBound = base_.getShadowEllipseArea(bounds, base_.getFontSize() * 0.1f, {});
                     base_.drawInnerShadowEllipse(g, innerBound, base_.getFontSize() * 0.375f, {
-                                                        .dark_shadow_color = base_.getDarkShadowColor().
-                                                        withMultipliedAlpha(button_depth_),
-                                                        .bright_shadow_color = base_.getBrightShadowColor().
-                                                        withMultipliedAlpha(button_depth_),
-                                                        .change_dark = true,
-                                                        .change_bright = true
-                                                    });
+                                                     .dark_shadow_color = base_.getDarkShadowColor().
+                                                     withMultipliedAlpha(button_depth_),
+                                                     .bright_shadow_color = base_.getBrightShadowColor().
+                                                     withMultipliedAlpha(button_depth_),
+                                                     .change_dark = true,
+                                                     .change_bright = true
+                                                 });
                 }
             }
             if (drawable_ == nullptr) {
@@ -60,9 +60,9 @@ namespace zlgui {
                 const auto radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) * .5f * scale_;
                 const auto draw_bound = bounds.withSizeKeepingCentre(radius, radius);
                 if (is_pressed) {
-                    internal_img_->drawWithin(g, draw_bound, juce::RectanglePlacement::Flags::centred, 1.f);
+                    internal_img_->drawWithin(g, draw_bound, kPlacement, 1.f);
                 } else {
-                    internal_img_->drawWithin(g, draw_bound, juce::RectanglePlacement::Flags::centred, .5f);
+                    internal_img_->drawWithin(g, draw_bound, kPlacement, .5f);
                 }
             }
         }
@@ -94,9 +94,11 @@ namespace zlgui {
         }
 
     private:
+        static constexpr auto kPlacement = juce::RectanglePlacement::Flags::centred;
+
         UIBase &base_;
 
-        bool reverse_{false}, with_shadow_{true}, with_background_{true};
+        bool reverse_{false}, with_shadow_{false}, with_background_{false};
         float button_depth_{0.f}, shrink_scale_{1.f}, scale_{1.f};
         juce::Drawable *drawable_ = nullptr;
         std::unique_ptr<juce::Drawable> internal_img_;
