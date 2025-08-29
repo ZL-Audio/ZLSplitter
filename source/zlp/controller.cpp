@@ -29,6 +29,10 @@ namespace zlp {
 
         fft_analyzer_.prepare(sample_rate, {2, 2});
         mag_analyzer_.prepare(sample_rate, max_num_samples);
+
+        const auto max_latency = std::max(lh_fir_splitter_.getMaxLatency(), ts_splitter_[0].getTSLatency());
+        bypass_delay_.prepare(sample_rate, max_num_samples, 2,
+                              static_cast<FloatType>(max_latency + 1) / static_cast<FloatType>(sample_rate));
     }
 
     template<typename FloatType>
@@ -157,10 +161,21 @@ namespace zlp {
     }
 
     template<typename FloatType>
+    void Controller<FloatType>::processBypassDelay(std::array<FloatType *, 2> &in_buffer, size_t num_samples) {
+        if (bypass_delay_.getDelayInSamples() == 0) {
+            return;
+        }
+        bypass_delay_.process(in_buffer, num_samples);
+    }
+
+    template<typename FloatType>
     void Controller<FloatType>::checkUpdateLatency() {
+        bypass_delay_.reset();
+        bypass_delay_.setDelayInSamples(latency_.load(std::memory_order::relaxed));
         if (latency_.load(std::memory_order::relaxed) != p_ref_.getLatencySamples()) {
             triggerAsyncUpdate();
         }
+        mag_analyzer_.setToReset();
     }
 
     template<typename FloatType>

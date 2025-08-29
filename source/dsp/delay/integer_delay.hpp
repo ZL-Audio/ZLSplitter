@@ -74,9 +74,9 @@ namespace zldsp::delay {
         }
 
         void setDelay(const FloatType delay_seconds) {
-            const auto delay_samples = static_cast<int>(std::round(delay_seconds * sample_rate_));
+            delay_samples_ = static_cast<int>(std::round(delay_seconds * sample_rate_));
             const auto pre_delay_samples = static_cast<int>(std::round(delay_seconds_ * sample_rate_));
-            const auto delta = delay_samples - pre_delay_samples;
+            const auto delta = delay_samples_ - pre_delay_samples;
             delay_seconds_ = delay_seconds;
             if (delta < 0) {
                 tail_ += delta;
@@ -96,12 +96,13 @@ namespace zldsp::delay {
         }
 
         [[nodiscard]] int getDelayInSamples() const {
-            return static_cast<int>(std::round(delay_seconds_ * sample_rate_));
+            return delay_samples_;
         }
 
     private:
         double sample_rate_{48000.0};
         FloatType delay_seconds_{0};
+        int delay_samples_{0};
         int capacity_{0}, head_{0}, tail_{0};
         std::vector<std::vector<FloatType> > states_;
     };

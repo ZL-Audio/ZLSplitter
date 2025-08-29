@@ -152,6 +152,10 @@ namespace zldsp::splitter {
             }
         }
 
+        int getMaxLatency() const {
+            return static_cast<int>(1 << (kSecondOrderNumStage + extra_stage_ + 2)) + 2;
+        }
+
     private:
         inline static constexpr size_t kFirstOrderNumStage = 9;
         inline static constexpr size_t kSecondOrderNumStage = 11;

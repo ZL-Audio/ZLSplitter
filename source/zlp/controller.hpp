@@ -35,6 +35,8 @@ namespace zlp {
                      std::array<FloatType *, 4> &out_buffer,
                      size_t num_samples);
 
+        void processBypassDelay(std::array<FloatType *, 2> &in_buffer, size_t num_samples);
+
         void setSplitType(zlp::PSplitType::SplitType split_type) {
             split_type_.store(split_type, std::memory_order::relaxed);
             to_update_split_type_.store(true, std::memory_order::release);
@@ -119,6 +121,8 @@ namespace zlp {
 
         std::atomic<bool> is_mag_on_{false};
         zldsp::analyzer::MultipleMagAnalyzer<FloatType, 2, kAnalyzerPointNum> mag_analyzer_;
+
+        zldsp::delay::IntegerDelay<FloatType> bypass_delay_;
 
         void checkUpdateLatency();
 

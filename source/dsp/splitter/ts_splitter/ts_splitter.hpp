@@ -40,9 +40,9 @@ namespace zldsp::splitter {
             delay_span_[0] = steady_buffer;
             delay_.process(delay_span_, num_samples);
             // transient split
-            fft_span_[0] = in_buffer;
-            zldsp::filter::FIRBase<FloatType, 10>::process(fft_span_, num_samples);
             zldsp::vector::copy(transient_buffer, in_buffer, num_samples);
+            fft_span_[0] = transient_buffer;
+            zldsp::filter::FIRBase<FloatType, 10>::process(fft_span_, num_samples);
             // subtract transient buffer from steady buffer
             auto transient_v = kfr::make_univector(transient_buffer, num_samples);
             auto steady_v = kfr::make_univector(steady_buffer, num_samples);

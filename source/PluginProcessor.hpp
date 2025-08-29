@@ -40,6 +40,10 @@ public:
 
     void processBlock(juce::AudioBuffer<double> &, juce::MidiBuffer &) override;
 
+    void processBlockBypassed(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
+
+    void processBlockBypassed(juce::AudioBuffer<double> &, juce::MidiBuffer &) override;
+
     juce::AudioProcessorEditor *createEditor() override;
 
     bool hasEditor() const override;
@@ -74,7 +78,7 @@ public:
         return double_controller_;
     }
 
-    double getAtomicSampleRate() const  {
+    double getAtomicSampleRate() const {
         return sample_rate_.load(std::memory_order::relaxed);
     }
 
@@ -86,12 +90,18 @@ private:
 
     std::array<std::vector<double>, 2> double_in_buffer;
     std::array<std::vector<double>, 4> double_out_buffer;
-    std::array<double*, 2> double_in_pointers{};
-    std::array<double*, 4> double_out_pointers1{};
-    std::array<double*, 4> double_out_pointers2{};
+    std::array<double *, 2> double_in_pointers{};
+    std::array<double *, 4> double_out_pointers1{};
+    std::array<double *, 4> double_out_pointers2{};
 
     zlp::Controller<double> double_controller_;
     zlp::ControllerAttach<double> double_controller_attach_;
+
+    template<bool IsBypassed>
+    void processBlockInternal(juce::AudioBuffer<float> &);
+
+    template<bool IsBypassed>
+    void processBlockInternal(juce::AudioBuffer<double> &);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
 };
