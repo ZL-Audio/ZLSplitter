@@ -8,6 +8,7 @@ LICENSE and CODE are available at [https://github.com/ZL-Audio/ZLSplitter](https
 
 New Features
 
+- add tooltips
 - add fft analyzer
 - add magnitude analyzer
 - add bypass
