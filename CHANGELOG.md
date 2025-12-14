@@ -4,6 +4,12 @@ LICENSE and CODE are available at [https://github.com/ZL-Audio/ZLSplitter](https
 
 # Changelog
 
+## 0.2.1
+
+Bug fixes and Improvements
+
+- fix plugin crashes when it does not have UI preset folder permission
+
 ## 0.2.0
 
 New Features
