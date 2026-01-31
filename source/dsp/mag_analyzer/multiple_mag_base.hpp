@@ -57,9 +57,19 @@ namespace zldsp::analyzer {
 
     protected:
         std::atomic<double> sample_rate_{48000.0}, max_num_samples_per_block_{0.};
-        std::array<std::array<float, PointNum>, MagNum> mag_fifos_{};
+        std::array<std::array < float, PointNum>
+        ,
+        MagNum
+        >
+        mag_fifos_ {
+        };
         zldsp::container::AbstractFIFO abstract_fifo_{PointNum};
-        std::array<std::array<float, PointNum>, MagNum> circular_mags_{};
+        std::array<std::array < float, PointNum>
+        ,
+        MagNum
+        >
+        circular_mags_ {
+        };
         size_t circular_idx_{0};
 
         std::atomic<float> time_length_{7.f};

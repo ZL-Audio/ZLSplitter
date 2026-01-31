@@ -10,18 +10,18 @@
 #include "mag_analyzer_panel.hpp"
 
 namespace zlpanel {
-    MagAnalyzerPanel::MagAnalyzerPanel(PluginProcessor &p, zlgui::UIBase &base)
-        : p_ref_(p), base_(base),
-          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
-          fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)),
-          mag_analyzer_ref_(p.getController().getMagAnalyzer()) {
+    MagAnalyzerPanel::MagAnalyzerPanel(PluginProcessor& p, zlgui::UIBase& base) :
+        p_ref_(p), base_(base),
+        split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+        swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
+        fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)),
+        mag_analyzer_ref_(p.getController().getMagAnalyzer()) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
-        for (auto &path: {&out_path1_, &out_path2_}) {
+        for (auto& path : {&out_path1_, &out_path2_}) {
             path->preallocateSpace(preallocateSpace);
         }
 
-        for (auto &ID: kNAIDs) {
+        for (auto& ID : kNAIDs) {
             p_ref_.na_parameters_.addParameterListener(ID, this);
             parameterChanged(ID, p_ref_.na_parameters_.getRawParameterValue(ID)->load(std::memory_order::relaxed));
         }
@@ -32,19 +32,19 @@ namespace zlpanel {
     }
 
     MagAnalyzerPanel::~MagAnalyzerPanel() {
-        for (auto &ID: kNAIDs) {
+        for (auto& ID : kNAIDs) {
             p_ref_.na_parameters_.removeParameterListener(ID, this);
         }
     }
 
-    void MagAnalyzerPanel::paint(juce::Graphics &g) {
+    void MagAnalyzerPanel::paint(juce::Graphics& g) {
         const std::unique_lock<std::mutex> lock{mutex_, std::try_to_lock};
         if (!lock.owns_lock()) {
             return;
         }
         const auto thickness = base_.getFontSize() * .2f * base_.getFFTCurveThickness();
         if (static_cast<zlp::PSplitType::SplitType>(
-                std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
+            std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
             g.setColour(base_.getTextColor());
             g.strokePath(out_path1_,
                          juce::PathStrokeType(thickness,
@@ -113,7 +113,8 @@ namespace zlpanel {
                                          static_cast<float>(shift),
                                          analyzer_min_db_.load(std::memory_order::relaxed), 0.f);
             updatePaths(current_bound);
-        } {
+        }
+        {
             std::lock_guard<std::mutex> lock{mutex_};
             out_path1_.swapWithPath(next_out_path1_);
             out_path2_.swapWithPath(next_out_path2_);
@@ -132,7 +133,7 @@ namespace zlpanel {
         }
     }
 
-    void MagAnalyzerPanel::parameterChanged(const juce::String &parameter_id, const float new_value) {
+    void MagAnalyzerPanel::parameterChanged(const juce::String& parameter_id, const float new_value) {
         if (parameter_id == zlstate::PMagType::kID) {
             mag_analyzer_ref_.setMagType(static_cast<zldsp::analyzer::MagType>(std::round(new_value)));
         } else if (parameter_id == zlstate::PMagMinDB::kID) {

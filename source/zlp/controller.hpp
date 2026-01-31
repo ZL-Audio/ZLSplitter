@@ -116,7 +116,7 @@ namespace zlp {
         std::atomic<int> latency_{0};
 
         std::atomic<bool> is_fft_on_{false};
-        std::array<std::span<FloatType*>, 2> analyzer_spans_;
+        std::array<std::span<FloatType *>, 2> analyzer_spans_;
         zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 2, kAnalyzerPointNum> fft_analyzer_;
 
         std::atomic<bool> is_mag_on_{false};

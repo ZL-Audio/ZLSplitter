@@ -56,7 +56,7 @@ namespace zldsp::filter {
 
         static std::array<double, 3> get_phi(double w);
 
-        static std::array<double, 3> linear_solve(const std::array<std::array<double, 3>, 3> &A,
+        static std::array<double, 3> linear_solve(const std::array<std::array < double, 3>, 3> &A,
                                                   const std::array<double, 3> &b);
     };
 }

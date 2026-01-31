@@ -10,16 +10,16 @@
 #include "top_legend_panel.hpp"
 
 namespace zlpanel {
-    TopLegendPanel::TopLegendPanel(PluginProcessor &p, zlgui::UIBase &base)
-        : base_(base),
-          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)) {
+    TopLegendPanel::TopLegendPanel(PluginProcessor& p, zlgui::UIBase& base) :
+        base_(base),
+        split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+        swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)) {
         setBufferedToImage(true);
 
         setInterceptsMouseClicks(false, false);
     }
 
-    void TopLegendPanel::paint(juce::Graphics &g) {
+    void TopLegendPanel::paint(juce::Graphics& g) {
         const auto idx = static_cast<size_t>(std::round(c_split_type_));
         g.setFont(base_.getFontSize() * 1.5f);
 

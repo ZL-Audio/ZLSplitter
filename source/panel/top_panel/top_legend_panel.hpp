@@ -37,5 +37,4 @@ namespace zlpanel {
             "Right", "Side", "High", "Steady", "Steady", "None"
         };
     };
-
 }

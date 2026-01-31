@@ -18,7 +18,7 @@
 #include "zlp/zlp.hpp"
 #include "state/state.hpp"
 
-class PluginProcessor : public juce::AudioProcessor {
+class PluginProcessor final : public juce::AudioProcessor {
 public:
     zlstate::DummyProcessor dummy_processor_;
     juce::AudioProcessorValueTreeState parameters_;
@@ -34,17 +34,17 @@ public:
 
     void releaseResources() override;
 
-    bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
+    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
 
-    void processBlock(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
+    void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
-    void processBlock(juce::AudioBuffer<double> &, juce::MidiBuffer &) override;
+    void processBlock(juce::AudioBuffer<double>&, juce::MidiBuffer&) override;
 
-    void processBlockBypassed(juce::AudioBuffer<float> &, juce::MidiBuffer &) override;
+    void processBlockBypassed(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
-    void processBlockBypassed(juce::AudioBuffer<double> &, juce::MidiBuffer &) override;
+    void processBlockBypassed(juce::AudioBuffer<double>&, juce::MidiBuffer&) override;
 
-    juce::AudioProcessorEditor *createEditor() override;
+    juce::AudioProcessorEditor* createEditor() override;
 
     bool hasEditor() const override;
 
@@ -66,15 +66,15 @@ public:
 
     const juce::String getProgramName(int index) override;
 
-    void changeProgramName(int index, const juce::String &new_name) override;
+    void changeProgramName(int index, const juce::String& new_name) override;
 
-    void getStateInformation(juce::MemoryBlock &dest_data) override;
+    void getStateInformation(juce::MemoryBlock& dest_data) override;
 
-    void setStateInformation(const void *data, int size_in_bytes) override;
+    void setStateInformation(const void* data, int size_in_bytes) override;
 
     bool supportsDoublePrecisionProcessing() const override { return true; }
 
-    zlp::Controller<double> &getController() {
+    zlp::Controller<double>& getController() {
         return double_controller_;
     }
 
@@ -83,25 +83,25 @@ public:
     }
 
 private:
-    std::atomic<float> &swap_ref_;
-    std::atomic<float> &bypass_ref_;
+    std::atomic<float>& swap_ref_;
+    std::atomic<float>& bypass_ref_;
 
     std::atomic<double> sample_rate_{48000.0};
 
     std::array<std::vector<double>, 2> double_in_buffer;
     std::array<std::vector<double>, 4> double_out_buffer;
-    std::array<double *, 2> double_in_pointers{};
-    std::array<double *, 4> double_out_pointers1{};
-    std::array<double *, 4> double_out_pointers2{};
+    std::array<double*, 2> double_in_pointers{};
+    std::array<double*, 4> double_out_pointers1{};
+    std::array<double*, 4> double_out_pointers2{};
 
     zlp::Controller<double> double_controller_;
     zlp::ControllerAttach<double> double_controller_attach_;
 
-    template<bool IsBypassed>
-    void processBlockInternal(juce::AudioBuffer<float> &);
+    template <bool IsBypassed>
+    void processBlockInternal(juce::AudioBuffer<float>&);
 
-    template<bool IsBypassed>
-    void processBlockInternal(juce::AudioBuffer<double> &);
+    template <bool IsBypassed>
+    void processBlockInternal(juce::AudioBuffer<double>&);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
 };

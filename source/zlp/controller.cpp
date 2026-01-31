@@ -10,12 +10,12 @@
 #include "controller.hpp"
 
 namespace zlp {
-    template<typename FloatType>
-    Controller<FloatType>::Controller(juce::AudioProcessor &processor)
-        : p_ref_(processor) {
+    template <typename FloatType>
+    Controller<FloatType>::Controller(juce::AudioProcessor& processor) :
+        p_ref_(processor) {
     }
 
-    template<typename FloatType>
+    template <typename FloatType>
     void Controller<FloatType>::prepare(const double sample_rate,
                                         const size_t max_num_samples) {
         lr_splitter_.prepare(sample_rate);
@@ -35,7 +35,7 @@ namespace zlp {
                               static_cast<FloatType>(max_latency + 1) / static_cast<FloatType>(sample_rate));
     }
 
-    template<typename FloatType>
+    template <typename FloatType>
     void Controller<FloatType>::prepareBuffer() {
         if (to_update_.exchange(false, std::memory_order::acquire)) {
             if (to_update_split_type_.exchange(false, std::memory_order::acquire)) {
@@ -43,29 +43,29 @@ namespace zlp {
             }
             c_use_fir_ = use_fir_.load(std::memory_order::relaxed);
             switch (c_split_type_) {
-                case zlp::PSplitType::kLRight:
-                case zlp::PSplitType::kMSide: {
+            case zlp::PSplitType::kLRight:
+            case zlp::PSplitType::kMSide: {
+                latency_.store(0, std::memory_order::relaxed);
+                break;
+            }
+            case zlp::PSplitType::kLHigh: {
+                if (c_use_fir_) {
+                    lh_fir_splitter_.prepareBuffer();
+                    latency_.store(lh_fir_splitter_.getLatency(), std::memory_order::relaxed);
+                } else {
                     latency_.store(0, std::memory_order::relaxed);
-                    break;
                 }
-                case zlp::PSplitType::kLHigh: {
-                    if (c_use_fir_) {
-                        lh_fir_splitter_.prepareBuffer();
-                        latency_.store(lh_fir_splitter_.getLatency(), std::memory_order::relaxed);
-                    } else {
-                        latency_.store(0, std::memory_order::relaxed);
-                    }
-                    break;
-                }
-                case zlp::PSplitType::kTSteady: {
-                    latency_.store(ts_splitter_[0].getTSLatency(), std::memory_order::relaxed);
-                    break;
-                }
-                case zlp::PSplitType::kPSteady:
-                case zlp::PSplitType::kNone: {
-                    latency_.store(0, std::memory_order::relaxed);
-                    break;
-                }
+                break;
+            }
+            case zlp::PSplitType::kTSteady: {
+                latency_.store(ts_splitter_[0].getTSLatency(), std::memory_order::relaxed);
+                break;
+            }
+            case zlp::PSplitType::kPSteady:
+            case zlp::PSplitType::kNone: {
+                latency_.store(0, std::memory_order::relaxed);
+                break;
+            }
             }
             checkUpdateLatency();
         }
@@ -78,35 +78,35 @@ namespace zlp {
             lh_fir_splitter_.setMix(mix);
         }
         switch (c_split_type_) {
-            case zlp::PSplitType::kLRight:
-            case zlp::PSplitType::kMSide: {
-                break;
+        case zlp::PSplitType::kLRight:
+        case zlp::PSplitType::kMSide: {
+            break;
+        }
+        case zlp::PSplitType::kLHigh: {
+            if (c_use_fir_) {
+                lh_fir_splitter_.prepareBuffer();
+            } else {
+                lh_splitter_.prepareBuffer();
             }
-            case zlp::PSplitType::kLHigh: {
-                if (c_use_fir_) {
-                    lh_fir_splitter_.prepareBuffer();
-                } else {
-                    lh_splitter_.prepareBuffer();
-                }
-                break;
-            }
-            case zlp::PSplitType::kTSteady: {
-                break;
-            }
-            case zlp::PSplitType::kPSteady: {
-                ps_splitter_[0].prepareBuffer();
-                ps_splitter_[1].prepareBuffer();
-                break;
-            }
-            case zlp::PSplitType::kNone: {
-                break;
-            }
+            break;
+        }
+        case zlp::PSplitType::kTSteady: {
+            break;
+        }
+        case zlp::PSplitType::kPSteady: {
+            ps_splitter_[0].prepareBuffer();
+            ps_splitter_[1].prepareBuffer();
+            break;
+        }
+        case zlp::PSplitType::kNone: {
+            break;
+        }
         }
     }
 
-    template<typename FloatType>
-    void Controller<FloatType>::process(std::array<FloatType *, 2> &in_buffer,
-                                        std::array<FloatType *, 4> &out_buffer,
+    template <typename FloatType>
+    void Controller<FloatType>::process(std::array<FloatType*, 2>& in_buffer,
+                                        std::array<FloatType*, 4>& out_buffer,
                                         const size_t num_samples) {
         prepareBuffer();
         out_buffer1_[0] = out_buffer[0];
@@ -115,38 +115,38 @@ namespace zlp {
         out_buffer2_[1] = out_buffer[3];
 
         switch (c_split_type_) {
-            case zlp::PSplitType::kLRight: {
-                lr_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
-                break;
+        case zlp::PSplitType::kLRight: {
+            lr_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
+            break;
+        }
+        case zlp::PSplitType::kMSide: {
+            ms_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
+            break;
+        }
+        case zlp::PSplitType::kLHigh: {
+            if (use_fir_) {
+                lh_fir_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
+            } else {
+                lh_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
             }
-            case zlp::PSplitType::kMSide: {
-                ms_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
-                break;
-            }
-            case zlp::PSplitType::kLHigh: {
-                if (use_fir_) {
-                    lh_fir_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
-                } else {
-                    lh_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
-                }
-                break;
-            }
-            case zlp::PSplitType::kTSteady: {
-                ts_splitter_[0].process(in_buffer[0], out_buffer1_[0], out_buffer2_[0], num_samples);
-                ts_splitter_[1].process(in_buffer[1], out_buffer1_[1], out_buffer2_[1], num_samples);
-                break;
-            }
-            case zlp::PSplitType::kPSteady: {
-                ps_splitter_[0].process(in_buffer[0], out_buffer1_[0], out_buffer2_[0], num_samples);
-                ps_splitter_[1].process(in_buffer[1], out_buffer1_[1], out_buffer2_[1], num_samples);
-                break;
-            }
-            case zlp::PSplitType::kNone: {
-                zldsp::vector::copy(out_buffer1_[0], in_buffer[0], num_samples);
-                zldsp::vector::copy(out_buffer1_[1], in_buffer[1], num_samples);
-                std::fill(out_buffer2_[0], out_buffer2_[0] + num_samples, static_cast<FloatType>(0));
-                std::fill(out_buffer2_[1], out_buffer2_[1] + num_samples, static_cast<FloatType>(0));
-            }
+            break;
+        }
+        case zlp::PSplitType::kTSteady: {
+            ts_splitter_[0].process(in_buffer[0], out_buffer1_[0], out_buffer2_[0], num_samples);
+            ts_splitter_[1].process(in_buffer[1], out_buffer1_[1], out_buffer2_[1], num_samples);
+            break;
+        }
+        case zlp::PSplitType::kPSteady: {
+            ps_splitter_[0].process(in_buffer[0], out_buffer1_[0], out_buffer2_[0], num_samples);
+            ps_splitter_[1].process(in_buffer[1], out_buffer1_[1], out_buffer2_[1], num_samples);
+            break;
+        }
+        case zlp::PSplitType::kNone: {
+            zldsp::vector::copy(out_buffer1_[0], in_buffer[0], num_samples);
+            zldsp::vector::copy(out_buffer1_[1], in_buffer[1], num_samples);
+            std::fill(out_buffer2_[0], out_buffer2_[0] + num_samples, static_cast<FloatType>(0));
+            std::fill(out_buffer2_[1], out_buffer2_[1] + num_samples, static_cast<FloatType>(0));
+        }
         }
 
         if (is_fft_on_.load(std::memory_order::relaxed)) {
@@ -160,15 +160,15 @@ namespace zlp {
         }
     }
 
-    template<typename FloatType>
-    void Controller<FloatType>::processBypassDelay(std::array<FloatType *, 2> &in_buffer, size_t num_samples) {
+    template <typename FloatType>
+    void Controller<FloatType>::processBypassDelay(std::array<FloatType*, 2>& in_buffer, size_t num_samples) {
         if (bypass_delay_.getDelayInSamples() == 0) {
             return;
         }
         bypass_delay_.process(in_buffer, num_samples);
     }
 
-    template<typename FloatType>
+    template <typename FloatType>
     void Controller<FloatType>::checkUpdateLatency() {
         bypass_delay_.reset();
         bypass_delay_.setDelayInSamples(latency_.load(std::memory_order::relaxed));
@@ -178,7 +178,7 @@ namespace zlp {
         mag_analyzer_.setToReset();
     }
 
-    template<typename FloatType>
+    template <typename FloatType>
     void Controller<FloatType>::handleAsyncUpdate() {
         p_ref_.setLatencySamples(latency_.load(std::memory_order::relaxed));
     }

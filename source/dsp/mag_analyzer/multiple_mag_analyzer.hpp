@@ -31,9 +31,9 @@ namespace zldsp::analyzer {
             // update tolerance
             const int block_tolerance = static_cast<int>(std::ceil(
                 this->max_num_samples_per_block_.load(std::memory_order::relaxed) /
-                    this->sample_rate_.load(std::memory_order::relaxed) /
-                        this->time_length_.load(std::memory_order::relaxed) *
-                            static_cast<double>(PointNum) * 1.5));
+                this->sample_rate_.load(std::memory_order::relaxed) /
+                this->time_length_.load(std::memory_order::relaxed) *
+                static_cast<double>(PointNum) * 1.5));
             if (tolerance > 0) {
                 tolerance = std::max(tolerance, block_tolerance);
             }

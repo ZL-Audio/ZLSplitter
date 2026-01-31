@@ -277,19 +277,24 @@ namespace zldsp::filter {
         std::atomic<bool> to_update_para_{true};
         std::atomic<bool> to_update_fgq_{false};
 
-        std::array<std::array<double, 6>, FilterSize> coeffs_{};
+        std::array<std::array < double, 6>
+        ,
+        FilterSize
+        >
+        coeffs_ {
+        };
 
         static size_t updateIIRCoeffs(const FilterType filterType, const size_t n,
                                       const double f, const double fs, const double g0, const double q0,
-                                      std::array<std::array<double, 6>, FilterSize> &coeffs) {
-            return FilterDesign::updateCoeffs<FilterSize,
-                MartinCoeff::get1LowShelf, MartinCoeff::get1HighShelf, MartinCoeff::get1TiltShelf,
-                MartinCoeff::get1LowPass, MartinCoeff::get1HighPass,
-                MartinCoeff::get2Peak,
-                MartinCoeff::get2LowShelf, MartinCoeff::get2HighShelf, MartinCoeff::get2TiltShelf,
-                MartinCoeff::get2LowPass, MartinCoeff::get2HighPass,
-                MartinCoeff::get2BandPass, MartinCoeff::get2Notch>(
-                filterType, n, f, fs, g0, q0, coeffs);
+                                      std::array<std::array < double, 6>, FilterSize> &coeffs) {
+            return FilterDesign::updateCoeffs < FilterSize,
+                   MartinCoeff::get1LowShelf, MartinCoeff::get1HighShelf, MartinCoeff::get1TiltShelf,
+                   MartinCoeff::get1LowPass, MartinCoeff::get1HighPass,
+                   MartinCoeff::get2Peak,
+                   MartinCoeff::get2LowShelf, MartinCoeff::get2HighShelf, MartinCoeff::get2TiltShelf,
+                   MartinCoeff::get2LowPass, MartinCoeff::get2HighPass,
+                   MartinCoeff::get2BandPass, MartinCoeff::get2Notch > (
+                       filterType, n, f, fs, g0, q0, coeffs);
         }
     };
 }

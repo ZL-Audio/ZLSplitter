@@ -35,7 +35,7 @@ namespace zldsp::filter {
 
         static void updateResponse(
             const std::array<double, 6> &coeff,
-            std::span<std::complex<SampleType> > wis, std::span<std::complex<SampleType> > response) {
+            std::span<std::complex<SampleType>> wis, std::span<std::complex<SampleType>> response) {
             for (size_t idx = 0; idx < wis.size(); ++idx) {
                 response[idx] = getResponse(coeff, wis[idx]);
             }
@@ -43,7 +43,7 @@ namespace zldsp::filter {
 
         static void multiplyResponse(
             const std::array<double, 6> &coeff,
-            std::span<std::complex<SampleType> > wis, std::span<std::complex<SampleType> > response) {
+            std::span<std::complex<SampleType>> wis, std::span<std::complex<SampleType>> response) {
             for (size_t idx = 0; idx < wis.size(); ++idx) {
                 response[idx] *= getResponse(coeff, wis[idx]);
             }

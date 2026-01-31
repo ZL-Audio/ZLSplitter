@@ -14,22 +14,23 @@
 #include "component_updater.hpp"
 
 namespace zlgui::attachment {
-    template<bool UpdateFromAPVTS = true>
+    template <bool UpdateFromAPVTS = true>
     class SliderAttachment final : public ComponentAttachment,
                                    private juce::AudioProcessorValueTreeState::Listener,
                                    private juce::Slider::Listener {
     public:
-        SliderAttachment(juce::Slider &slider,
-                         juce::AudioProcessorValueTreeState &apvts,
-                         const juce::String &parameter_ID,
-                         ComponentUpdater &updater,
-                         const juce::NotificationType notification_type = juce::NotificationType::sendNotificationSync)
-            : slider_(slider), notification_type_(notification_type),
-              apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
-              updater_ref_(updater) {
+        SliderAttachment(juce::Slider& slider,
+                         juce::AudioProcessorValueTreeState& apvts,
+                         const juce::String& parameter_ID,
+                         ComponentUpdater& updater,
+                         const juce::NotificationType notification_type =
+                             juce::NotificationType::sendNotificationSync) :
+            slider_(slider), notification_type_(notification_type),
+            apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
+            updater_ref_(updater) {
             // setup slider values
-            const auto &para_ref(parameter_ref_);
-            slider_.valueFromTextFunction = [&para_ref](const juce::String &text) {
+            const auto& para_ref(parameter_ref_);
+            slider_.valueFromTextFunction = [&para_ref](const juce::String& text) {
                 return static_cast<double>(para_ref.convertFrom0to1(para_ref.getValueForText(text)));
             };
             slider_.textFromValueFunction = [&para_ref](const double value) {
@@ -67,8 +68,8 @@ namespace zlgui::attachment {
                 apvts_.addParameterListener(parameter_ref_.getParameterID(), this);
             }
             parameterChanged(parameter_ref_.getParameterID(),
-                                 apvts_.getRawParameterValue(
-                                     parameter_ref_.getParameterID())->load(std::memory_order::relaxed));
+                             apvts_.getRawParameterValue(
+                                 parameter_ref_.getParameterID())->load(std::memory_order::relaxed));
             if constexpr (UpdateFromAPVTS) {
                 updater_ref_.addAttachment(*this);
             } else {
@@ -76,18 +77,19 @@ namespace zlgui::attachment {
             }
         }
 
-        SliderAttachment(juce::Slider &slider,
-                         juce::AudioProcessorValueTreeState &apvts,
-                         const juce::String &parameter_ID,
-                         const juce::NormalisableRange<double> &range,
-                         ComponentUpdater &updater,
-                         const juce::NotificationType notification_type = juce::NotificationType::sendNotificationSync)
-            : slider_(slider), notification_type_(notification_type),
-              apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
-              updater_ref_(updater) {
+        SliderAttachment(juce::Slider& slider,
+                         juce::AudioProcessorValueTreeState& apvts,
+                         const juce::String& parameter_ID,
+                         const juce::NormalisableRange<double>& range,
+                         ComponentUpdater& updater,
+                         const juce::NotificationType notification_type =
+                             juce::NotificationType::sendNotificationSync) :
+            slider_(slider), notification_type_(notification_type),
+            apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
+            updater_ref_(updater) {
             // setup slider values
-            const auto &para_ref(parameter_ref_);
-            slider_.valueFromTextFunction = [&para_ref](const juce::String &text) {
+            const auto& para_ref(parameter_ref_);
+            slider_.valueFromTextFunction = [&para_ref](const juce::String& text) {
                 return static_cast<double>(para_ref.convertFrom0to1(para_ref.getValueForText(text)));
             };
             slider_.textFromValueFunction = [&para_ref](const double value) {
@@ -105,8 +107,8 @@ namespace zlgui::attachment {
                 apvts_.addParameterListener(parameter_ref_.getParameterID(), this);
             }
             parameterChanged(parameter_ref_.getParameterID(),
-                                 apvts_.getRawParameterValue(
-                                     parameter_ref_.getParameterID())->load(std::memory_order::relaxed));
+                             apvts_.getRawParameterValue(
+                                 parameter_ref_.getParameterID())->load(std::memory_order::relaxed));
             if constexpr (UpdateFromAPVTS) {
                 updater_ref_.addAttachment(*this);
             } else {
@@ -130,30 +132,30 @@ namespace zlgui::attachment {
         }
 
     private:
-        juce::Slider &slider_;
+        juce::Slider& slider_;
         juce::NotificationType notification_type_{juce::NotificationType::sendNotificationSync};
-        juce::AudioProcessorValueTreeState &apvts_;
-        juce::RangedAudioParameter &parameter_ref_;
-        ComponentUpdater &updater_ref_;
+        juce::AudioProcessorValueTreeState& apvts_;
+        juce::RangedAudioParameter& parameter_ref_;
+        ComponentUpdater& updater_ref_;
         std::atomic<float> atomic_value_{0.f};
 
-        void parameterChanged(const juce::String &, const float new_value) override {
+        void parameterChanged(const juce::String&, const float new_value) override {
             atomic_value_.store(new_value, std::memory_order::relaxed);
             updater_ref_.getFlag().store(true, std::memory_order::release);
         }
 
-        void sliderValueChanged(juce::Slider *) override {
+        void sliderValueChanged(juce::Slider*) override {
             const auto normalized_value = parameter_ref_.convertTo0to1(static_cast<float>(slider_.getValue()));
             if (std::abs(normalized_value - parameter_ref_.getValue()) > 1e-6) {
                 parameter_ref_.setValueNotifyingHost(normalized_value);
             }
         }
 
-        void sliderDragStarted(juce::Slider *) override {
+        void sliderDragStarted(juce::Slider*) override {
             parameter_ref_.beginChangeGesture();
         }
 
-        void sliderDragEnded(juce::Slider *) override {
+        void sliderDragEnded(juce::Slider*) override {
             parameter_ref_.endChangeGesture();
         }
     };

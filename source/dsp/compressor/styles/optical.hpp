@@ -13,7 +13,7 @@
 
 namespace zldsp::compressor {
     template<typename FloatType>
-    class OpticalCompressor final : public CompressorStyleBase<FloatType>{
+    class OpticalCompressor final : public CompressorStyleBase<FloatType> {
     public:
         using base = CompressorStyleBase<FloatType>;
 
@@ -27,7 +27,7 @@ namespace zldsp::compressor {
             base::follower_.reset(FloatType(0));
         }
 
-        template <bool UseRMS = false>
+        template<bool UseRMS = false>
         void process(FloatType *buffer, const size_t num_samples) {
             auto vector = kfr::make_univector(buffer, num_samples);
             if constexpr (UseRMS) {

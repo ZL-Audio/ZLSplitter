@@ -10,15 +10,14 @@
 #include "other_ui_setting_panel.hpp"
 
 namespace zlpanel {
-    OtherUISettingPanel::OtherUISettingPanel(PluginProcessor &p, zlgui::UIBase &base)
-        : p_ref_(p),
-          base_(base), name_laf_(base),
-          refresh_rate_box_(zlstate::PTargetRefreshSpeed::kChoices, base),
-          fft_tilt_slider_("Tilt", base),
-          fft_speed_slider_("Speed", base),
-          mag_curve_slider_("Mag", base),
-          fft_curve_slider_("FFT", base),
-          tooltip_box_(zlstate::PTooltipLang::kChoices, base) {
+    OtherUISettingPanel::OtherUISettingPanel(PluginProcessor &p, zlgui::UIBase &base) : p_ref_(p),
+        base_(base), name_laf_(base),
+        refresh_rate_box_(zlstate::PTargetRefreshSpeed::kChoices, base),
+        fft_tilt_slider_("Tilt", base),
+        fft_speed_slider_("Speed", base),
+        mag_curve_slider_("Mag", base),
+        fft_curve_slider_("FFT", base),
+        tooltip_box_(zlstate::PTooltipLang::kChoices, base) {
         juce::ignoreUnused(p_ref_);
         name_laf_.setFontScale(zlgui::kFontHuge);
 
@@ -91,13 +90,15 @@ namespace zlpanel {
         const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
         const auto slider_height = juce::roundToInt(base_.getFontSize() * kSliderHeightScale);
 
-        auto bound = getLocalBounds(); {
+        auto bound = getLocalBounds();
+        {
             bound.removeFromTop(padding);
             auto local_bound = bound.removeFromTop(slider_height);
             refresh_rate_label_.setBounds(local_bound.removeFromLeft(slider_width * 2));
             local_bound.removeFromLeft(padding);
             refresh_rate_box_.setBounds(local_bound.removeFromLeft(slider_width));
-        } {
+        }
+        {
             bound.removeFromTop(padding);
             auto local_bound = bound.removeFromTop(slider_height);
             fft_label_.setBounds(local_bound.removeFromLeft(slider_width * 2));
@@ -105,7 +106,8 @@ namespace zlpanel {
             fft_tilt_slider_.setBounds(local_bound.removeFromLeft(slider_width));
             local_bound.removeFromLeft(padding);
             fft_speed_slider_.setBounds(local_bound.removeFromLeft(slider_width));
-        } {
+        }
+        {
             bound.removeFromTop(padding);
             auto local_bound = bound.removeFromTop(slider_height);
             curve_thick_label_.setBounds(local_bound.removeFromLeft(slider_width * 2));
@@ -113,7 +115,8 @@ namespace zlpanel {
             mag_curve_slider_.setBounds(local_bound.removeFromLeft(slider_width));
             local_bound.removeFromLeft(padding);
             fft_curve_slider_.setBounds(local_bound.removeFromLeft(slider_width));
-        } {
+        }
+        {
             bound.removeFromTop(padding);
             auto local_bound = bound.removeFromTop(slider_height);
             tooltip_label_.setBounds(local_bound.removeFromLeft(slider_width * 2));

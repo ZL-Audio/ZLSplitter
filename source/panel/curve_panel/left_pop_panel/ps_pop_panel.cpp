@@ -10,26 +10,26 @@
 #include "ps_pop_panel.hpp"
 
 namespace zlpanel {
-    PSPopPanel::PSPopPanel(PluginProcessor &p, zlgui::UIBase &base,
-                           multilingual::TooltipHelper &tooltip_helper)
-        : base_(base), updater_(),
-          balance_slider_("Balance", base,
-                          tooltip_helper.getToolTipText(multilingual::kPSBalance)),
-          balance_attach_(balance_slider_.getSlider(), p.parameters_,
-                          zlp::PPSBalance::kID, updater_),
-          attack_slider_("Attack", base,
-                         tooltip_helper.getToolTipText(multilingual::kPSAttack)),
-          attack_attach_(attack_slider_.getSlider(), p.parameters_,
-                         zlp::PPSAttack::kID, updater_),
-          hold_slider_("Hold", base,
-                       tooltip_helper.getToolTipText(multilingual::kPSHold)),
-          hold_attach_(hold_slider_.getSlider(), p.parameters_,
-                       zlp::PPSHold::kID, updater_),
-          smooth_slider_("Smooth", base,
-                         tooltip_helper.getToolTipText(multilingual::kPSSmooth)),
-          smooth_attach_(smooth_slider_.getSlider(), p.parameters_,
-                         zlp::PPSSmooth::kID, updater_) {
-        for (auto &s: {&balance_slider_, &attack_slider_, &hold_slider_, &smooth_slider_}) {
+    PSPopPanel::PSPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+                           multilingual::TooltipHelper& tooltip_helper) :
+        base_(base), updater_(),
+        balance_slider_("Balance", base,
+                        tooltip_helper.getToolTipText(multilingual::kPSBalance)),
+        balance_attach_(balance_slider_.getSlider(), p.parameters_,
+                        zlp::PPSBalance::kID, updater_),
+        attack_slider_("Attack", base,
+                       tooltip_helper.getToolTipText(multilingual::kPSAttack)),
+        attack_attach_(attack_slider_.getSlider(), p.parameters_,
+                       zlp::PPSAttack::kID, updater_),
+        hold_slider_("Hold", base,
+                     tooltip_helper.getToolTipText(multilingual::kPSHold)),
+        hold_attach_(hold_slider_.getSlider(), p.parameters_,
+                     zlp::PPSHold::kID, updater_),
+        smooth_slider_("Smooth", base,
+                       tooltip_helper.getToolTipText(multilingual::kPSSmooth)),
+        smooth_attach_(smooth_slider_.getSlider(), p.parameters_,
+                       zlp::PPSSmooth::kID, updater_) {
+        for (auto& s : {&balance_slider_, &attack_slider_, &hold_slider_, &smooth_slider_}) {
             addAndMakeVisible(*s);
         }
 

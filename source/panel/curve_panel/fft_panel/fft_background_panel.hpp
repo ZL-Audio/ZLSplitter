@@ -29,7 +29,7 @@ namespace zlpanel {
             20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0, 20000.0, 50000.0
         };
 
-        static constexpr std::array<std::string, 11> kBackgroundFreqsNames = {
+        static constexpr std::array<std::string_view, 11> kBackgroundFreqsNames = {
             "20", "50", "100", "200", "500", "1k", "2k", "5k", "10k", "20k", "50k"
         };
 

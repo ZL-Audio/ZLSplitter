@@ -95,8 +95,8 @@ namespace zldsp::filter {
             return order_.load(std::memory_order::relaxed);
         }
 
-        void updateResponse(std::span<std::complex<FloatType> > wis,
-                            std::span<std::complex<FloatType> > response) {
+        void updateResponse(std::span<std::complex<FloatType>> wis,
+                            std::span<std::complex<FloatType>> response) {
             if (current_filter_num_ == 0) {
                 std::fill(response.begin(), response.end(), std::complex(FloatType(1), FloatType(0)));
             } else {
@@ -107,8 +107,8 @@ namespace zldsp::filter {
             }
         }
 
-        void multiplyResponse(std::span<std::complex<FloatType> > wis,
-                            std::span<std::complex<FloatType> > response) {
+        void multiplyResponse(std::span<std::complex<FloatType>> wis,
+                              std::span<std::complex<FloatType>> response) {
             if (current_filter_num_ > 0) {
                 for (size_t i = 0; i < current_filter_num_; ++i) {
                     IdealBase<FloatType>::multiplyResponse(coeffs_[i], wis, response);
@@ -129,7 +129,7 @@ namespace zldsp::filter {
         }
 
         void multiplyMagnitude(const std::span<const FloatType> ws,
-                             std::span<FloatType> dbs) {
+                               std::span<FloatType> dbs) {
             if (current_filter_num_ > 0) {
                 for (size_t i = 0; i < current_filter_num_; ++i) {
                     IdealBase<FloatType>::multiplyMagnitude(coeffs_[i], ws, dbs);
@@ -146,7 +146,12 @@ namespace zldsp::filter {
         }
 
     private:
-        std::array<std::array<double, 6>, FilterSize> coeffs_{};
+        std::array<std::array < double, 6>
+        ,
+        FilterSize
+        >
+        coeffs_ {
+        };
         std::atomic<size_t> order_{2};
         size_t current_filter_num_{1};
         std::atomic<double> freq_{1000.0}, gain_{0.0}, q_{0.707};
@@ -156,15 +161,15 @@ namespace zldsp::filter {
 
         static size_t updateIIRCoeffs(const FilterType filterType, const size_t n,
                                       const double f, const double fs, const double g0, const double q0,
-                                      std::array<std::array<double, 6>, FilterSize> &coeffs) {
-            return FilterDesign::updateCoeffs<FilterSize,
-                IdealCoeff::get1LowShelf, IdealCoeff::get1HighShelf, IdealCoeff::get1TiltShelf,
-                IdealCoeff::get1LowPass, IdealCoeff::get1HighPass,
-                IdealCoeff::get2Peak,
-                IdealCoeff::get2LowShelf, IdealCoeff::get2HighShelf, IdealCoeff::get2TiltShelf,
-                IdealCoeff::get2LowPass, IdealCoeff::get2HighPass,
-                IdealCoeff::get2BandPass, IdealCoeff::get2Notch>(
-                filterType, n, f, fs, g0, q0, coeffs);
+                                      std::array<std::array < double, 6>, FilterSize> &coeffs) {
+            return FilterDesign::updateCoeffs < FilterSize,
+                   IdealCoeff::get1LowShelf, IdealCoeff::get1HighShelf, IdealCoeff::get1TiltShelf,
+                   IdealCoeff::get1LowPass, IdealCoeff::get1HighPass,
+                   IdealCoeff::get2Peak,
+                   IdealCoeff::get2LowShelf, IdealCoeff::get2HighShelf, IdealCoeff::get2TiltShelf,
+                   IdealCoeff::get2LowPass, IdealCoeff::get2HighPass,
+                   IdealCoeff::get2BandPass, IdealCoeff::get2Notch > (
+                       filterType, n, f, fs, g0, q0, coeffs);
         }
     };
 }

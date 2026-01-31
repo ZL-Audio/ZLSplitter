@@ -21,7 +21,7 @@ namespace zldsp::delay {
         IntegerDelay() = default;
 
         void reset() {
-            for (auto &s : states_) {
+            for (auto &s: states_) {
                 s.resize(static_cast<size_t>(capacity_));
                 std::fill(s.begin(), s.end(), FloatType(0));
             }
@@ -104,6 +104,6 @@ namespace zldsp::delay {
         FloatType delay_seconds_{0};
         int delay_samples_{0};
         int capacity_{0}, head_{0}, tail_{0};
-        std::vector<std::vector<FloatType> > states_;
+        std::vector<std::vector<FloatType>> states_;
     };
 }

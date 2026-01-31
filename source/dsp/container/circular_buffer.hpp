@@ -27,8 +27,8 @@ namespace zldsp::container {
 
         [[nodiscard]] size_t size() const {
             return tail_ >= head_
-            ? static_cast<size_t>(tail_ - head_)
-            : static_cast<size_t>(tail_ + static_cast<unsigned int>(data_.size()) - head_);
+                       ? static_cast<size_t>(tail_ - head_)
+                       : static_cast<size_t>(tail_ + static_cast<unsigned int>(data_.size()) - head_);
         }
 
         [[nodiscard]] bool isEmpty() const {

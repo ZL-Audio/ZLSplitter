@@ -11,25 +11,25 @@
 #include "PluginEditor.hpp"
 
 //==============================================================================
-PluginProcessor::PluginProcessor()
-    : AudioProcessor(BusesProperties()
-          .withInput("Input", juce::AudioChannelSet::stereo(), true)
-          .withOutput("Output 1", juce::AudioChannelSet::stereo(), true)
-          .withOutput("Output 2", juce::AudioChannelSet::stereo(), true)),
-      parameters_(*this, nullptr,
-                  juce::Identifier("ZLSplitParameters"),
-                  zlp::getParameterLayout()),
-      na_parameters_(dummy_processor_, nullptr,
-                     juce::Identifier("ZLSplitNAParameters"),
-                     zlstate::getNAParameterLayout()),
-      state_(dummy_processor_, nullptr,
-             juce::Identifier("ZLSplitState"),
-             zlstate::getStateParameterLayout()),
-      property_(state_),
-      swap_ref_(*parameters_.getRawParameterValue(zlp::PSwap::kID)),
-      bypass_ref_(*parameters_.getRawParameterValue(zlp::PBypass::kID)),
-      double_controller_(*this),
-      double_controller_attach_(*this, parameters_, double_controller_) {
+PluginProcessor::PluginProcessor() :
+    AudioProcessor(BusesProperties()
+        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+        .withOutput("Output 1", juce::AudioChannelSet::stereo(), true)
+        .withOutput("Output 2", juce::AudioChannelSet::stereo(), true)),
+    parameters_(*this, nullptr,
+                juce::Identifier("ZLSplitParameters"),
+                zlp::getParameterLayout()),
+    na_parameters_(dummy_processor_, nullptr,
+                   juce::Identifier("ZLSplitNAParameters"),
+                   zlstate::getNAParameterLayout()),
+    state_(dummy_processor_, nullptr,
+           juce::Identifier("ZLSplitState"),
+           zlstate::getStateParameterLayout()),
+    property_(state_),
+    swap_ref_(*parameters_.getRawParameterValue(zlp::PSwap::kID)),
+    bypass_ref_(*parameters_.getRawParameterValue(zlp::PBypass::kID)),
+    double_controller_(*this),
+    double_controller_attach_(*this, parameters_, double_controller_) {
 }
 
 PluginProcessor::~PluginProcessor() = default;
@@ -85,7 +85,7 @@ const juce::String PluginProcessor::getProgramName(int index) {
     return {};
 }
 
-void PluginProcessor::changeProgramName(int, const juce::String &) {
+void PluginProcessor::changeProgramName(int, const juce::String&) {
 }
 
 //==============================================================================
@@ -111,7 +111,7 @@ void PluginProcessor::prepareToPlay(const double sample_rate, const int samples_
 void PluginProcessor::releaseResources() {
 }
 
-bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
+bool PluginProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const {
     if (layouts.getMainInputChannelSet() != juce::AudioChannelSet::stereo()) {
         return false;
     }
@@ -125,7 +125,7 @@ bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
     return true;
 }
 
-void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &) {
+void PluginProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) {
     if (bypass_ref_.load(std::memory_order::relaxed) < .5f) {
         processBlockInternal<false>(buffer);
     } else {
@@ -133,7 +133,7 @@ void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiB
     }
 }
 
-void PluginProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::MidiBuffer &) {
+void PluginProcessor::processBlock(juce::AudioBuffer<double>& buffer, juce::MidiBuffer&) {
     if (bypass_ref_.load(std::memory_order::relaxed) < .5f) {
         processBlockInternal<false>(buffer);
     } else {
@@ -141,16 +141,16 @@ void PluginProcessor::processBlock(juce::AudioBuffer<double> &buffer, juce::Midi
     }
 }
 
-void PluginProcessor::processBlockBypassed(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &) {
+void PluginProcessor::processBlockBypassed(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) {
     processBlockInternal<true>(buffer);
 }
 
-void PluginProcessor::processBlockBypassed(juce::AudioBuffer<double> &buffer, juce::MidiBuffer &) {
+void PluginProcessor::processBlockBypassed(juce::AudioBuffer<double>& buffer, juce::MidiBuffer&) {
     processBlockInternal<true>(buffer);
 }
 
-template<bool IsBypassed>
-void PluginProcessor::processBlockInternal(juce::AudioBuffer<float> &buffer) {
+template <bool IsBypassed>
+void PluginProcessor::processBlockInternal(juce::AudioBuffer<float>& buffer) {
     juce::ScopedNoDenormals no_denormals;
     double_in_pointers[0] = double_in_buffer[0].data();
     double_in_pointers[1] = double_in_buffer[1].data();
@@ -184,8 +184,8 @@ void PluginProcessor::processBlockInternal(juce::AudioBuffer<float> &buffer) {
     }
 }
 
-template<bool IsBypassed>
-void PluginProcessor::processBlockInternal(juce::AudioBuffer<double> &buffer) {
+template <bool IsBypassed>
+void PluginProcessor::processBlockInternal(juce::AudioBuffer<double>& buffer) {
     juce::ScopedNoDenormals no_denormals;
     double_in_pointers[0] = buffer.getWritePointer(0);
     double_in_pointers[1] = buffer.getWritePointer(1);
@@ -216,13 +216,13 @@ bool PluginProcessor::hasEditor() const {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor *PluginProcessor::createEditor() {
+juce::AudioProcessorEditor* PluginProcessor::createEditor() {
     return new PluginEditor(*this);
     // return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
-void PluginProcessor::getStateInformation(juce::MemoryBlock &dest_data) {
+void PluginProcessor::getStateInformation(juce::MemoryBlock& dest_data) {
     auto temp_tree = juce::ValueTree("ZLSplitterParaState");
     temp_tree.appendChild(parameters_.copyState(), nullptr);
     temp_tree.appendChild(na_parameters_.copyState(), nullptr);
@@ -230,7 +230,7 @@ void PluginProcessor::getStateInformation(juce::MemoryBlock &dest_data) {
     copyXmlToBinary(*xml, dest_data);
 }
 
-void PluginProcessor::setStateInformation(const void *data, const int size_in_bytes) {
+void PluginProcessor::setStateInformation(const void* data, const int size_in_bytes) {
     std::unique_ptr<juce::XmlElement> xml_state(getXmlFromBinary(data, size_in_bytes));
     if (xml_state != nullptr && xml_state->hasTagName("ZLSplitterParaState")) {
         const auto temp_tree = juce::ValueTree::fromXml(*xml_state);
@@ -241,6 +241,6 @@ void PluginProcessor::setStateInformation(const void *data, const int size_in_by
 
 //==============================================================================
 // This creates new instances of the plugin..
-juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() {
+juce::AudioProcessor*JUCE_CALLTYPE createPluginFilter() {
     return new PluginProcessor();
 }

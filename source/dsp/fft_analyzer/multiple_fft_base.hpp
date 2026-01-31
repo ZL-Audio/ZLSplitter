@@ -278,8 +278,8 @@ namespace zldsp::analyzer {
         size_t default_fft_order_ = 12;
         zldsp::lock::SpinLock lock_;
 
-        std::array<std::vector<std::vector<float> >, FFTNum> sample_fifos_;
-        std::array<std::vector<std::vector<float> >, FFTNum> circular_buffers_;
+        std::array<std::vector<std::vector<float>>, FFTNum> sample_fifos_;
+        std::array<std::vector<std::vector<float>>, FFTNum> circular_buffers_;
         zldsp::container::AbstractFIFO abstract_fifo_{0};
         std::vector<float> fft_buffer_, ms_fft_buffer_;
 
@@ -290,7 +290,7 @@ namespace zldsp::analyzer {
         std::vector<size_t> seq_input_starts_, seq_input_ends_;
         std::array<std::vector<float>, FFTNum> seq_input_dbs_{};
 
-        std::array<std::unique_ptr<zldsp::interpolation::SeqMakima<float> >, FFTNum> seq_akima_;
+        std::array<std::unique_ptr<zldsp::interpolation::SeqMakima<float>>, FFTNum> seq_akima_;
 
         std::vector<float> interplot_freqs_{}, interplot_freqs_p_{};
         std::vector<float> reduced_freqs_{}, reduced_dbs_{};
@@ -320,7 +320,8 @@ namespace zldsp::analyzer {
             const auto min_freq = std::min(min_freq_.load(std::memory_order::relaxed), max_freq * .5);
             const auto fft_size = fft_.getSize();
             // calculate start/end indices
-            bool force_last_range = false; {
+            bool force_last_range = false;
+            {
                 const auto freq_delta = sample_rate / static_cast<double>(fft_size);
                 const auto freq_mul = std::pow(max_freq / min_freq, 2. / static_cast<double>(PointNum));
                 auto freq = min_freq * std::sqrt(freq_mul);
@@ -363,7 +364,7 @@ namespace zldsp::analyzer {
                 }
                 for (size_t i = 0; i < FFTNum; ++i) {
                     seq_input_dbs_[i].resize(seq_input_freqs_.size());
-                    seq_akima_[i] = std::make_unique<zldsp::interpolation::SeqMakima<float> >(
+                    seq_akima_[i] = std::make_unique<zldsp::interpolation::SeqMakima<float>>(
                         seq_input_freqs_.data(), seq_input_dbs_[i].data(), seq_input_freqs_.size(),
                         0.f, 0.f);
                 }

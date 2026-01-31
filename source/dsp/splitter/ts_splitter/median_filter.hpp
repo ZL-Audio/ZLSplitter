@@ -107,7 +107,8 @@ namespace zldsp::splitter {
          */
         T getMedian() {
             if (min_ct_ < max_ct_) {
-                return (data_[static_cast<size_t>(heap_[static_cast<size_t>(center_pos_)])] + data_[static_cast<size_t>(heap_[static_cast<size_t>(center_pos_ - 1)])]) / 2;
+                return (data_[static_cast<size_t>(heap_[static_cast<size_t>(center_pos_)])] + data_[static_cast<size_t>(
+                            heap_[static_cast<size_t>(center_pos_ - 1)])]) / 2;
             } else {
                 return data_[static_cast<size_t>(heap_[static_cast<size_t>(center_pos_)])];
             }
@@ -165,7 +166,8 @@ namespace zldsp::splitter {
 
         // Returns 1 if heap[i] < heap[j]
         inline int mmLess(const int i, const int j) {
-            return (data_[static_cast<size_t>(heap_[static_cast<size_t>(center_pos_ + i)])] < data_[static_cast<size_t>(heap_[static_cast<size_t>(center_pos_ + j)])]);
+            return (data_[static_cast<size_t>(heap_[static_cast<size_t>(center_pos_ + i)])] < data_[static_cast<size_t>(
+                        heap_[static_cast<size_t>(center_pos_ + j)])]);
         }
 
         // Swaps items i&j if i<j; returns true if swapped

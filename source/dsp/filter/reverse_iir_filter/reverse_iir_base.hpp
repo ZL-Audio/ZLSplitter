@@ -67,7 +67,7 @@ namespace zldsp::filter {
 
     private:
         ReverseCCPoleBase<FloatType> reverse_pole_;
-        std::vector<std::array<FloatType, 2> > states_;
+        std::vector<std::array<FloatType, 2>> states_;
         std::array<FloatType, 3> zeros_;
     };
 }

@@ -84,7 +84,7 @@ namespace zldsp::filter {
         // write position in input FIFO and read position in output FIFO.
         size_t pos_ = 0;
         // circular buffers for incoming and outgoing audio data.
-        std::vector<kfr::univector<float> > input_fifo_, output_fifo_;
+        std::vector<kfr::univector<float>> input_fifo_, output_fifo_;
         // circular FFT working space which contains interleaved complex numbers.
         kfr::univector<float> fft_in_, fft_data_;
 
@@ -118,7 +118,6 @@ namespace zldsp::filter {
         template<bool isBypassed = false>
         void processFrame() {
             for (size_t idx = 0; idx < input_fifo_.size(); ++idx) {
-
                 // Copy the input FIFO into the FFT working space in two parts.
                 zldsp::vector::copy(fft_in_.data(), input_fifo_[idx].data() + pos_, fft_size_ - pos_);
                 if (pos_ > 0) {

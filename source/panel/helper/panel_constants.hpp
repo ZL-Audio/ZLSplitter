@@ -10,9 +10,9 @@
 #pragma once
 
 namespace zlpanel {
-    static constexpr float kPaddingScale = .5f;
-    static constexpr float kSliderScale = 6.5f;
-    static constexpr float kButtonScale = 2.25f;
-    static constexpr float kSliderHeightScale = 2.8f;
-    static constexpr float kSmallSliderScale = 5.5f;
+    inline constexpr float kPaddingScale = .5f;
+    inline constexpr float kSliderScale = 6.5f;
+    inline constexpr float kButtonScale = 2.25f;
+    inline constexpr float kSliderHeightScale = 2.8f;
+    inline constexpr float kSmallSliderScale = 5.5f;
 }

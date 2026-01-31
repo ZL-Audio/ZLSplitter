@@ -20,6 +20,7 @@ namespace zlgui::attachment {
         ComponentUpdater() = default;
 
         ComponentUpdater(const ComponentUpdater&) = delete;
+
         ComponentUpdater& operator=(const ComponentUpdater&) = delete;
 
         void addAttachment(ComponentAttachment& attachment) {

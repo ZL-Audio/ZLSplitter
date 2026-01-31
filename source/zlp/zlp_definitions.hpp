@@ -16,7 +16,7 @@ namespace zlp {
 
     inline static constexpr size_t kBandNum = 8;
 
-    template<typename FloatType>
+    template <typename FloatType>
     inline juce::NormalisableRange<FloatType> getLogMidRange(
         const FloatType x_min, const FloatType x_max, const FloatType x_mid, const FloatType x_interval) {
         const FloatType rng1{std::log(x_mid / x_min) * FloatType(2)};
@@ -38,7 +38,7 @@ namespace zlp {
         return result_range;
     }
 
-    template<typename FloatType>
+    template <typename FloatType>
     inline juce::NormalisableRange<FloatType> getLogMidRangeShift(
         const FloatType x_min, const FloatType x_max, const FloatType x_mid,
         const FloatType x_interval, const FloatType shift) {
@@ -59,7 +59,7 @@ namespace zlp {
         return result_range;
     }
 
-    template<typename FloatType>
+    template <typename FloatType>
     inline juce::NormalisableRange<FloatType> getSymmetricLogMidRangeShift(
         const FloatType x_min, const FloatType x_max, const FloatType x_mid,
         const FloatType x_interval, const FloatType shift) {
@@ -92,20 +92,20 @@ namespace zlp {
         return result_range;
     }
 
-    template<typename FloatType>
+    template <typename FloatType>
     inline juce::NormalisableRange<FloatType> getLinearMidRange(
         const FloatType x_min, const FloatType x_max, const FloatType x_mid, const FloatType x_interval) {
         auto result_range = juce::NormalisableRange<FloatType>{
             x_min, x_max,
             [=](FloatType, FloatType, const FloatType v) {
                 return v < FloatType(.5)
-                           ? FloatType(2) * v * (x_mid - x_min) + x_min
-                           : FloatType(2) * (v - FloatType(0.5)) * (x_max - x_mid) + x_mid;
+                    ? FloatType(2) * v * (x_mid - x_min) + x_min
+                    : FloatType(2) * (v - FloatType(0.5)) * (x_max - x_mid) + x_mid;
             },
             [=](FloatType, FloatType, const FloatType v) {
                 return v < x_mid
-                           ? FloatType(.5) * (v - x_min) / (x_mid - x_min)
-                           : FloatType(.5) + FloatType(.5) * (v - x_mid) / (x_max - x_mid);
+                    ? FloatType(.5) * (v - x_min) / (x_mid - x_min)
+                    : FloatType(.5) + FloatType(.5) * (v - x_mid) / (x_max - x_mid);
             },
             [=](FloatType, FloatType, const FloatType v) {
                 const FloatType x = x_min + x_interval * std::round((v - x_min) / x_interval);
@@ -117,7 +117,7 @@ namespace zlp {
     }
 
     // float
-    template<class T>
+    template <class T>
     class FloatParameters {
     public:
         static std::unique_ptr<juce::AudioParameterFloat> get(const bool automate = true) {
@@ -126,16 +126,16 @@ namespace zlp {
                                                                T::kName, T::kRange, T::kDefaultV, attributes);
         }
 
-        static std::unique_ptr<juce::AudioParameterFloat> get(const std::string &suffix, const bool automate = true) {
+        static std::unique_ptr<juce::AudioParameterFloat> get(const std::string& suffix, const bool automate = true) {
             auto attributes = juce::AudioParameterFloatAttributes().withAutomatable(automate).withLabel(T::kName);
             return std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(T::kID + suffix, kVersionHint),
                                                                T::kName + suffix, T::kRange, T::kDefaultV, attributes);
         }
 
-        static std::unique_ptr<juce::AudioParameterFloat> get(const std::string &suffix, const bool meta,
+        static std::unique_ptr<juce::AudioParameterFloat> get(const std::string& suffix, const bool meta,
                                                               const bool automate = true) {
             auto attributes = juce::AudioParameterFloatAttributes().withAutomatable(automate).withLabel(T::kName).
-                    withMeta(meta);
+                withMeta(meta);
             return std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(T::kID + suffix, kVersionHint),
                                                                T::kName + suffix, T::kRange, T::kDefaultV, attributes);
         }
@@ -146,7 +146,7 @@ namespace zlp {
     };
 
     // bool
-    template<class T>
+    template <class T>
     class BoolParameters {
     public:
         static std::unique_ptr<juce::AudioParameterBool> get(bool automate = true) {
@@ -155,16 +155,16 @@ namespace zlp {
                                                               T::kName, T::kDefaultV, attributes);
         }
 
-        static std::unique_ptr<juce::AudioParameterBool> get(const std::string &suffix, bool automate = true) {
+        static std::unique_ptr<juce::AudioParameterBool> get(const std::string& suffix, bool automate = true) {
             auto attributes = juce::AudioParameterBoolAttributes().withAutomatable(automate).withLabel(T::kName);
             return std::make_unique<juce::AudioParameterBool>(juce::ParameterID(T::kID + suffix, kVersionHint),
                                                               T::kName + suffix, T::kDefaultV, attributes);
         }
 
-        static std::unique_ptr<juce::AudioParameterBool> get(const std::string &suffix, const bool meta,
+        static std::unique_ptr<juce::AudioParameterBool> get(const std::string& suffix, const bool meta,
                                                              const bool automate = true) {
             auto attributes = juce::AudioParameterBoolAttributes().withAutomatable(automate).withLabel(T::kName).
-                    withMeta(meta);
+                withMeta(meta);
             return std::make_unique<juce::AudioParameterBool>(juce::ParameterID(T::kID + suffix, kVersionHint),
                                                               T::kName + suffix, T::kDefaultV, attributes);
         }
@@ -175,7 +175,7 @@ namespace zlp {
     };
 
     // choice
-    template<class T>
+    template <class T>
     class ChoiceParameters {
     public:
         static std::unique_ptr<juce::AudioParameterChoice> get(const bool automate = true) {
@@ -184,17 +184,17 @@ namespace zlp {
                                                                 T::kName, T::kChoices, T::kDefaultI, attributes);
         }
 
-        static std::unique_ptr<juce::AudioParameterChoice> get(const std::string &suffix, const bool automate = true) {
+        static std::unique_ptr<juce::AudioParameterChoice> get(const std::string& suffix, const bool automate = true) {
             auto attributes = juce::AudioParameterChoiceAttributes().withAutomatable(automate).withLabel(T::kName);
             return std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(T::kID + suffix, kVersionHint),
                                                                 T::kName + suffix, T::kChoices, T::kDefaultI,
                                                                 attributes);
         }
 
-        static std::unique_ptr<juce::AudioParameterChoice> get(const std::string &suffix, const bool meta,
+        static std::unique_ptr<juce::AudioParameterChoice> get(const std::string& suffix, const bool meta,
                                                                const bool automate = true) {
             auto attributes = juce::AudioParameterChoiceAttributes().withAutomatable(automate).withLabel(T::kName).
-                    withMeta(meta);
+                withMeta(meta);
             return std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(T::kID + suffix, kVersionHint),
                                                                 T::kName + suffix, T::kChoices, T::kDefaultI,
                                                                 attributes);

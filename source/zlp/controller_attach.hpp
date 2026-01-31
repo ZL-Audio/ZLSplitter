@@ -14,7 +14,7 @@
 
 namespace zlp {
     template<typename FloatType>
-    class ControllerAttach  final : private juce::AudioProcessorValueTreeState::Listener {
+    class ControllerAttach final : private juce::AudioProcessorValueTreeState::Listener {
     public:
         explicit ControllerAttach(juce::AudioProcessor &processor,
                                   juce::AudioProcessorValueTreeState &parameters,

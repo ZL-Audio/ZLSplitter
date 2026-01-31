@@ -81,7 +81,7 @@ namespace zldsp::filter {
     private:
         size_t num_stage_{0};
 
-        std::vector<std::vector<zldsp::delay::FIFODelay<FloatType> > > delays_;
+        std::vector<std::vector<zldsp::delay::FIFODelay<FloatType>>> delays_;
         std::vector<FloatType> cs_;
     };
 }

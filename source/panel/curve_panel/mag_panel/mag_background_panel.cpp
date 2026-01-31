@@ -10,17 +10,17 @@
 #include "mag_background_panel.hpp"
 
 namespace zlpanel {
-    MagBackgroundPanel::MagBackgroundPanel(PluginProcessor &p, zlgui::UIBase &base)
-        : base_(base), updater_(),
-          mag_time_length_box_(zlstate::PMagTimeLength::kChoices, base),
-          mag_time_length_attach_(mag_time_length_box_.getBox(), p.na_parameters_,
-                                  zlstate::PMagTimeLength::kID, updater_),
-          min_db_box_(zlstate::PMagMinDB::kChoices, base),
-          min_db_attach_(min_db_box_.getBox(), p.na_parameters_,
-                         zlstate::PMagMinDB::kID, updater_),
-          mag_type_box_(zlstate::PMagType::kChoices, base),
-          mag_type_attach_(mag_type_box_.getBox(), p.na_parameters_,
-                           zlstate::PMagType::kID, updater_) {
+    MagBackgroundPanel::MagBackgroundPanel(PluginProcessor& p, zlgui::UIBase& base) :
+        base_(base), updater_(),
+        mag_time_length_box_(zlstate::PMagTimeLength::kChoices, base),
+        mag_time_length_attach_(mag_time_length_box_.getBox(), p.na_parameters_,
+                                zlstate::PMagTimeLength::kID, updater_),
+        min_db_box_(zlstate::PMagMinDB::kChoices, base),
+        min_db_attach_(min_db_box_.getBox(), p.na_parameters_,
+                       zlstate::PMagMinDB::kID, updater_),
+        mag_type_box_(zlstate::PMagType::kChoices, base),
+        mag_type_attach_(mag_type_box_.getBox(), p.na_parameters_,
+                         zlstate::PMagType::kID, updater_) {
         const auto popup_option = juce::PopupMenu::Options().withPreferredPopupDirection(
             juce::PopupMenu::Options::PopupDirection::upwards);
 
@@ -31,7 +31,7 @@ namespace zlpanel {
         min_db_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);
         mag_type_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);
 
-        for (auto &b: {&mag_time_length_box_, &min_db_box_, &mag_type_box_}) {
+        for (auto& b : {&mag_time_length_box_, &min_db_box_, &mag_type_box_}) {
             b->setAlpha(box_alpha);
             b->getLAF().setOption(popup_option);
             b->getLAF().setFontScale(1.f);
@@ -42,7 +42,7 @@ namespace zlpanel {
         setInterceptsMouseClicks(false, true);
     }
 
-    void MagBackgroundPanel::paint(juce::Graphics &g) {
+    void MagBackgroundPanel::paint(juce::Graphics& g) {
         g.fillAll(base_.getBackgroundColor());
         if (c_mag_min_db_ < 0) {
             return;

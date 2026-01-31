@@ -117,10 +117,10 @@ namespace zldsp::filter {
 
     private:
         size_t num_stage_{0};
-        std::vector<std::vector<zldsp::delay::FIFODelay<FloatType> > > u_delays_, v_delays_;
+        std::vector<std::vector<zldsp::delay::FIFODelay<FloatType>>> u_delays_, v_delays_;
         std::vector<FloatType> a_state_, b_state_;
         FloatType aB_;
-        std::vector<std::vector<FloatType> > u_state_, v_state_;
+        std::vector<std::vector<FloatType>> u_state_, v_state_;
 
         bool is_complex_{false};
 

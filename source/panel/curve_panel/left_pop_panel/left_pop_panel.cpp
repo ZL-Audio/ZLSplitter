@@ -10,14 +10,14 @@
 #include "left_pop_panel.hpp"
 
 namespace zlpanel {
-    LeftPopPanel::LeftPopPanel(PluginProcessor &p, zlgui::UIBase &base,
-                               multilingual::TooltipHelper &tooltip_helper)
-        : base_(base),
-          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          lr_pop_panel_(p, base, tooltip_helper),
-          lh_pop_panel_(p, base, tooltip_helper),
-          ts_pop_panel_(p, base, tooltip_helper),
-          ps_pop_panel_(p, base, tooltip_helper) {
+    LeftPopPanel::LeftPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+                               multilingual::TooltipHelper& tooltip_helper) :
+        base_(base),
+        split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+        lr_pop_panel_(p, base, tooltip_helper),
+        lh_pop_panel_(p, base, tooltip_helper),
+        ts_pop_panel_(p, base, tooltip_helper),
+        ps_pop_panel_(p, base, tooltip_helper) {
         addChildComponent(lr_pop_panel_);
         addChildComponent(lh_pop_panel_);
         addChildComponent(ts_pop_panel_);
@@ -27,7 +27,7 @@ namespace zlpanel {
         setInterceptsMouseClicks(false, true);
     }
 
-    void LeftPopPanel::paint(juce::Graphics &g) {
+    void LeftPopPanel::paint(juce::Graphics& g) {
         g.setColour(base_.getBackgroundColor());
         g.fillPath(background_);
     }
@@ -36,16 +36,20 @@ namespace zlpanel {
         const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
         auto bound = getLocalBounds();
 
-        bound = bound.withSizeKeepingCentre(bound.getWidth() - 2 * padding, bound.getHeight()); {
+        bound = bound.withSizeKeepingCentre(bound.getWidth() - 2 * padding, bound.getHeight());
+        {
             const auto height = lr_pop_panel_.getIdealHeight();
             lr_pop_panel_.setBounds(bound.withSizeKeepingCentre(bound.getWidth(), height));
-        } {
+        }
+        {
             const auto height = lh_pop_panel_.getIdealHeight();
             lh_pop_panel_.setBounds(bound.withSizeKeepingCentre(bound.getWidth(), height));
-        } {
+        }
+        {
             const auto height = ts_pop_panel_.getIdealHeight();
             ts_pop_panel_.setBounds(bound.withSizeKeepingCentre(bound.getWidth(), height));
-        } {
+        }
+        {
             const auto height = ps_pop_panel_.getIdealHeight();
             ps_pop_panel_.setBounds(bound.withSizeKeepingCentre(bound.getWidth(), height));
         }

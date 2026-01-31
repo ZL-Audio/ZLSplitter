@@ -21,12 +21,14 @@ namespace zldsp::compressor {
          * call before processing starts
          * @param sr sampleRate
          */
-        virtual void prepare([[maybe_unused]] double sr) {}
+        virtual void prepare([[maybe_unused]] double sr) {
+        }
 
         /**
          * reset the computer
          */
-        virtual void reset([[maybe_unused]] FloatType x) {}
+        virtual void reset([[maybe_unused]] FloatType x) {
+        }
 
         /**
          * update values before processing a buffer

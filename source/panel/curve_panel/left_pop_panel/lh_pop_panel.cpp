@@ -10,25 +10,25 @@
 #include "lh_pop_panel.hpp"
 
 namespace zlpanel {
-    LHPopPanel::LHPopPanel(PluginProcessor &p, zlgui::UIBase &base,
-                           multilingual::TooltipHelper &tooltip_helper)
-        : base_(base), updater_(),
-          mix_slider_("Mix", base,
-                      tooltip_helper.getToolTipText(multilingual::kMix)),
-          mix_attach_(mix_slider_.getSlider(), p.parameters_,
-                      zlp::PMix::kID, updater_),
-          filter_type_box_(zlp::PLHFilterType::kChoices, base,
-                           tooltip_helper.getToolTipText(multilingual::kLHFilterType)),
-          filter_type_attach_(filter_type_box_.getBox(), p.parameters_,
-                              zlp::PLHFilterType::kID, updater_),
-          filter_slope_box_(zlp::PLHSlope::kChoices, base,
-                            tooltip_helper.getToolTipText(multilingual::kLHFilterSlope)),
-          filter_slope_attach_(filter_slope_box_.getBox(), p.parameters_,
-                               zlp::PLHSlope::kID, updater_),
-          freq_slider_("Freq", base,
-                       tooltip_helper.getToolTipText(multilingual::kLHFreq)),
-          freq_attach_(freq_slider_.getSlider1(), p.parameters_,
-                       zlp::PLHFreq::kID, updater_) {
+    LHPopPanel::LHPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+                           multilingual::TooltipHelper& tooltip_helper) :
+        base_(base), updater_(),
+        mix_slider_("Mix", base,
+                    tooltip_helper.getToolTipText(multilingual::kMix)),
+        mix_attach_(mix_slider_.getSlider(), p.parameters_,
+                    zlp::PMix::kID, updater_),
+        filter_type_box_(zlp::PLHFilterType::kChoices, base,
+                         tooltip_helper.getToolTipText(multilingual::kLHFilterType)),
+        filter_type_attach_(filter_type_box_.getBox(), p.parameters_,
+                            zlp::PLHFilterType::kID, updater_),
+        filter_slope_box_(zlp::PLHSlope::kChoices, base,
+                          tooltip_helper.getToolTipText(multilingual::kLHFilterSlope)),
+        filter_slope_attach_(filter_slope_box_.getBox(), p.parameters_,
+                             zlp::PLHSlope::kID, updater_),
+        freq_slider_("Freq", base,
+                     tooltip_helper.getToolTipText(multilingual::kLHFreq)),
+        freq_attach_(freq_slider_.getSlider1(), p.parameters_,
+                     zlp::PLHFreq::kID, updater_) {
         addAndMakeVisible(mix_slider_);
         addAndMakeVisible(filter_type_box_);
         addAndMakeVisible(filter_slope_box_);
@@ -51,10 +51,12 @@ namespace zlpanel {
         // const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
         const auto slider_height = juce::roundToInt(base_.getFontSize() * kSliderHeightScale);
 
-        auto bound = getLocalBounds(); {
+        auto bound = getLocalBounds();
+        {
             mix_slider_.setBounds(bound.removeFromTop(slider_height));
             bound.removeFromTop(padding);
-        } {
+        }
+        {
             auto temp_bound = bound.removeFromTop(slider_height);
             auto left_bound = temp_bound.removeFromLeft(temp_bound.getWidth() / 2);
             left_bound = left_bound.withSizeKeepingCentre(left_bound.getWidth() - (padding / 2) * 2,
@@ -63,7 +65,8 @@ namespace zlpanel {
             const auto right_bound = temp_bound.withSizeKeepingCentre(left_bound.getWidth(), left_bound.getHeight());
             filter_slope_box_.setBounds(right_bound);
             bound.removeFromTop(padding);
-        } {
+        }
+        {
             freq_slider_.setBounds(bound);
         }
     }

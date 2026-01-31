@@ -10,17 +10,17 @@
 #include "main_panel.hpp"
 
 namespace zlpanel {
-    MainPanel::MainPanel(PluginProcessor &processor, zlgui::UIBase &base)
-        : p_ref_(processor), base_(base),
-          tooltip_helper_(
-              static_cast<multilingual::TooltipLanguage>(std::round(
-                  p_ref_.state_.getRawParameterValue(zlstate::PTooltipLang::kID)->load(std::memory_order::relaxed)))
-          ),
-          curve_panel_(processor, base_, tooltip_helper_),
-          top_panel_(processor, base_, tooltip_helper_),
-          ui_setting_panel_(processor, base_),
-          tooltip_laf_(base_), tooltip_window_(&curve_panel_),
-          refresh_handler_(zlstate::PTargetRefreshSpeed::kRates[base_.getRefreshRateID()]) {
+    MainPanel::MainPanel(PluginProcessor& processor, zlgui::UIBase& base) :
+        p_ref_(processor), base_(base),
+        tooltip_helper_(
+            static_cast<multilingual::TooltipLanguage>(std::round(
+                p_ref_.state_.getRawParameterValue(zlstate::PTooltipLang::kID)->load(std::memory_order::relaxed)))
+            ),
+        curve_panel_(processor, base_, tooltip_helper_),
+        top_panel_(processor, base_, tooltip_helper_),
+        ui_setting_panel_(processor, base_),
+        tooltip_laf_(base_), tooltip_window_(&curve_panel_),
+        refresh_handler_(zlstate::PTargetRefreshSpeed::kRates[base_.getRefreshRateID()]) {
         juce::ignoreUnused(base_);
         addAndMakeVisible(curve_panel_);
         addAndMakeVisible(top_panel_);
@@ -79,7 +79,7 @@ namespace zlpanel {
         }
     }
 
-    void MainPanel::valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &property) {
+    void MainPanel::valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier& property) {
         if (base_.isPanelIdentifier(zlgui::PanelSettingIdx::kUISettingPanel, property)) {
             const auto ui_setting_visibility = static_cast<bool>(base_.getPanelProperty(
                 zlgui::PanelSettingIdx::kUISettingPanel));

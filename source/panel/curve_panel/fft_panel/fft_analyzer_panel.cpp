@@ -10,14 +10,14 @@
 #include "fft_analyzer_panel.hpp"
 
 namespace zlpanel {
-    FFTAnalyzerPanel::FFTAnalyzerPanel(PluginProcessor &p, zlgui::UIBase &base)
-        : p_ref_(p),
-          base_(base),
-          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
-          fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)) {
+    FFTAnalyzerPanel::FFTAnalyzerPanel(PluginProcessor& p, zlgui::UIBase& base) :
+        p_ref_(p),
+        base_(base),
+        split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+        swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
+        fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
-        for (auto &path: {&out_path1_, &out_path2_, &next_out_path1_, &next_out_path2_}) {
+        for (auto& path : {&out_path1_, &out_path2_, &next_out_path1_, &next_out_path2_}) {
             path->preallocateSpace(preallocateSpace);
         }
 
@@ -26,7 +26,7 @@ namespace zlpanel {
 
     FFTAnalyzerPanel::~FFTAnalyzerPanel() = default;
 
-    void FFTAnalyzerPanel::paint(juce::Graphics &g) {
+    void FFTAnalyzerPanel::paint(juce::Graphics& g) {
         if (skip_next_repaint_) {
             skip_next_repaint_ = false;
             return;
@@ -37,7 +37,7 @@ namespace zlpanel {
         }
         const auto thickness = base_.getFontSize() * .2f * base_.getFFTCurveThickness();
         if (static_cast<zlp::PSplitType::SplitType>(
-                std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
+            std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
             g.setColour(base_.getTextColor());
             g.strokePath(out_path1_,
                          juce::PathStrokeType(thickness,
@@ -65,7 +65,7 @@ namespace zlpanel {
     }
 
     void FFTAnalyzerPanel::run() {
-        auto &analyzer{p_ref_.getController().getFFTAnalyzer()};
+        auto& analyzer{p_ref_.getController().getFFTAnalyzer()};
         if (!analyzer.getLock().try_lock()) {
             return;
         }

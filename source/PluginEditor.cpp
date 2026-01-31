@@ -9,12 +9,12 @@
 
 #include "PluginEditor.hpp"
 
-PluginEditor::PluginEditor(PluginProcessor &p)
-    : AudioProcessorEditor(&p),
-      p_ref_(p),
-      property_(p.property_),
-      base_(p.state_),
-      main_panel_(p, base_) {
+PluginEditor::PluginEditor(PluginProcessor& p) :
+    AudioProcessorEditor(&p),
+    p_ref_(p),
+    property_(p.property_),
+    base_(p.state_),
+    main_panel_(p, base_) {
     // set font
     const auto font_face = juce::Typeface::createSystemTypefaceFor(
         BinaryData::MiSansLatinMedium_ttf, BinaryData::MiSansLatinMedium_ttfSize);
@@ -39,7 +39,7 @@ PluginEditor::PluginEditor(PluginProcessor &p)
     setSize(
         std::clamp(static_cast<int>(last_ui_width_.getValue()), zlstate::PWindowW::kMinV, zlstate::PWindowW::kMaxV),
         std::clamp(static_cast<int>(last_ui_height_.getValue()), zlstate::PWindowH::kMinV, zlstate::PWindowH::kMaxV)
-    );
+        );
 
     startTimerHz(2);
     updateIsShowing();
@@ -54,13 +54,13 @@ PluginEditor::~PluginEditor() {
     stopTimer();
 }
 
-void PluginEditor::paint(juce::Graphics &g) {
+void PluginEditor::paint(juce::Graphics& g) {
     juce::ignoreUnused(g);
 }
 
 void PluginEditor::resized() {
     main_panel_.setBounds(getLocalBounds());
-    last_ui_width_ =  std::clamp(getWidth(), zlstate::PWindowW::kMinV, zlstate::PWindowW::kMaxV);
+    last_ui_width_ = std::clamp(getWidth(), zlstate::PWindowW::kMinV, zlstate::PWindowW::kMaxV);
     last_ui_height_ = std::clamp(getHeight(), zlstate::PWindowH::kMinV, zlstate::PWindowH::kMaxV);
     triggerAsyncUpdate();
 }
@@ -77,10 +77,10 @@ void PluginEditor::minimisationStateChanged(bool) {
     updateIsShowing();
 }
 
-void PluginEditor::valueTreePropertyChanged(juce::ValueTree &, const juce::Identifier &property) {
+void PluginEditor::valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier& property) {
     if (base_.isPanelIdentifier(zlgui::kUISettingChanged, property)) {
         sendLookAndFeelChange();
-        auto &fft{p_ref_.getController().getFFTAnalyzer()};
+        auto& fft{p_ref_.getController().getFFTAnalyzer()};
         fft.setExtraTilt(base_.getFFTExtraTilt());
         fft.setExtraSpeed(base_.getFFTExtraSpeed());
         triggerAsyncUpdate();

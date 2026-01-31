@@ -10,29 +10,29 @@
 #include "controller_attach.hpp"
 
 namespace zlp {
-    template<typename FloatType>
-    ControllerAttach<FloatType>::ControllerAttach(juce::AudioProcessor &processor,
-                                                  juce::AudioProcessorValueTreeState &parameters,
-                                                  Controller<FloatType> &controller)
-        : p_ref_(processor), parameters_ref_(parameters),
-          controller_ref_(controller),
-          ts_splitter_(controller_ref_.getTSSplitter()),
-          ps_splitter_(controller_ref_.getPSSplitter()) {
+    template <typename FloatType>
+    ControllerAttach<FloatType>::ControllerAttach(juce::AudioProcessor& processor,
+                                                  juce::AudioProcessorValueTreeState& parameters,
+                                                  Controller<FloatType>& controller) :
+        p_ref_(processor), parameters_ref_(parameters),
+        controller_ref_(controller),
+        ts_splitter_(controller_ref_.getTSSplitter()),
+        ps_splitter_(controller_ref_.getPSSplitter()) {
         for (size_t i = 0; i < kDefaultVs.size(); ++i) {
             parameters_ref_.addParameterListener(kIDs[i], this);
             parameterChanged(kIDs[i], kDefaultVs[i]);
         }
     }
 
-    template<typename FloatType>
+    template <typename FloatType>
     ControllerAttach<FloatType>::~ControllerAttach() {
-        for (auto &ID: kIDs) {
+        for (auto& ID : kIDs) {
             parameters_ref_.removeParameterListener(ID, this);
         }
     }
 
-    template<typename FloatType>
-    void ControllerAttach<FloatType>::parameterChanged(const juce::String &parameter_ID, const float new_value) {
+    template <typename FloatType>
+    void ControllerAttach<FloatType>::parameterChanged(const juce::String& parameter_ID, const float new_value) {
         if (parameter_ID == zlp::PSplitType::kID) {
             controller_ref_.setSplitType(static_cast<zlp::PSplitType::SplitType>(std::round(new_value)));
         } else if (parameter_ID == zlp::PMix::kID) {

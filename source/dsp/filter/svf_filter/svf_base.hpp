@@ -29,8 +29,8 @@ namespace zldsp::filter {
             std::fill(s2_.begin(), s2_.end(), static_cast<FloatType>(0));
         }
 
-        template <bool isBypass = false>
-        void process(std::span<FloatType*> buffer, const size_t num_samples) noexcept {
+        template<bool isBypass = false>
+        void process(std::span<FloatType *> buffer, const size_t num_samples) noexcept {
             if constexpr (isBypass) {
                 for (size_t channel = 0; channel < buffer.size(); ++channel) {
                     auto *samples = buffer[channel];

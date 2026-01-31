@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace zldsp::delay {
-    template <typename FloatType>
+    template<typename FloatType>
     class FIFODelay {
     public:
         FIFODelay() {

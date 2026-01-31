@@ -39,9 +39,9 @@ namespace zldsp::splitter {
             }
         }
 
-        void process(FloatType * in_buffer,
-                     FloatType * peak_buffer,
-                     FloatType * steady_buffer,
+        void process(FloatType *in_buffer,
+                     FloatType *peak_buffer,
+                     FloatType *steady_buffer,
                      const size_t num_samples) {
             while (peak_sm_buffer_.size() >= peak_buffer_size_) {
                 peak_sm_ -= peak_sm_buffer_.popFront();
@@ -97,7 +97,9 @@ namespace zldsp::splitter {
         }
 
     private:
-        std::atomic<FloatType> attack_{FloatType(0.5)}, balance_{FloatType(0.5)}, hold_{FloatType(0.5)}, smooth_{FloatType(0.5)};
+        std::atomic<FloatType> attack_{FloatType(0.5)}, balance_{FloatType(0.5)}, hold_{FloatType(0.5)}, smooth_{
+                    FloatType(0.5)
+                };
         FloatType sample_rate_{FloatType(48000)};
         std::atomic<bool> to_update_{true};
         FloatType c_balance_{}, c_release_{}, c_attack_{}, c_attack_c_{};

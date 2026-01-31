@@ -106,7 +106,8 @@ namespace zldsp::splitter {
                     forward_filter_[1].process(low_buffer, num_samples);
                     break;
                 }
-                default: {}
+                default: {
+                }
             }
 
             delay_.process(high_buffer, num_samples);
@@ -234,7 +235,8 @@ namespace zldsp::splitter {
                             2 * std::numbers::pi * freq / sample_rate_, order4q1);
                         filter_[0].updateFromBiquad(coeff);
                         forward_filter_[0].updateFromBiquad(coeff);
-                    } {
+                    }
+                    {
                         const auto coeff = zldsp::filter::MartinCoeff::get2LowPass(
                             2 * std::numbers::pi * freq / sample_rate_, order4q2);
                         filter_[1].updateFromBiquad(coeff);

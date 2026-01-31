@@ -7,20 +7,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-//
-// Created by Zishu Liu on 8/18/25.
-//
-
 #include "fft_panel.hpp"
 
 namespace zlpanel {
-    FFTPanel::FFTPanel(PluginProcessor &p, zlgui::UIBase &base)
-        : p_ref_(p),
-          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          fft_min_freq_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinFreq::kID)),
-          fft_max_freq_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMaxFreq::kID)),
-          fft_background_panel_(p, base),
-          fft_analyzer_panel_(p, base) {
+    FFTPanel::FFTPanel(PluginProcessor& p, zlgui::UIBase& base) :
+        p_ref_(p),
+        split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+        fft_min_freq_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinFreq::kID)),
+        fft_max_freq_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMaxFreq::kID)),
+        fft_background_panel_(p, base),
+        fft_analyzer_panel_(p, base) {
         addAndMakeVisible(fft_background_panel_);
         addAndMakeVisible(fft_analyzer_panel_);
     }
@@ -90,18 +86,18 @@ namespace zlpanel {
         }
     }
 
-    void FFTPanel::mouseEnter(const juce::MouseEvent &) {
+    void FFTPanel::mouseEnter(const juce::MouseEvent&) {
         startTimer(kHoverDurationMS);
     }
 
-    void FFTPanel::mouseMove(const juce::MouseEvent &) {
+    void FFTPanel::mouseMove(const juce::MouseEvent&) {
         stopTimer();
         p_ref_.getController().getFFTAnalyzer().setFrozen(0, false);
         p_ref_.getController().getFFTAnalyzer().setFrozen(1, false);
         startTimer(kHoverDurationMS);
     }
 
-    void FFTPanel::mouseExit(const juce::MouseEvent &) {
+    void FFTPanel::mouseExit(const juce::MouseEvent&) {
         stopTimer();
         p_ref_.getController().getFFTAnalyzer().setFrozen(0, false);
         p_ref_.getController().getFFTAnalyzer().setFrozen(1, false);

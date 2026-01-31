@@ -21,7 +21,7 @@ namespace zldsp::filter {
         // w should be an array of std::exp(-2pi * f / samplerate * i)
         static void updateResponse(
             const std::array<double, 6> &coeff,
-            const std::vector<std::complex<FloatType> > &wis, std::vector<std::complex<FloatType> > &response) {
+            const std::vector<std::complex<FloatType>> &wis, std::vector<std::complex<FloatType>> &response) {
             for (size_t idx = 0; idx < wis.size(); ++idx) {
                 response[idx] *= getResponse(coeff, wis[idx]);
             }
@@ -30,7 +30,7 @@ namespace zldsp::filter {
         // w should be std::exp(-2pi * f / samplerate * i)
         // const auto wi = std::exp(std::complex<FloatType>(FloatType(0), w))
         static std::complex<FloatType> getResponse(const std::array<double, 6> &coeff,
-                                                    const std::complex<FloatType> &wi) {
+                                                   const std::complex<FloatType> &wi) {
             const auto wi2 = wi * wi;
             return (static_cast<FloatType>(coeff[3]) +
                     static_cast<FloatType>(coeff[4]) * wi +
@@ -53,8 +53,8 @@ namespace zldsp::filter {
             std::fill(s2_.begin(), s2_.end(), static_cast<FloatType>(0));
         }
 
-        template <bool isBypass = false>
-        void process(std::span<FloatType*> buffer, const size_t num_samples) noexcept {
+        template<bool isBypass = false>
+        void process(std::span<FloatType *> buffer, const size_t num_samples) noexcept {
             for (size_t channel = 0; channel < buffer.size(); ++channel) {
                 auto *samples = buffer[channel];
                 for (size_t i = 0; i < num_samples; ++i) {

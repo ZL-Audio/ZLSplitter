@@ -10,10 +10,10 @@
 #include "mag_panel.hpp"
 
 namespace zlpanel {
-    MagPanel::MagPanel(PluginProcessor &p, zlgui::UIBase &base)
-        : p_ref_(p),
-          mag_background_panel_(p, base),
-          mag_analyzer_panel_(p, base) {
+    MagPanel::MagPanel(PluginProcessor& p, zlgui::UIBase& base) :
+        p_ref_(p),
+        mag_background_panel_(p, base),
+        mag_analyzer_panel_(p, base) {
         addAndMakeVisible(mag_background_panel_);
         addAndMakeVisible(mag_analyzer_panel_);
 

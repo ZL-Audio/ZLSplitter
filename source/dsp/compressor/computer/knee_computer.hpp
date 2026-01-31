@@ -134,7 +134,8 @@ namespace zldsp::compressor {
             const auto current_ratio = ratio_.load(std::memory_order::relaxed);
             const auto current_curve = curve_.load(std::memory_order::relaxed);
             low_th_ = current_threshold - current_knee_w;
-            high_th_ = current_threshold + current_knee_w; {
+            high_th_ = current_threshold + current_knee_w;
+            {
                 // update mid curve parameters
                 const auto a0 = (FloatType(1) / current_ratio - FloatType(1)) / (current_knee_w * FloatType(4));
                 const auto a1 = -low_th_;
@@ -146,7 +147,8 @@ namespace zldsp::compressor {
                     para_mid_g0_[1] = FloatType(2) * a0a1 + FloatType(1);
                 }
                 para_mid_g0_[2] = a0a1 * a1;
-            } {
+            }
+            {
                 if (current_curve >= FloatType(0)) {
                     const auto alpha = FloatType(1) - current_curve, beta = current_curve;
                     linear_curve_.setPara(current_threshold, current_ratio, current_knee_w);
@@ -165,7 +167,8 @@ namespace zldsp::compressor {
                 if constexpr (OutputDiff) {
                     para_high_g0_[1] -= FloatType(1);
                 }
-            } {
+            }
+            {
                 if (high_th_ <= FloatType(0)) {
                     para_over_g0_[0] = para_high_g0_[1];
                     para_over_g0_[1] = para_high_g0_[2];

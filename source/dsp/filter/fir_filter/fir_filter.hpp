@@ -42,7 +42,7 @@ namespace zldsp::filter {
         std::array<Ideal<FloatType, FilterSize>, FilterNum> &ideal_fs_;
         std::vector<size_t> &on_indices_;
 
-        std::vector<std::complex<FloatType> > wis_, response_;
+        std::vector<std::complex<FloatType>> wis_, response_;
         kfr::univector<float> corrections_{};
 
         void setOrder(const size_t num_channels, const size_t order) override {

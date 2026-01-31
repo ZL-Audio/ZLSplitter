@@ -10,14 +10,14 @@
 #include "colour_opacity_selector.hpp"
 
 namespace zlgui::colour_selector {
-    ColourOpacitySelector::ColourOpacitySelector(zlgui::UIBase &base, juce::Component &parent,
+    ColourOpacitySelector::ColourOpacitySelector(zlgui::UIBase& base, juce::Component& parent,
                                                  const bool use_opacity,
                                                  const float width_s, const float height_s,
-                                                 const float w1, const float w2)
-        : base_(base),
-          selector_(base, parent, width_s, height_s),
-          slider_("Opacity", base),
-          opacity_on_(use_opacity) {
+                                                 const float w1, const float w2) :
+        base_(base),
+        selector_(base, parent, width_s, height_s),
+        slider_("Opacity", base),
+        opacity_on_(use_opacity) {
         weights_ = {w1, w2};
         if (opacity_on_) {
             slider_.getSlider().setRange(0.0, 1.0, 0.01);
@@ -45,7 +45,7 @@ namespace zlgui::colour_selector {
         }
     }
 
-    void ColourOpacitySelector::sliderValueChanged(juce::Slider *s) {
+    void ColourOpacitySelector::sliderValueChanged(juce::Slider* s) {
         selector_.setOpacity(static_cast<float>(s->getValue()));
     }
 } // zlgui

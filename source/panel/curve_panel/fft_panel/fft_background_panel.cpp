@@ -10,13 +10,13 @@
 #include "fft_background_panel.hpp"
 
 namespace zlpanel {
-    FFTBackgroundPanel::Background1::Background1(zlgui::UIBase &base)
-        : base_(base) {
+    FFTBackgroundPanel::Background1::Background1(zlgui::UIBase& base) :
+        base_(base) {
         setBufferedToImage(true);
         setInterceptsMouseClicks(false, false);
     }
 
-    void FFTBackgroundPanel::Background1::paint(juce::Graphics &g) {
+    void FFTBackgroundPanel::Background1::paint(juce::Graphics& g) {
         g.fillAll(base_.getBackgroundColor());
 
         const auto bound = getLocalBounds().toFloat();
@@ -38,7 +38,7 @@ namespace zlpanel {
                                                            bound.getBottom() - base_.getFontSize() * 2,
                                                            base_.getFontSize() * 3, base_.getFontSize() * 2);
             g.setColour(text_colour);
-            g.drawText(kBackgroundFreqsNames[i], text_bound, juce::Justification::bottomRight);
+            g.drawText(std::string(kBackgroundFreqsNames[i]), text_bound, juce::Justification::bottomRight);
         }
 
         const auto right_padding = std::round(base_.getFontSize() * .25f);
@@ -55,18 +55,18 @@ namespace zlpanel {
         }
     }
 
-    FFTBackgroundPanel::FFTBackgroundPanel(PluginProcessor &processor, zlgui::UIBase &base)
-        : base_(base), background1_(base),
-          updater_(),
-          fft_min_freq_box_(zlstate::PFFTMinFreq::kChoices, base),
-          fft_min_freq_attach_(fft_min_freq_box_.getBox(), processor.na_parameters_,
-                               zlstate::PFFTMinFreq::kID, updater_),
-          fft_max_freq_box_(zlstate::PFFTMaxFreq::kChoices, base),
-          fft_max_freq_attach_(fft_max_freq_box_.getBox(), processor.na_parameters_,
-                               zlstate::PFFTMaxFreq::kID, updater_),
-          fft_min_db_box_(zlstate::PFFTMinDB::kChoices, base),
-          fft_min_db_attach_(fft_min_db_box_.getBox(), processor.na_parameters_,
-                             zlstate::PFFTMinDB::kID, updater_) {
+    FFTBackgroundPanel::FFTBackgroundPanel(PluginProcessor& processor, zlgui::UIBase& base) :
+        base_(base), background1_(base),
+        updater_(),
+        fft_min_freq_box_(zlstate::PFFTMinFreq::kChoices, base),
+        fft_min_freq_attach_(fft_min_freq_box_.getBox(), processor.na_parameters_,
+                             zlstate::PFFTMinFreq::kID, updater_),
+        fft_max_freq_box_(zlstate::PFFTMaxFreq::kChoices, base),
+        fft_max_freq_attach_(fft_max_freq_box_.getBox(), processor.na_parameters_,
+                             zlstate::PFFTMaxFreq::kID, updater_),
+        fft_min_db_box_(zlstate::PFFTMinDB::kChoices, base),
+        fft_min_db_attach_(fft_min_db_box_.getBox(), processor.na_parameters_,
+                           zlstate::PFFTMinDB::kID, updater_) {
         addAndMakeVisible(background1_);
 
         const auto popup_option = juce::PopupMenu::Options().withPreferredPopupDirection(
@@ -79,7 +79,7 @@ namespace zlpanel {
         fft_max_freq_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);
         fft_min_db_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);
 
-        for (auto &b: {&fft_min_freq_box_, &fft_max_freq_box_, &fft_min_db_box_}) {
+        for (auto& b : {&fft_min_freq_box_, &fft_max_freq_box_, &fft_min_db_box_}) {
             b->setAlpha(box_alpha);
             b->getLAF().setOption(popup_option);
             b->getLAF().setFontScale(1.f);
@@ -127,7 +127,7 @@ namespace zlpanel {
         background1_.repaint();
 
         fft_max_freq_box_.getLAF().setLabelString(juce::String(
-                                                      static_cast<int>(std::round(max_freq * 0.001))) + "k");
+            static_cast<int>(std::round(max_freq * 0.001))) + "k");
         fft_max_freq_box_.repaint();
     }
 }

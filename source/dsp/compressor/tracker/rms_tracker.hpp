@@ -86,7 +86,8 @@ namespace zldsp::compressor {
          */
         void setMomentarySeconds(const FloatType second) {
             time_length_.store(second, std::memory_order::relaxed);
-            setMomentarySize(static_cast<size_t>(static_cast<double>(second) * sample_rate_.load(std::memory_order::relaxed)));
+            setMomentarySize(
+                static_cast<size_t>(static_cast<double>(second) * sample_rate_.load(std::memory_order::relaxed)));
             to_update_.store(true, std::memory_order::release);
         }
 

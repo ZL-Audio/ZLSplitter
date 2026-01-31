@@ -33,7 +33,7 @@ namespace zldsp::fft {
 
         void setOrder(const size_t order) {
             fft_size_ = static_cast<size_t>(1) << order;
-            fft_plan_ = std::make_unique<kfr::dft_plan_real<FloatType> >(fft_size_);
+            fft_plan_ = std::make_unique<kfr::dft_plan_real<FloatType>>(fft_size_);
             temp_buffer_.resize(fft_plan_->temp_size);
         }
 
@@ -67,7 +67,7 @@ namespace zldsp::fft {
 
     private:
         size_t fft_size_{0};
-        std::unique_ptr<kfr::dft_plan_real<FloatType> > fft_plan_;
+        std::unique_ptr<kfr::dft_plan_real<FloatType>> fft_plan_;
         kfr::univector<kfr::u8> temp_buffer_;
     };
 }

@@ -31,9 +31,9 @@ namespace zldsp::splitter {
             delay_.setDelayInSamples(delay_num);
         }
 
-        void process(FloatType * in_buffer,
-                     FloatType * transient_buffer,
-                     FloatType * steady_buffer,
+        void process(FloatType *in_buffer,
+                     FloatType *transient_buffer,
+                     FloatType *steady_buffer,
                      const size_t num_samples) {
             // copy in buffer to steady buffer and delay it
             zldsp::vector::copy(steady_buffer, in_buffer, num_samples);
@@ -81,7 +81,7 @@ namespace zldsp::splitter {
         std::array<std::vector<float>, kTimeHalfMedianWindowsSize + 1> fft_lines_;
         kfr::univector<float> magnitude_;
         // median calculators
-        std::vector<HeapFilter<float, kTimeMedianWindowsSize> > time_median_{};
+        std::vector<HeapFilter<float, kTimeMedianWindowsSize>> time_median_{};
         HeapFilter<float, kFreqMedianWindowsSize> freq_median_{};
         // portion holders
         kfr::univector<float> mask_;
@@ -93,7 +93,7 @@ namespace zldsp::splitter {
             zldsp::filter::FIRBase<FloatType, 10>::setFFTOrder(1, order);
             // set fft data lines
             fft_line_pos_ = 0;
-            for (auto &line : fft_lines_) {
+            for (auto &line: fft_lines_) {
                 line.resize(this->fft_data_.size());
                 std::fill(line.begin(), line.end(), 0.f);
             }

@@ -16,12 +16,13 @@
 namespace zlgui::combobox {
     class CompactComboboxLookAndFeel : public juce::LookAndFeel_V4 {
     public:
-        explicit CompactComboboxLookAndFeel(UIBase &base) : base_(base) {
+        explicit CompactComboboxLookAndFeel(UIBase& base) :
+            base_(base) {
             setColour(juce::PopupMenu::backgroundColourId, base_.getBackgroundInactiveColor());
         }
 
-        void drawComboBox(juce::Graphics &g, int width, int height, bool isButtonDown, int, int, int, int,
-                          juce::ComboBox &box) override {
+        void drawComboBox(juce::Graphics& g, int width, int height, bool isButtonDown, int, int, int, int,
+                          juce::ComboBox& box) override {
             juce::ignoreUnused(width, height);
             const auto boxBounds = juce::Rectangle<float>(0, 0,
                                                           static_cast<float>(width),
@@ -47,11 +48,11 @@ namespace zlgui::combobox {
             }
         }
 
-        void positionComboBoxText(juce::ComboBox &box, juce::Label &label) override {
+        void positionComboBoxText(juce::ComboBox& box, juce::Label& label) override {
             label.setBounds(box.getLocalBounds());
         }
 
-        void drawLabel(juce::Graphics &g, juce::Label &label) override {
+        void drawLabel(juce::Graphics& g, juce::Label& label) override {
             g.setColour(base_.getTextColor());
             g.setFont(base_.getFontSize() * font_scale_);
             if (label_string_.isEmpty()) {
@@ -61,26 +62,26 @@ namespace zlgui::combobox {
             }
         }
 
-        void drawPopupMenuBackground(juce::Graphics &g, int width, int height) override {
+        void drawPopupMenuBackground(juce::Graphics& g, int width, int height) override {
             const auto cornerSize = base_.getFontSize() * 0.375f;
             const auto boxBounds = juce::Rectangle<float>(0, 0, static_cast<float>(width),
                                                           static_cast<float>(height));
             base_.fillRoundedInnerShadowRectangle(g, boxBounds, cornerSize, {.blur_radius = 0.45f, .flip = true});
         }
 
-        void getIdealPopupMenuItemSize(const juce::String &text, const bool isSeparator, int standardMenuItemHeight,
-                                       int &idealWidth, int &idealHeight) override {
+        void getIdealPopupMenuItemSize(const juce::String& text, const bool isSeparator, int standardMenuItemHeight,
+                                       int& idealWidth, int& idealHeight) override {
             juce::ignoreUnused(text, isSeparator, standardMenuItemHeight);
             idealWidth = static_cast<int>(0);
             idealHeight = static_cast<int>(base_.getFontSize() * font_scale_ * 1.2f);
         }
 
-        void drawPopupMenuItem(juce::Graphics &g, const juce::Rectangle<int> &area,
+        void drawPopupMenuItem(juce::Graphics& g, const juce::Rectangle<int>& area,
                                const bool isSeparator, const bool isActive,
                                const bool isHighlighted, const bool isTicked, const bool hasSubMenu,
-                               const juce::String &text,
-                               const juce::String &shortcutKeyText, const juce::Drawable *icon,
-                               const juce::Colour *const textColourToUse) override {
+                               const juce::String& text,
+                               const juce::String& shortcutKeyText, const juce::Drawable* icon,
+                               const juce::Colour* const textColourToUse) override {
             juce::ignoreUnused(isSeparator, hasSubMenu, shortcutKeyText, icon, textColourToUse);
             if ((isHighlighted || isTicked) && isActive) {
                 g.setColour(base_.getTextColor());
@@ -103,11 +104,11 @@ namespace zlgui::combobox {
 
         inline void setFontScale(const float x) { font_scale_ = x; }
 
-        void setOption(const juce::PopupMenu::Options &x) {
+        void setOption(const juce::PopupMenu::Options& x) {
             option_ = x;
         }
 
-        juce::PopupMenu::Options getOptionsForComboBoxPopupMenu(juce::ComboBox &box, juce::Label &label) override {
+        juce::PopupMenu::Options getOptionsForComboBoxPopupMenu(juce::ComboBox& box, juce::Label& label) override {
             auto option = option_;
             if (option.getParentComponent() == nullptr) {
                 if (juce::JUCEApplicationBase::isStandaloneApp()) {
@@ -120,14 +121,14 @@ namespace zlgui::combobox {
                 option = option.withMinimumWidth(box.getWidth());
             }
             return option.withTargetComponent(&box)
-                    .withItemThatMustBeVisible(box.getSelectedId())
-                    .withInitiallySelectedItem(box.getSelectedId())
-                    .withStandardItemHeight(label.getHeight());
+                .withItemThatMustBeVisible(box.getSelectedId())
+                .withInitiallySelectedItem(box.getSelectedId())
+                .withStandardItemHeight(label.getHeight());
         }
 
         void setBoxAlpha(const float x) { box_alpha_ = x; }
 
-        void setLabelString(const juce::String &label_string) {
+        void setLabelString(const juce::String& label_string) {
             label_string_ = label_string;
         }
 
@@ -142,6 +143,6 @@ namespace zlgui::combobox {
         juce::Justification item_justification_{juce::Justification::centred};
         juce::PopupMenu::Options option_{};
 
-        UIBase &base_;
+        UIBase& base_;
     };
 }

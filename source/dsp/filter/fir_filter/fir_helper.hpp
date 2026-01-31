@@ -16,7 +16,7 @@
 
 namespace zldsp::filter {
     template<typename FloatType>
-    void calculateWsForPrototype(std::span<std::complex<FloatType> > ws) {
+    void calculateWsForPrototype(std::span<std::complex<FloatType>> ws) {
         const auto delta = std::numbers::pi / static_cast<double>(ws.size() - 1);
         double w = 0.f;
         for (size_t i = 0; i < ws.size(); ++i) {
@@ -26,7 +26,7 @@ namespace zldsp::filter {
     }
 
     template<typename FloatType>
-    void calculateWsForBiquad(std::span<std::complex<FloatType> > ws) {
+    void calculateWsForBiquad(std::span<std::complex<FloatType>> ws) {
         const auto delta = std::numbers::pi / static_cast<double>(ws.size() - 1);
         double w = 0.f;
         for (size_t i = 0; i < ws.size(); ++i) {

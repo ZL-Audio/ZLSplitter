@@ -29,7 +29,7 @@ namespace zldsp::compressor {
             x0_ = FloatType(0);
         }
 
-        template <bool UseRMS = false>
+        template<bool UseRMS = false>
         void process(FloatType *buffer, const size_t num_samples) {
             for (size_t i = 0; i < num_samples; ++i) {
                 FloatType input_db;
