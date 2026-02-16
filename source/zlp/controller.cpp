@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -27,8 +27,10 @@ namespace zlp {
         ps_splitter_[0].prepare(sample_rate);
         ps_splitter_[1].prepare(sample_rate);
 
-        fft_analyzer_.prepare(sample_rate, {2, 2});
-        mag_analyzer_.prepare(sample_rate, max_num_samples);
+        analyzer_sender_.prepare(sample_rate, max_num_samples, {2, 2}, 0.1);
+        for (size_t i = 0; i < 2; ++i) {
+            analyzer_sender_.setON(i, true);
+        }
 
         const auto max_latency = std::max(lh_fir_splitter_.getMaxLatency(), ts_splitter_[0].getTSLatency());
         bypass_delay_.prepare(sample_rate, max_num_samples, 2,
@@ -149,14 +151,8 @@ namespace zlp {
         }
         }
 
-        if (is_fft_on_.load(std::memory_order::relaxed)) {
-            analyzer_spans_[0] = std::span(out_buffer1_);
-            analyzer_spans_[1] = std::span(out_buffer2_);
-            fft_analyzer_.process(analyzer_spans_, num_samples);
-        } else if (is_mag_on_.load(std::memory_order::relaxed)) {
-            analyzer_spans_[0] = std::span(out_buffer1_);
-            analyzer_spans_[1] = std::span(out_buffer2_);
-            mag_analyzer_.process(analyzer_spans_, num_samples);
+        if (analyzer_on_.load(std::memory_order::relaxed)) {
+            analyzer_sender_.process({std::span(out_buffer1_), std::span(out_buffer2_)}, num_samples);
         }
     }
 
@@ -175,7 +171,6 @@ namespace zlp {
         if (latency_.load(std::memory_order::relaxed) != p_ref_.getLatencySamples()) {
             triggerAsyncUpdate();
         }
-        mag_analyzer_.setToReset();
     }
 
     template <typename FloatType>

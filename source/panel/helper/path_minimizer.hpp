@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -12,17 +12,23 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 namespace zlpanel {
+    template <int kIntTol = 1>
     class PathMinimizer {
     public:
-        static constexpr float kTol = 0.01f;
+        static constexpr float kTol = 0.01f * static_cast<float>(kIntTol);
 
-        explicit PathMinimizer(juce::Path& path) :
-            path_ref_(path) {
+        explicit PathMinimizer(juce::Path& path) : path_ref_(path) {
         }
 
+        /**
+         *
+         * @tparam start whether it is the first point in the path
+         * @param x
+         * @param y
+         */
         template <bool start = true>
         void startNewSubPath(const float x, const float y) {
-            if (start) {
+            if constexpr (start) {
                 path_ref_.startNewSubPath(x, y);
             } else {
                 path_ref_.lineTo(x, y);

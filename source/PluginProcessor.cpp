@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -179,7 +179,9 @@ void PluginProcessor::processBlockInternal(juce::AudioBuffer<float>& buffer) {
                                 double_in_pointers[chan], static_cast<size_t>(buffer.getNumSamples()));
         }
         for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i) {
-            buffer.clear(i, 0, buffer.getNumSamples());
+            if (buffer.getNumChannels() > i) {
+                buffer.clear(i, 0, buffer.getNumSamples());
+            }
         }
     }
 }
@@ -206,19 +208,20 @@ void PluginProcessor::processBlockInternal(juce::AudioBuffer<double>& buffer) {
     } else {
         double_controller_.processBypassDelay(double_in_pointers, static_cast<size_t>(buffer.getNumSamples()));
         for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i) {
-            buffer.clear(i, 0, buffer.getNumSamples());
+            if (buffer.getNumChannels() > i) {
+                buffer.clear(i, 0, buffer.getNumSamples());
+            }
         }
     }
 }
 
 //==============================================================================
 bool PluginProcessor::hasEditor() const {
-    return true; // (change this to false if you choose to not supply an editor)
+    return true;
 }
 
 juce::AudioProcessorEditor* PluginProcessor::createEditor() {
     return new PluginEditor(*this);
-    // return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================

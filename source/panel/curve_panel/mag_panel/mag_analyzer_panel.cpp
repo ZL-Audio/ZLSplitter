@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -14,31 +14,21 @@ namespace zlpanel {
         p_ref_(p), base_(base),
         split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
         swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
-        fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)),
-        mag_analyzer_ref_(p.getController().getMagAnalyzer()) {
+        analyzer_mag_type_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagType::kID)),
+        analyzer_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagMinDB::kID)),
+        analyzer_time_length_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagTimeLength::kID)) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
-        for (auto& path : {&out_path1_, &out_path2_}) {
+        for (auto& path : {&path1_, &path2_}) {
             path->preallocateSpace(preallocateSpace);
         }
-
-        for (auto& ID : kNAIDs) {
-            p_ref_.na_parameters_.addParameterListener(ID, this);
-            parameterChanged(ID, p_ref_.na_parameters_.getRawParameterValue(ID)->load(std::memory_order::relaxed));
-        }
-
-        mag_analyzer_ref_.setToReset();
 
         setInterceptsMouseClicks(false, false);
     }
 
-    MagAnalyzerPanel::~MagAnalyzerPanel() {
-        for (auto& ID : kNAIDs) {
-            p_ref_.na_parameters_.removeParameterListener(ID, this);
-        }
-    }
+    MagAnalyzerPanel::~MagAnalyzerPanel() = default;
 
     void MagAnalyzerPanel::paint(juce::Graphics& g) {
-        const std::unique_lock<std::mutex> lock{mutex_, std::try_to_lock};
+        const std::unique_lock lock{mutex_, std::try_to_lock};
         if (!lock.owns_lock()) {
             return;
         }
@@ -46,19 +36,19 @@ namespace zlpanel {
         if (static_cast<zlp::PSplitType::SplitType>(
             std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
             g.setColour(base_.getTextColor());
-            g.strokePath(out_path1_,
+            g.strokePath(path1_,
                          juce::PathStrokeType(thickness,
                                               juce::PathStrokeType::curved,
                                               juce::PathStrokeType::rounded));
         } else {
             const auto swap = swap_ref_.load(std::memory_order::relaxed) > .5f;
             g.setColour(base_.getColourByIdx(zlgui::ColourIdx::kOutput2Colour));
-            g.strokePath(swap ? out_path1_ : out_path2_,
+            g.strokePath(swap ? path1_ : path2_,
                          juce::PathStrokeType(thickness,
                                               juce::PathStrokeType::curved,
                                               juce::PathStrokeType::rounded));
             g.setColour(base_.getColourByIdx(zlgui::ColourIdx::kOutput1Colour));
-            g.strokePath(swap ? out_path2_ : out_path1_,
+            g.strokePath(swap ? path2_ : path1_,
                          juce::PathStrokeType(thickness,
                                               juce::PathStrokeType::curved,
                                               juce::PathStrokeType::rounded));
@@ -75,71 +65,121 @@ namespace zlpanel {
     }
 
     void MagAnalyzerPanel::run(const double next_time_stamp) {
-        const auto current_bound = atomic_bound_.load();
-        if (to_reset_path_.exchange(false, std::memory_order::acquire)
-            || next_time_stamp - current_time > 0.5) {
-            is_first_point_ = true;
-        }
-        current_time = next_time_stamp;
-        if (is_first_point_) {
-            auto [actual_delta, to_reset_shift] = mag_analyzer_ref_.run(1, 0);
-            if (actual_delta > 0) {
-                is_first_point_ = false;
-                current_count_ = 0.;
-                start_time_ = next_time_stamp;
-                mag_analyzer_ref_.createPath(xs_, {out1_ys_, out2_ys_},
-                                             current_bound.getWidth(), current_bound.getHeight(), 0.f,
-                                             analyzer_min_db_.load(std::memory_order::relaxed), 0.f);
-                updatePaths(current_bound);
-            }
-        } else {
-            const auto c_num_per_second = num_per_second_.load(std::memory_order::relaxed);
-            const auto target_count = (next_time_stamp - start_time_) * c_num_per_second;
-            const auto tolerance = std::max(target_count * 1.5, 1.0);
-            const auto target_delta = target_count - current_count_;
-            auto [actual_delta, to_reset_shift] = mag_analyzer_ref_.run(
-                static_cast<int>(std::floor(target_delta)),
-                static_cast<int>(std::round(tolerance)));
-            current_count_ += static_cast<double>(actual_delta);
+        const auto bound = atomic_bound_.load();
+        constexpr auto stereo_type = zldsp::analyzer::StereoType::kStereo;
+        const auto mag_type = static_cast<zldsp::analyzer::MagType>(std::round(
+            analyzer_mag_type_ref_.load(std::memory_order::relaxed)));
+        const auto min_db = zlstate::PMagMinDB::kDBs[static_cast<size_t>(std::round(
+            analyzer_min_db_ref_.load(std::memory_order::relaxed)))];
+        const auto time_length_idx = analyzer_time_length_ref_.load(std::memory_order::relaxed);
 
-            if (to_reset_shift) {
-                start_time_ = next_time_stamp;
-                current_count_ = 0.;
-            }
-
-            const auto shift = to_reset_shift ? 0.0 : target_count - current_count_;
-            mag_analyzer_ref_.createPath(xs_, {out1_ys_, out2_ys_},
-                                         current_bound.getWidth(), current_bound.getHeight(),
-                                         static_cast<float>(shift),
-                                         analyzer_min_db_.load(std::memory_order::relaxed), 0.f);
-            updatePaths(current_bound);
-        }
         {
-            std::lock_guard<std::mutex> lock{mutex_};
-            out_path1_.swapWithPath(next_out_path1_);
-            out_path2_.swapWithPath(next_out_path2_);
+            auto& sender{p_ref_.getController().getAnalyzerSender()};
+            std::lock_guard lock{sender.getLock()};
+            const auto sample_rate = sender.getSampleRate();
+            const auto max_num_samples = sender.getMaxNumSamples();
+            if (std::abs(sample_rate_ - sample_rate) > 0.1 ||
+                max_num_samples_ != max_num_samples ||
+                std::abs(time_length_idx_ - time_length_idx) > 0.1) {
+                sample_rate_ = sample_rate;
+                max_num_samples_ = max_num_samples;
+                time_length_idx_ = time_length_idx;
+                const auto time_idx = static_cast<size_t>(std::round(time_length_idx_));
+                num_points_per_second_ = kNumPointsPerSecond[time_idx];
+                num_samples_per_point_ = static_cast<int>(sample_rate_) / num_points_per_second_;
+                time_length_ = zlstate::PMagTimeLength::kLength[time_idx];
+                is_first_point_ = true;
+                num_points_ = static_cast<size_t>(num_points_per_second_) * static_cast<size_t>(time_length_);
+                second_per_point_ = static_cast<double>(time_length_) / static_cast<double>(num_points_);
+
+                xs_.resize(num_points_ + 2);
+                y1s_.resize(num_points_ + 2);
+                y2s_.resize(num_points_ + 2);
+            }
+
+            auto& fifo{sender.getAbstractFIFO()};
+            if (!is_first_point_) {
+                // update ys
+                while (next_time_stamp - start_time_ > second_per_point_) {
+                    // if not enough samples
+                    if (fifo.getNumReady() >= num_samples_per_point_) {
+                        const auto range = fifo.prepareToRead(num_samples_per_point_);
+                        db1_ = zldsp::analyzer::MagReceiver::calculate(
+                            range, sender.getSampleFIFOs()[0], mag_type, stereo_type);
+                        db2_ = zldsp::analyzer::MagReceiver::calculate(
+                            range, sender.getSampleFIFOs()[1], mag_type, stereo_type);
+                        fifo.finishRead(num_samples_per_point_);
+                        num_missing_points_ = 0;
+                    } else {
+                        if (num_missing_points_ < kPausedThreshold) {
+                            num_missing_points_ += 1;
+                        } else if (num_missing_points_ == kPausedThreshold) {
+                            const auto shift = static_cast<ptrdiff_t>(
+                                y1s_.size() - static_cast<size_t>(kPausedThreshold));
+                            std::ranges::fill(y1s_.begin() + shift, y1s_.end(), 10000.f);
+                            std::ranges::fill(y2s_.begin() + shift, y2s_.end(), 10000.f);
+                        }
+                    }
+                    {
+                        const auto too_many_missing = num_missing_points_ >= kPausedThreshold;
+                        const auto scale = bound.getHeight() / min_db;
+                        std::ranges::rotate(y1s_, y1s_.begin() + 1);
+                        y1s_.back() = too_many_missing ? 10000.f : db1_ * scale;
+                        std::ranges::rotate(y2s_, y2s_.begin() + 1);
+                        y2s_.back() = too_many_missing ? 10000.f : db2_ * scale;
+                    }
+                    start_time_ += second_per_point_;
+                }
+                // if too much samples
+                const auto num_ready = fifo.getNumReady();
+                const auto threshold = 2 * std::max(static_cast<int>(max_num_samples_), num_samples_per_point_);
+                if (num_ready > threshold) {
+                    too_much_samples_ += (num_ready - threshold) / num_samples_per_point_;
+                    if (too_much_samples_ > kTooMuchResetThreshold) {
+                        (void)fifo.prepareToRead(num_ready - threshold);
+                        fifo.finishRead(num_ready - threshold);
+                        too_much_samples_ = 0;
+                    }
+                } else {
+                    too_much_samples_ = 0;
+                }
+            } else {
+                if (fifo.getNumReady() >= num_samples_per_point_) {
+                    is_first_point_ = false;
+                    start_time_ = next_time_stamp;
+                    std::ranges::fill(y1s_, 100000.f);
+                    std::ranges::fill(y2s_, 100000.f);
+                }
+            }
+        }
+        // update xs
+        if (!is_first_point_) {
+            const auto x_scale = static_cast<double>(bound.getWidth()) / static_cast<double>(time_length_);
+            auto x0 = -(next_time_stamp - start_time_) * x_scale;
+            const auto delta_x = second_per_point_ * x_scale;
+            for (size_t i = 0; i < xs_.size(); ++i) {
+                xs_[i] = static_cast<float>(x0);
+                x0 += delta_x;
+            }
+        }
+        if (!is_first_point_) {
+            updatePaths(bound);
+            std::lock_guard lock{mutex_};
+            path1_.swapWithPath(next_path1_);
+            path2_.swapWithPath(next_path2_);
         }
     }
 
-    void MagAnalyzerPanel::updatePaths(const juce::Rectangle<float>) {
-        next_out_path1_.clear();
-        next_out_path2_.clear();
+    void MagAnalyzerPanel::updatePaths(const juce::Rectangle<float> bound) {
+        next_path1_.clear();
+        next_path2_.clear();
 
-        next_out_path1_.startNewSubPath(xs_[0], out1_ys_[0]);
-        next_out_path2_.startNewSubPath(xs_[0], out2_ys_[0]);
+        next_path1_.startNewSubPath(xs_[0], y1s_[0]);
+        next_path2_.startNewSubPath(xs_[0], y2s_[0]);
+        const auto center_y = bound.getCentreY();
         for (size_t i = 1; i < xs_.size(); ++i) {
-            next_out_path1_.lineTo(xs_[i], out1_ys_[i]);
-            next_out_path2_.lineTo(xs_[i], out2_ys_[i]);
-        }
-    }
-
-    void MagAnalyzerPanel::parameterChanged(const juce::String& parameter_id, const float new_value) {
-        if (parameter_id == zlstate::PMagType::kID) {
-            mag_analyzer_ref_.setMagType(static_cast<zldsp::analyzer::MagType>(std::round(new_value)));
-        } else if (parameter_id == zlstate::PMagMinDB::kID) {
-            analyzer_min_db_.store(zlstate::PMagMinDB::getMinDBFromIndex(new_value), std::memory_order::relaxed);
-        } else if (parameter_id == zlstate::PMagTimeLength::kID) {
-            setTimeLength(zlstate::PMagTimeLength::getTimeLengthFromIndex(new_value));
+            next_path1_.lineTo(xs_[i], y1s_[i]);
+            next_path2_.lineTo(xs_[i], y2s_[i]);
         }
     }
 }

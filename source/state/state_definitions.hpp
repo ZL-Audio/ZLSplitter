@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -177,7 +177,7 @@ namespace zlstate {
         auto static constexpr kID = "mag_time_length";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "6 s ", "9 s ", "12 s ", "18 s "
+            "6 s", "9 s", "12 s", "18 s"
         };
         static constexpr std::array kLength = {6.f, 9.f, 12.f, 18.f};
         int static constexpr kDefaultI = 1;

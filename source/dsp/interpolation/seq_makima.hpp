@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -16,7 +16,7 @@ namespace zldsp::interpolation {
      * modified Akima spline interpolation with increasing input/output X
      * @tparam FloatType the float type of input/output
      */
-    template<typename FloatType>
+    template <typename FloatType>
     class SeqMakima {
     public:
         /**
@@ -27,7 +27,7 @@ namespace zldsp::interpolation {
          * @param left_derivative left derivative
          * @param right_derivative right derivative
          */
-        explicit SeqMakima(FloatType *x, FloatType *y, size_t point_num,
+        explicit SeqMakima(FloatType* x, FloatType* y, size_t point_num,
                            FloatType left_derivative, FloatType right_derivative)
             : xs_(x), ys_(y), input_size_(point_num),
               left_derivative_(left_derivative), right_derivative_(right_derivative) {
@@ -43,18 +43,17 @@ namespace zldsp::interpolation {
                 deltas_[i] = (ys_[i + 1] - ys_[i]) / (xs_[i + 1] - xs_[i]);
             }
             auto left_delta = FloatType(2) * deltas_[0] - deltas_[1];
-            auto right_delta = FloatType(2) * deltas_.end()[-1] - deltas_.end()[-2];
+            auto right_delta = FloatType(2) * deltas_[deltas_.size() - 1] - deltas_[deltas_.size() - 2];
 
-            derivatives_.front() = left_derivative_;
-            derivatives_.back() = right_derivative_;
+            const auto n = derivatives_.size();
 
+            derivatives_[0] = left_derivative_;
+            derivatives_[n - 1] = right_derivative_;
             derivatives_[1] = calculateD(left_delta, deltas_[0], deltas_[1], deltas_[2]);
-
-            for (size_t i = 2; i < derivatives_.size() - 2; ++i) {
+            for (size_t i = 2; i < n - 2; ++i) {
                 derivatives_[i] = calculateD(deltas_[i - 2], deltas_[i - 1], deltas_[i], deltas_[i + 1]);
             }
-
-            derivatives_.end()[-2] = calculateD(deltas_.end()[-3], deltas_.end()[-2], deltas_.end()[-1], right_delta);
+            derivatives_[n - 2] = calculateD(deltas_[n - 4], deltas_[n - 3], deltas_[n - 2], right_delta);
         }
 
         /**
@@ -63,7 +62,7 @@ namespace zldsp::interpolation {
          * @param y output Y pointer
          * @param point_num number of output points
          */
-        void eval(FloatType *x, FloatType *y, const size_t point_num) {
+        void eval(FloatType* x, FloatType* y, const size_t point_num) {
             size_t current_pos = 0;
             size_t start_idx = 0, end_idx = point_num - 1;
             while (start_idx <= end_idx && x[start_idx] <= xs_[0]) {
@@ -80,9 +79,9 @@ namespace zldsp::interpolation {
                 }
                 const auto t = (x[i] - xs_[current_pos]) / (xs_[current_pos + 1] - xs_[current_pos]);
                 y[i] = h00(t) * ys_[current_pos] +
-                       h10(t) * (xs_[current_pos + 1] - xs_[current_pos]) * derivatives_[current_pos] +
-                       h01(t) * ys_[current_pos + 1] +
-                       h11(t) * (xs_[current_pos + 1] - xs_[current_pos]) * derivatives_[current_pos + 1];
+                    h10(t) * (xs_[current_pos + 1] - xs_[current_pos]) * derivatives_[current_pos] +
+                    h01(t) * ys_[current_pos + 1] +
+                    h11(t) * (xs_[current_pos + 1] - xs_[current_pos]) * derivatives_[current_pos + 1];
             }
         }
 
@@ -108,7 +107,7 @@ namespace zldsp::interpolation {
             return t * t * (t - FloatType(1));
         }
 
-        static FloatType calculateD(FloatType &delta0, FloatType &delta1, FloatType &delta2, FloatType &delta3) {
+        static FloatType calculateD(FloatType& delta0, FloatType& delta1, FloatType& delta2, FloatType& delta3) {
             const auto w1 = std::abs(delta3 - delta2) + std::abs(delta3 + delta2) * FloatType(0.5);
             const auto w2 = std::abs(delta1 - delta0) + std::abs(delta1 + delta0) * FloatType(0.5);
             const auto w = w1 / (w1 + w2);

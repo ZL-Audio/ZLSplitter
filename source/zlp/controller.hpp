@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -15,27 +15,26 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include "../dsp/splitter/splitter.hpp"
-#include "../dsp/fft_analyzer/fft_analyzer.hpp"
-#include "../dsp/mag_analyzer/mag_analyzer.hpp"
+#include "../dsp/analyzer/analyzer_base/analyzer_sender_base.hpp"
 #include "zlp_definitions.hpp"
 
 namespace zlp {
-    template<typename FloatType>
-    class Controller : private juce::AsyncUpdater {
+    template <typename FloatType>
+    class Controller final : private juce::AsyncUpdater {
     public:
         static constexpr size_t kAnalyzerPointNum = 251;
 
-        explicit Controller(juce::AudioProcessor &processor);
+        explicit Controller(juce::AudioProcessor& processor);
 
         void prepare(double sample_rate, size_t max_num_samples);
 
         void prepareBuffer();
 
-        void process(std::array<FloatType *, 2> &in_buffer,
-                     std::array<FloatType *, 4> &out_buffer,
+        void process(std::array<FloatType*, 2>& in_buffer,
+                     std::array<FloatType*, 4>& out_buffer,
                      size_t num_samples);
 
-        void processBypassDelay(std::array<FloatType *, 2> &in_buffer, size_t num_samples);
+        void processBypassDelay(std::array<FloatType*, 2>& in_buffer, size_t num_samples);
 
         void setSplitType(zlp::PSplitType::SplitType split_type) {
             split_type_.store(split_type, std::memory_order::relaxed);
@@ -59,41 +58,33 @@ namespace zlp {
             to_update_.store(true, std::memory_order::release);
         }
 
-        zldsp::splitter::LHSplitter<FloatType> &getLHSplitter() {
+        zldsp::splitter::LHSplitter<FloatType>& getLHSplitter() {
             return lh_splitter_;
         }
 
-        zldsp::splitter::LHFIRSplitter<FloatType> &getLHFIRSplitter() {
+        zldsp::splitter::LHFIRSplitter<FloatType>& getLHFIRSplitter() {
             return lh_fir_splitter_;
         }
 
-        std::array<zldsp::splitter::TSSplitter<FloatType>, 2> &getTSSplitter() {
+        std::array<zldsp::splitter::TSSplitter<FloatType>, 2>& getTSSplitter() {
             return ts_splitter_;
         }
 
-        std::array<zldsp::splitter::PSSplitter<FloatType>, 2> &getPSSplitter() {
+        std::array<zldsp::splitter::PSSplitter<FloatType>, 2>& getPSSplitter() {
             return ps_splitter_;
         }
 
-        void setFFTAnalyzerOn(const bool f) {
-            is_fft_on_.store(f, std::memory_order::relaxed);
+        void setAnalyzerOn(const bool f) {
+            analyzer_on_.store(f, std::memory_order::relaxed);
         }
 
-        zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 2, kAnalyzerPointNum> &getFFTAnalyzer() {
-            return fft_analyzer_;
-        }
-
-        void setMagAnalyzerOn(const bool f) {
-            is_mag_on_.store(f, std::memory_order::relaxed);
-        }
-
-        zldsp::analyzer::MultipleMagAnalyzer<FloatType, 2, kAnalyzerPointNum> &getMagAnalyzer() {
-            return mag_analyzer_;
+        auto& getAnalyzerSender() {
+            return analyzer_sender_;
         }
 
     private:
-        juce::AudioProcessor &p_ref_;
-        std::array<FloatType *, 2> out_buffer1_, out_buffer2_;
+        juce::AudioProcessor& p_ref_;
+        std::array<FloatType*, 2> out_buffer1_, out_buffer2_;
         zldsp::splitter::LRSplitter<FloatType> lr_splitter_;
         zldsp::splitter::MSSplitter<FloatType> ms_splitter_;
         zldsp::splitter::LHSplitter<FloatType> lh_splitter_;
@@ -115,12 +106,9 @@ namespace zlp {
 
         std::atomic<int> latency_{0};
 
-        std::atomic<bool> is_fft_on_{false};
-        std::array<std::span<FloatType *>, 2> analyzer_spans_;
-        zldsp::analyzer::MultipleFFTAnalyzer<FloatType, 2, kAnalyzerPointNum> fft_analyzer_;
-
-        std::atomic<bool> is_mag_on_{false};
-        zldsp::analyzer::MultipleMagAnalyzer<FloatType, 2, kAnalyzerPointNum> mag_analyzer_;
+        // magnitude analyzer
+        std::atomic<bool> analyzer_on_{true};
+        zldsp::analyzer::AnalyzerSenderBase<FloatType, 2> analyzer_sender_{};
 
         zldsp::delay::IntegerDelay<FloatType> bypass_delay_;
 

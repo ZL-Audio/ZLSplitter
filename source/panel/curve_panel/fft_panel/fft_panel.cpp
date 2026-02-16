@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -21,9 +21,7 @@ namespace zlpanel {
         addAndMakeVisible(fft_analyzer_panel_);
     }
 
-    FFTPanel::~FFTPanel() {
-        p_ref_.getController().setFFTAnalyzerOn(false);
-    }
+    FFTPanel::~FFTPanel() = default;
 
     void FFTPanel::run() {
         fft_analyzer_panel_.run();
@@ -70,19 +68,11 @@ namespace zlpanel {
                     max_freq = 96000.0;
                 }
             }
-            p_ref_.getController().getFFTAnalyzer().setMinFreq(min_freq);
-            p_ref_.getController().getFFTAnalyzer().setMaxFreq(max_freq);
             fft_background_panel_.setMinMaxFreq(min_freq, max_freq);
         }
         const auto new_split_type = split_type_ref_.load(std::memory_order::relaxed);
         if (std::abs(new_split_type - c_split_type_) > .1f) {
             c_split_type_ = new_split_type;
-            if (static_cast<zlp::PSplitType::SplitType>(
-                std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
-                p_ref_.getController().getFFTAnalyzer().setON({true, false});
-            } else {
-                p_ref_.getController().getFFTAnalyzer().setON({true, true});
-            }
         }
     }
 
@@ -92,24 +82,17 @@ namespace zlpanel {
 
     void FFTPanel::mouseMove(const juce::MouseEvent&) {
         stopTimer();
-        p_ref_.getController().getFFTAnalyzer().setFrozen(0, false);
-        p_ref_.getController().getFFTAnalyzer().setFrozen(1, false);
         startTimer(kHoverDurationMS);
     }
 
     void FFTPanel::mouseExit(const juce::MouseEvent&) {
         stopTimer();
-        p_ref_.getController().getFFTAnalyzer().setFrozen(0, false);
-        p_ref_.getController().getFFTAnalyzer().setFrozen(1, false);
     }
 
     void FFTPanel::timerCallback() {
-        p_ref_.getController().getFFTAnalyzer().setFrozen(0, true);
-        p_ref_.getController().getFFTAnalyzer().setFrozen(1, true);
         stopTimer();
     }
 
     void FFTPanel::visibilityChanged() {
-        p_ref_.getController().setFFTAnalyzerOn(isVisible());
     }
 }

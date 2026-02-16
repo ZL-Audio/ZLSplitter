@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -9,11 +9,14 @@
 
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-
 #include "../../../PluginProcessor.hpp"
 #include "../../../gui/gui.hpp"
 #include "../../helper/helper.hpp"
+#include "../../../dsp/analyzer/fft_analyzer/fft_analyzer_receiver.hpp"
+#include "../../../dsp/analyzer/fft_analyzer/spectrum_smoother.hpp"
+#include "../../../dsp/analyzer/fft_analyzer/spectrum_tilter.hpp"
+#include "../../../dsp/analyzer/fft_analyzer/spectrum_decayer.hpp"
+#include "../../../dsp/lock/spin_lock.hpp"
 
 namespace zlpanel {
     class FFTAnalyzerPanel final : public juce::Component {
@@ -28,19 +31,36 @@ namespace zlpanel {
 
         void resized() override;
 
+        void setRefreshRate(double refresh_rate);
+
     private:
         PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
         std::atomic<float> &split_type_ref_, &swap_ref_, &fft_min_db_ref_;
 
-        bool skip_next_repaint_{false};
         AtomicBound<float> atomic_bound_;
-        float width_{-.1f};
 
-        std::vector<float> xs_{};
-        std::vector<float> y1_{}, y2_{};
+        kfr::univector<float> xs_{}, y1s_{}, y2s_{};
         juce::Path out_path1_, next_out_path1_;
         juce::Path out_path2_, next_out_path2_;
-        std::mutex mutex_;
+        zldsp::lock::SpinLock mutex_;
+
+        double c_sample_rate_{};
+        int fft_size_{0};
+        float c_width_{};
+
+        std::atomic<float> refresh_rate_{30.f};
+        std::atomic<float> spectrum_decay_speed_{-30.f};
+        std::atomic<bool> to_update_decay_{false};
+
+        std::atomic<float> spectrum_tilt_slope_{4.5f};
+        std::atomic<bool> to_update_tilt_{false};
+
+        std::atomic<bool> is_fft_frozen_{false};
+
+        zldsp::analyzer::FFTAnalyzerReceiver<2> receiver_;
+        zldsp::analyzer::SpectrumSmoother spectrum_smoother_;
+        zldsp::analyzer::SpectrumTilter spectrum_tilter_;
+        std::array<zldsp::analyzer::SpectrumDecayer, 2> spectrum_decayers_;
     };
 }

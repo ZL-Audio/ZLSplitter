@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -73,8 +73,7 @@ namespace zlpanel {
             const auto c_refresh_rate = refresh_handler_.getActualRefreshRate();
             if (std::abs(c_refresh_rate - refresh_rate_) > 1e-3) {
                 refresh_rate_ = c_refresh_rate;
-                p_ref_.getController().getFFTAnalyzer().setRefreshRate(
-                    static_cast<float>(refresh_rate_));
+                curve_panel_.setRefreshRate(refresh_rate_);
             }
         }
     }
@@ -96,4 +95,4 @@ namespace zlpanel {
             stopTimer();
         }
     }
-} // zlpanel
+}

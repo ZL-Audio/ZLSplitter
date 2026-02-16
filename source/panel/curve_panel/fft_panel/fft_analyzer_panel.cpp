@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -20,18 +20,14 @@ namespace zlpanel {
         for (auto& path : {&out_path1_, &out_path2_, &next_out_path1_, &next_out_path2_}) {
             path->preallocateSpace(preallocateSpace);
         }
-
+        receiver_.setON({true, true});
         setInterceptsMouseClicks(false, false);
     }
 
     FFTAnalyzerPanel::~FFTAnalyzerPanel() = default;
 
     void FFTAnalyzerPanel::paint(juce::Graphics& g) {
-        if (skip_next_repaint_) {
-            skip_next_repaint_ = false;
-            return;
-        }
-        const std::unique_lock<std::mutex> lock{mutex_, std::try_to_lock};
+        const std::unique_lock lock{mutex_, std::try_to_lock};
         if (!lock.owns_lock()) {
             return;
         }
@@ -61,52 +57,116 @@ namespace zlpanel {
     void FFTAnalyzerPanel::resized() {
         const auto bound = getLocalBounds().toFloat();
         atomic_bound_.store(bound);
-        skip_next_repaint_ = true;
     }
 
     void FFTAnalyzerPanel::run() {
-        auto& analyzer{p_ref_.getController().getFFTAnalyzer()};
-        if (!analyzer.getLock().try_lock()) {
-            return;
-        }
-        const auto akima_reset_flag = analyzer.run();
-        const size_t n = analyzer.getInterplotSize();
-        if (akima_reset_flag || n != xs_.size()) {
-            xs_.resize(n);
-            y1_.resize(n);
-            y2_.resize(n);
-            width_ = -1.f;
-        }
-
         const auto bound = atomic_bound_.load();
-        // re-calculate xs if width changes
-        if (std::abs(bound.getWidth() - width_) > 1e-3f) {
-            width_ = bound.getWidth();
-            analyzer.createPathXs(xs_, width_);
-        }
         const auto min_db = zlstate::PFFTMinDB::kDBs[static_cast<size_t>(std::round(
             fft_min_db_ref_.load(std::memory_order::relaxed)))];
-        analyzer.createPathYs({std::span{y1_}, std::span{y2_}}, bound.getHeight(), min_db);
-        analyzer.getLock().unlock();
+        bool to_update_xs_{false};
+        double sample_rate;
+        {
+            auto& sender{p_ref_.getController().getAnalyzerSender()};
+            std::lock_guard lock{sender.getLock()};
+            sample_rate = sender.getSampleRate();
+            if (std::abs(c_sample_rate_ - sample_rate) > 0.1) {
+                c_sample_rate_ = sample_rate;
+                to_update_tilt_.store(true, std::memory_order::relaxed);
 
-        if (xs_.empty()) {
+                int fft_order;
+                if (sample_rate <= 50000) {
+                    fft_order = 12;
+                } else if (sample_rate <= 100000) {
+                    fft_order = 13;
+                } else if (sample_rate <= 200000) {
+                    fft_order = 14;
+                } else {
+                    fft_order = 15;
+                }
+                fft_size_ = 1 << fft_order;
+                receiver_.prepare(static_cast<int>(fft_order), {2, 2});
+                spectrum_smoother_.prepare(static_cast<size_t>(fft_size_));
+                spectrum_smoother_.setSmooth(1.0 / 12.0);
+                spectrum_tilter_.prepare(static_cast<size_t>(fft_size_));
+                spectrum_decayers_[0].prepare(static_cast<size_t>(fft_size_));
+                spectrum_decayers_[1].prepare(static_cast<size_t>(fft_size_));
+
+                xs_.resize(static_cast<size_t>(fft_size_) / 2 + 1);
+                y1s_.resize(static_cast<size_t>(fft_size_) / 2 + 1);
+                y2s_.resize(static_cast<size_t>(fft_size_) / 2 + 1);
+
+                to_update_xs_ = true;
+            }
+
+            auto& fifo{sender.getAbstractFIFO()};
+            auto num_read = fifo.getNumReady();
+            if (num_read > static_cast<int>(receiver_.getFFTSize())) {
+                (void)fifo.prepareToRead(num_read - static_cast<int>(receiver_.getFFTSize()));
+                fifo.finishRead(num_read - static_cast<int>(receiver_.getFFTSize()));
+                num_read = static_cast<int>(receiver_.getFFTSize());
+            }
+            const auto range = fifo.prepareToRead(num_read);
+            receiver_.pull(range, sender.getSampleFIFOs());
+            fifo.finishRead(num_read);
+        }
+        if (sample_rate < 40000.0) {
             return;
         }
-        next_out_path1_.clear();
-        next_out_path1_.startNewSubPath(xs_[0], std::isfinite(y1_[0]) ? y1_[0] : bound.getBottom());
-        next_out_path2_.clear();
-        next_out_path2_.startNewSubPath(xs_[0], std::isfinite(y2_[0]) ? y2_[0] : bound.getBottom());
-        for (size_t i = 1; i < xs_.size(); ++i) {
-            if (std::isfinite(y1_[i])) {
-                next_out_path1_.lineTo(xs_[i], y1_[i]);
+        if (fft_size_ <= 0) {
+            return;
+        }
+        receiver_.forward(zldsp::analyzer::StereoType::kStereo);
+
+        if (to_update_tilt_.exchange(false, std::memory_order::acquire)) {
+            spectrum_tilter_.setTiltSlope(sample_rate,
+                                          spectrum_tilt_slope_.load(std::memory_order::relaxed));
+        }
+        if (to_update_xs_ || std::abs(bound.getWidth() - c_width_) > 0.1f) {
+            c_width_ = bound.getWidth();
+            const auto delta_freq = static_cast<float>(sample_rate / static_cast<double>(fft_size_));
+            const auto temp_scale = static_cast<float>(1.0 / std::log(sample_rate * 0.5 / 10.0)) * bound.getWidth();
+            const auto temp_bias = std::log(static_cast<float>(10.0)) * temp_scale;
+            for (size_t i = 1; i < xs_.size(); ++i) {
+                const auto freq = delta_freq * static_cast<float>(i);
+                xs_[i] = std::log(freq) * temp_scale - temp_bias;
             }
-            if (std::isfinite(y2_[i])) {
-                next_out_path2_.lineTo(xs_[i], y2_[i]);
-            }
+            xs_[0] = std::min(0.f, xs_[2] - 2.f * xs_[1]);
+        }
+        if (to_update_decay_.exchange(false, std::memory_order::acquire)) {
+            spectrum_decayers_[0].setDecaySpeed(refresh_rate_.load(std::memory_order::relaxed),
+                                            spectrum_decay_speed_.load(std::memory_order::relaxed));
+            spectrum_decayers_[1].setDecaySpeed(refresh_rate_.load(std::memory_order::relaxed),
+                                            spectrum_decay_speed_.load(std::memory_order::relaxed));
         }
 
-        std::lock_guard<std::mutex> lock{mutex_};
+        auto calculate_path = [&](kfr::univector<float>& spectrum,
+            kfr::univector<float>& ys,
+            zldsp::analyzer::SpectrumDecayer& decayer,
+            juce::Path& path) {
+            spectrum_smoother_.smooth(spectrum);
+            spectrum = 10.f * kfr::log10(kfr::max(spectrum, 1e-24f));
+            decayer.decay(spectrum, is_fft_frozen_.load(std::memory_order::relaxed));
+            spectrum_tilter_.tilt(spectrum);
+            ys = spectrum * (bound.getHeight() / min_db);
+            path.clear();
+            PathMinimizer<10> minimizer{path};
+            minimizer.startNewSubPath<true>(xs_[0], ys[0]);
+            for (size_t i = 1; i < xs_.size(); ++i) {
+                minimizer.lineTo(xs_[i], ys[i]);
+            }
+            minimizer.finish();
+        };
+
+        calculate_path(receiver_.getAbsSqrFFTBuffers()[0], y1s_, spectrum_decayers_[0], next_out_path1_);
+        calculate_path(receiver_.getAbsSqrFFTBuffers()[1], y2s_, spectrum_decayers_[1], next_out_path2_);
+
+        std::lock_guard lock{mutex_};
         out_path1_.swapWithPath(next_out_path1_);
         out_path2_.swapWithPath(next_out_path2_);
+    }
+
+    void FFTAnalyzerPanel::setRefreshRate(const double refresh_rate) {
+        refresh_rate_.store(static_cast<float>(refresh_rate), std::memory_order::relaxed);
+        to_update_decay_.store(true, std::memory_order::release);
     }
 }

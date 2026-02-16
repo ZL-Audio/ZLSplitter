@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -15,10 +15,11 @@
 #include "../../../gui/gui.hpp"
 #include "../../../state/state.hpp"
 #include "../../helper/helper.hpp"
+#include "../../../dsp/analyzer/mag_analyzer/mag_receiver.hpp"
+#include "../../../dsp/lock/spin_lock.hpp"
 
 namespace zlpanel {
-    class MagAnalyzerPanel final : public juce::Component,
-                                   private juce::AudioProcessorValueTreeState::Listener {
+    class MagAnalyzerPanel final : public juce::Component {
     public:
         explicit MagAnalyzerPanel(PluginProcessor &p, zlgui::UIBase &base);
 
@@ -31,42 +32,42 @@ namespace zlpanel {
         void resized() override;
 
     private:
+        static constexpr std::array<int, 4> kNumPointsPerSecond{40, 30, 20, 15};
+        static constexpr int kPausedThreshold = 6;
+        static constexpr int kTooMuchResetThreshold = 64;
         PluginProcessor &p_ref_;
-        zlgui::UIBase &base_;
-        std::atomic<float> &split_type_ref_, &swap_ref_, &fft_min_db_ref_;
+        zlgui::UIBase& base_;
 
-        static constexpr std::array kNAIDs{
-            zlstate::PMagType::kID,
-            zlstate::PMagMinDB::kID,
-            zlstate::PMagTimeLength::kID
-        };
+        std::atomic<float> &split_type_ref_, &swap_ref_;
+        std::atomic<float>& analyzer_mag_type_ref_;
+        std::atomic<float>& analyzer_min_db_ref_;
+        std::atomic<float>& analyzer_time_length_ref_;
 
-        zldsp::analyzer::MultipleMagAnalyzer<double, 2, zlp::Controller<double>::kAnalyzerPointNum> &mag_analyzer_ref_;
         AtomicBound<float> atomic_bound_;
 
-        std::array<float, zlp::Controller<double>::kAnalyzerPointNum> xs_{}, out1_ys_{}, out2_ys_{};
-        juce::Path out_path1_, next_out_path1_;
-        juce::Path out_path2_, next_out_path2_;
-        std::mutex mutex_;
+        float db1_{-240.f}, db2_{-240.f};
+        kfr::univector<float> xs_{}, y1s_{}, y2s_{};
+        juce::Path path1_, path2_;
+        juce::Path next_path1_, next_path2_;
+        zldsp::lock::SpinLock mutex_;
 
-        std::atomic<bool> to_reset_path_{true};
-        double start_time_{0.0}, current_time{0.0};
-        double current_count_{0.0};
-        std::atomic<double> num_per_second_{50.0};
+        float curve_thickness_{0.f};
+
+        double start_time_{0.0};
 
         bool is_first_point_{true};
+        int too_much_samples_{0};
+        int num_missing_points_{0};
 
-        std::atomic<float> analyzer_min_db_{-72.f};
+        double sample_rate_{0.};
+        size_t max_num_samples_{0};
+        float time_length_idx_{0.f}, time_length_{6.f};
+
+        size_t num_points_{0};
+        int num_samples_per_point_{0};
+        int num_points_per_second_{0};
+        double second_per_point_{0};
 
         void updatePaths(juce::Rectangle<float> bound);
-
-        void parameterChanged(const juce::String &parameter_id, float new_value) override;
-
-        void setTimeLength(const float x) {
-            mag_analyzer_ref_.setTimeLength(x);
-            num_per_second_.store(
-                static_cast<double>(zlp::Controller<double>::kAnalyzerPointNum - 1) / static_cast<double>(x));
-            to_reset_path_.exchange(true, std::memory_order::release);
-        }
     };
 }

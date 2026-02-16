@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -9,6 +9,15 @@
 
 #pragma once
 
-#include "multiple_mag_analyzer.hpp"
-#include "mag_reduction_analyzer.hpp"
-#include "multiple_mag_avg_analyzer.hpp"
+namespace zldsp::analyzer {
+    enum class MagType {
+        kPeak, kRMS
+    };
+
+    enum class StereoType {
+        kStereo, kLeft, kRight, kMid, kSide
+    };
+
+    inline constexpr float kSqrt2Over2 = static_cast<float>(
+            0.7071067811865475244008443621048490392848359376884740365883398690);
+}

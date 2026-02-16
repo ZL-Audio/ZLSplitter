@@ -1,4 +1,4 @@
-// Copyright (C) 2025 - zsliu98
+// Copyright (C) 2026 - zsliu98
 // This file is part of ZLSplitter
 //
 // ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
@@ -17,8 +17,8 @@
 #pragma clang diagnostic pop
 
 namespace zldsp::fft {
-    template<typename FloatType>
-    void fillCycleHanningWindow(kfr::univector<FloatType> &window, const size_t size) {
+    template <typename FloatType>
+    void fillCycleHanningWindow(kfr::univector<FloatType>& window, const size_t size) {
         kfr::univector<float> temp_window;
         temp_window.resize(size + 1);
         temp_window = kfr::window_hann<FloatType>(size + 1);
@@ -26,7 +26,7 @@ namespace zldsp::fft {
         window = actual_window;
     }
 
-    template<typename FloatType>
+    template <typename FloatType>
     class KFREngine {
     public:
         KFREngine() = default;
@@ -37,27 +37,35 @@ namespace zldsp::fft {
             temp_buffer_.resize(fft_plan_->temp_size);
         }
 
-        void forward(FloatType *in_buffer, std::complex<FloatType> *out_buffer) {
+        void forward(kfr::univector<float>& in_buffer, kfr::univector<std::complex<float>>& out_buffer) {
+            fft_plan_->execute(out_buffer, in_buffer, temp_buffer_);
+        }
+
+        void forward(FloatType* in_buffer, std::complex<FloatType>* out_buffer) {
             fft_plan_->execute(out_buffer, in_buffer, temp_buffer_.data());
         }
 
-        void forward(FloatType *in_buffer, FloatType *float_out_buffer) {
-            auto out_buffer = reinterpret_cast<std::complex<FloatType> *>(float_out_buffer);
+        void forward(FloatType* in_buffer, FloatType* float_out_buffer) {
+            auto out_buffer = reinterpret_cast<std::complex<FloatType>*>(float_out_buffer);
             forward(in_buffer, out_buffer);
         }
 
-        void backward(std::complex<FloatType> *out_buffer, FloatType *in_buffer) {
+        void backward(kfr::univector<std::complex<float>>& out_buffer, kfr::univector<float>& in_buffer) {
+            fft_plan_->execute(in_buffer, out_buffer, temp_buffer_);
+        }
+
+        void backward(std::complex<FloatType>* out_buffer, FloatType* in_buffer) {
             fft_plan_->execute(in_buffer, out_buffer, temp_buffer_.data());
         }
 
-        void backward(FloatType *float_out_buffer, FloatType *in_buffer) {
-            auto out_buffer = reinterpret_cast<std::complex<FloatType> *>(float_out_buffer);
+        void backward(FloatType* float_out_buffer, FloatType* in_buffer) {
+            auto out_buffer = reinterpret_cast<std::complex<FloatType>*>(float_out_buffer);
             backward(out_buffer, in_buffer);
         }
 
-        void forwardMagnitudeOnly(FloatType *buffer) {
+        void forwardMagnitudeOnly(FloatType* buffer) {
             forward(buffer, buffer);
-            auto *out = reinterpret_cast<std::complex<FloatType> *>(buffer);
+            auto* out = reinterpret_cast<std::complex<FloatType>*>(buffer);
             for (size_t i = 0; i < (fft_size_ / 2) + 1; ++i) {
                 buffer[i] = std::abs(out[i]);
             }
