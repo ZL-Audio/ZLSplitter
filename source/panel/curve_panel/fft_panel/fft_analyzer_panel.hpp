@@ -17,6 +17,7 @@
 #include "../../../dsp/analyzer/fft_analyzer/spectrum_tilter.hpp"
 #include "../../../dsp/analyzer/fft_analyzer/spectrum_decayer.hpp"
 #include "../../../dsp/lock/spin_lock.hpp"
+#include "../../../dsp/interpolation/seq_makima.hpp"
 
 namespace zlpanel {
     class FFTAnalyzerPanel final : public juce::Component {
@@ -64,5 +65,9 @@ namespace zlpanel {
         zldsp::analyzer::SpectrumSmoother spectrum_smoother_;
         zldsp::analyzer::SpectrumTilter spectrum_tilter_;
         std::array<zldsp::analyzer::SpectrumDecayer, 2> spectrum_decayers_;
+
+        size_t inter_num_{0};
+        kfr::univector<float> inter_xs_{}, inter_y1s_{}, inter_y2s_{};
+        std::unique_ptr<zldsp::interpolation::SeqMakima<float>> interpolator1_, interpolator2_;
     };
 }

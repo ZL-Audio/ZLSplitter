@@ -99,6 +99,14 @@ namespace zlpanel {
                 y1s_.resize(static_cast<size_t>(fft_size_) / 2 + 1);
                 y2s_.resize(static_cast<size_t>(fft_size_) / 2 + 1);
 
+                inter_num_ = static_cast<size_t>(std::round(std::sqrt(static_cast<double>(xs_.size()))));
+                inter_xs_.resize(inter_num_);
+                inter_y1s_.resize(inter_num_);
+                inter_y2s_.resize(inter_num_);
+                interpolator1_ = std::make_unique<zldsp::interpolation::SeqMakima<float>>(
+                    xs_.data(), y1s_.data(), inter_num_ + 1, 0.f, 0.f);
+                interpolator2_ = std::make_unique<zldsp::interpolation::SeqMakima<float>>(
+                    xs_.data(), y2s_.data(), inter_num_ + 1, 0.f, 0.f);
                 to_update_xs_ = true;
             }
 
@@ -135,6 +143,9 @@ namespace zlpanel {
                 xs_[i] = std::log(freq) * temp_scale - temp_bias;
             }
             xs_[0] = std::min(0.f, xs_[2] - 2.f * xs_[1]);
+            for (size_t i = 0; i < inter_num_; ++i) {
+                inter_xs_[i] = (xs_[i] + xs_[i + 1]) * .5f;
+            }
         }
         if (to_update_decay_.exchange(false, std::memory_order::acquire)) {
             const auto refresh_rate = refresh_rate_.load(std::memory_order::acquire);
@@ -146,23 +157,34 @@ namespace zlpanel {
         auto calculate_path = [&](kfr::univector<float>& spectrum,
             kfr::univector<float>& ys,
             zldsp::analyzer::SpectrumDecayer& decayer,
-            juce::Path& path) {
+            juce::Path& path,
+            std::unique_ptr<zldsp::interpolation::SeqMakima<float>>& interpolator,
+            kfr::univector<float>& inter_ys) {
             spectrum_smoother_.smooth(spectrum);
             spectrum = 10.f * kfr::log10(kfr::max(spectrum, 1e-24f));
             decayer.decay(spectrum, is_fft_frozen_.load(std::memory_order::relaxed));
             spectrum_tilter_.tilt(spectrum);
             ys = spectrum * (bound.getHeight() / min_db);
+            interpolator->prepare();
+            interpolator->eval(inter_xs_.data(), inter_ys.data(), inter_num_);
             path.clear();
-            PathMinimizer<10> minimizer{path};
-            minimizer.startNewSubPath<true>(xs_[0], ys[0]);
-            for (size_t i = 1; i < xs_.size(); ++i) {
+            PathMinimizer<50> minimizer{path};
+            path.startNewSubPath(xs_[0], ys[0]);
+            for (size_t i = 0; i < inter_num_; ++i) {
+                path.lineTo(inter_xs_[i], inter_ys[i]);
+                path.lineTo(xs_[i + 1], ys[i + 1]);
+            }
+            minimizer.startNewSubPath<false>(xs_[inter_num_ + 1], ys[inter_num_ + 1]);
+            for (size_t i = inter_num_ + 2; i < xs_.size(); ++i) {
                 minimizer.lineTo(xs_[i], ys[i]);
             }
             minimizer.finish();
         };
 
-        calculate_path(receiver_.getAbsSqrFFTBuffers()[0], y1s_, spectrum_decayers_[0], next_out_path1_);
-        calculate_path(receiver_.getAbsSqrFFTBuffers()[1], y2s_, spectrum_decayers_[1], next_out_path2_);
+        calculate_path(receiver_.getAbsSqrFFTBuffers()[0], y1s_, spectrum_decayers_[0], next_out_path1_,
+            interpolator1_, inter_y1s_);
+        calculate_path(receiver_.getAbsSqrFFTBuffers()[1], y2s_, spectrum_decayers_[1], next_out_path2_,
+            interpolator2_, inter_y2s_);
 
         std::lock_guard lock{mutex_};
         out_path1_.swapWithPath(next_out_path1_);
