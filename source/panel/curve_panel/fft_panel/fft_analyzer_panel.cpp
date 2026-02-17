@@ -63,6 +63,10 @@ namespace zlpanel {
         const auto bound = atomic_bound_.load();
         const auto min_db = zlstate::PFFTMinDB::kDBs[static_cast<size_t>(std::round(
             fft_min_db_ref_.load(std::memory_order::relaxed)))];
+        if (std::abs(min_db - c_fft_min_db_) > .1f) {
+            c_fft_min_db_ = min_db;
+            to_update_decay_.store(true, std::memory_order::relaxed);
+        }
         bool to_update_xs_{false};
         double sample_rate;
         {
@@ -133,10 +137,10 @@ namespace zlpanel {
             xs_[0] = std::min(0.f, xs_[2] - 2.f * xs_[1]);
         }
         if (to_update_decay_.exchange(false, std::memory_order::acquire)) {
-            spectrum_decayers_[0].setDecaySpeed(refresh_rate_.load(std::memory_order::relaxed),
-                                            spectrum_decay_speed_.load(std::memory_order::relaxed));
-            spectrum_decayers_[1].setDecaySpeed(refresh_rate_.load(std::memory_order::relaxed),
-                                            spectrum_decay_speed_.load(std::memory_order::relaxed));
+            const auto refresh_rate = refresh_rate_.load(std::memory_order::acquire);
+            const auto decay_db = c_fft_min_db_ * spectrum_decay_speed_.load(std::memory_order::relaxed);
+            spectrum_decayers_[0].setDecaySpeed(refresh_rate, decay_db);
+            spectrum_decayers_[1].setDecaySpeed(refresh_rate, decay_db);
         }
 
         auto calculate_path = [&](kfr::univector<float>& spectrum,

@@ -49,8 +49,10 @@ namespace zlpanel {
         int fft_size_{0};
         float c_width_{};
 
+        float c_fft_min_db_{0.f};
+
         std::atomic<float> refresh_rate_{30.f};
-        std::atomic<float> spectrum_decay_speed_{-30.f};
+        std::atomic<float> spectrum_decay_speed_{.375f};
         std::atomic<bool> to_update_decay_{false};
 
         std::atomic<float> spectrum_tilt_slope_{4.5f};

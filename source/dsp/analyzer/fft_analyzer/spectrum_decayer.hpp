@@ -35,12 +35,11 @@ namespace zldsp::analyzer {
                 }
             } else {
                 for (size_t i = 0; i < spectrum_db.size(); ++i) {
-                    state_[i] = state_[i] + decay_per_call_;
-                    if (spectrum_db[i] >= state_[i]) {
-                        state_[i] = spectrum_db[i];
-                    } else {
-                        spectrum_db[i] = state_[i];
-                    }
+                    const float v = std::max(spectrum_db[i],
+                                             std::max(state_[i] + decay_per_call_,
+                                                      (spectrum_db[i] + state_[i]) * .5f));
+                    spectrum_db[i] = v;
+                    state_[i] = v;
                 }
             }
         }
