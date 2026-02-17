@@ -7,24 +7,25 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
-
-#include "mag_analyzer_panel.hpp"
-#include "mag_background_panel.hpp"
+#include "wav_panel.hpp"
 
 namespace zlpanel {
-    class MagPanel final : public juce::Component {
-    public:
-        explicit MagPanel(PluginProcessor &p, zlgui::UIBase &base);
+    WavPanel::WavPanel(PluginProcessor& p, zlgui::UIBase& base) :
+        wav_analyzer_panel_(p, base) {
+        addAndMakeVisible(wav_analyzer_panel_);
 
-        void run(double next_time_stamp);
+        setInterceptsMouseClicks(false, true);
+    }
 
-        void resized() override;
+    void WavPanel::run(const double next_time_stamp) {
+        wav_analyzer_panel_.run(next_time_stamp);
+    }
 
-        void repaintCallBackSlow();
+    void WavPanel::resized() {
+        wav_analyzer_panel_.setBounds(getLocalBounds());
+    }
 
-    private:
-        MagBackgroundPanel mag_background_panel_;
-        MagAnalyzerPanel mag_analyzer_panel_;
-    };
+    void WavPanel::repaintCallBackSlow() {
+
+    }
 }

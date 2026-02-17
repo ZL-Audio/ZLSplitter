@@ -10,19 +10,21 @@
 #include "curve_panel.hpp"
 
 namespace zlpanel {
-    CurvePanel::CurvePanel(PluginProcessor &p, zlgui::UIBase &base,
-                           multilingual::TooltipHelper &tooltip_helper)
-        : Thread("curve_panel"), p_ref_(p), base_(base),
-          split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
-          analyzer_show_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PAnalyzerShow::kID)),
-          fft_panel_(p, base),
-          mag_panel_(p, base),
-          left_control_panel_(p, base, tooltip_helper),
-          left_pop_panel_(p, base, tooltip_helper) {
+    CurvePanel::CurvePanel(PluginProcessor& p, zlgui::UIBase& base,
+                           multilingual::TooltipHelper& tooltip_helper) :
+        Thread("curve_panel"), p_ref_(p), base_(base),
+        split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
+        analyzer_show_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PAnalyzerShow::kID)),
+        fft_panel_(p, base),
+        mag_panel_(p, base),
+        wav_panel_(p, base),
+        left_control_panel_(p, base, tooltip_helper),
+        left_pop_panel_(p, base, tooltip_helper) {
         juce::ignoreUnused(p_ref_, tooltip_helper);
         p_ref_.getController().setAnalyzerOn(true);
         addChildComponent(fft_panel_);
         addChildComponent(mag_panel_);
+        addChildComponent(wav_panel_);
         fft_panel_.addMouseListener(this, false);
         left_control_panel_.setAlpha(0.f);
         addAndMakeVisible(left_control_panel_);
@@ -40,12 +42,12 @@ namespace zlpanel {
         p_ref_.getController().setAnalyzerOn(false);
     }
 
-    void CurvePanel::paint(juce::Graphics &g) {
+    void CurvePanel::paint(juce::Graphics& g) {
         g.setColour(base_.getBackgroundColor());
         g.fillRect(getLocalBounds());
     }
 
-    void CurvePanel::paintOverChildren(juce::Graphics &g) {
+    void CurvePanel::paintOverChildren(juce::Graphics& g) {
         juce::ignoreUnused(g);
         notify();
     }
@@ -57,6 +59,7 @@ namespace zlpanel {
         auto bound = getLocalBounds();
         fft_panel_.setBounds(bound);
         mag_panel_.setBounds(bound);
+        wav_panel_.setBounds(bound);
         bound.removeFromBottom(button_width);
         left_control_panel_.setBounds(bound.withRight(bound.getX() + button_width));
         bound.removeFromLeft(left_control_panel_.getWidth());
@@ -71,8 +74,10 @@ namespace zlpanel {
             const auto c_analyzer_show = analyzer_show_ref_.load(std::memory_order::relaxed);
             if (c_analyzer_show < .5f) {
                 fft_panel_.run();
-            } else {
+            } else if (c_analyzer_show < 1.5f) {
                 mag_panel_.run(next_time_stamp_.load(std::memory_order::relaxed));
+            } else {
+                wav_panel_.run(next_time_stamp_.load(std::memory_order::relaxed));
             }
             if (threadShouldExit()) {
                 return;
@@ -80,7 +85,7 @@ namespace zlpanel {
         }
     }
 
-    void CurvePanel::mouseDown(const juce::MouseEvent &) {
+    void CurvePanel::mouseDown(const juce::MouseEvent&) {
         left_control_panel_.setAlpha(0.f);
         left_pop_panel_.setVisible(false);
     }
@@ -90,17 +95,24 @@ namespace zlpanel {
         if (c_analyzer_show < .5f) {
             fft_panel_.setVisible(true);
             mag_panel_.setVisible(false);
-        } else {
+            wav_panel_.setVisible(false);
+        } else if (c_analyzer_show < 1.5f) {
             fft_panel_.setVisible(false);
             mag_panel_.setVisible(true);
+            wav_panel_.setVisible(false);
+        } else {
+            fft_panel_.setVisible(false);
+            mag_panel_.setVisible(false);
+            wav_panel_.setVisible(true);
         }
         fft_panel_.repaintCallBackSlow();
         mag_panel_.repaintCallBackSlow();
+        wav_panel_.repaintCallBackSlow();
         if (left_control_panel_.isMouseOver(true)) {
             left_control_panel_.setAlpha(1.f);
             left_pop_panel_.setVisible(static_cast<zlp::PSplitType::SplitType>(
-                                           std::round(split_type_ref_.load(std::memory_order_relaxed))) !=
-                                       zlp::PSplitType::kNone);
+                    std::round(split_type_ref_.load(std::memory_order_relaxed))) !=
+                zlp::PSplitType::kNone);
         }
         left_control_panel_.repaintCallBackSlow();
         left_pop_panel_.repaintCallBackSlow();
@@ -114,6 +126,9 @@ namespace zlpanel {
             }
             if (mag_panel_.isVisible()) {
                 mag_panel_.repaint();
+            }
+            if (wav_panel_.isVisible()) {
+                wav_panel_.repaint();
             }
         }
     }

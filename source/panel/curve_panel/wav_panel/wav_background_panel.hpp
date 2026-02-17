@@ -9,22 +9,7 @@
 
 #pragma once
 
-#include "mag_analyzer_panel.hpp"
-#include "mag_background_panel.hpp"
-
 namespace zlpanel {
-    class MagPanel final : public juce::Component {
-    public:
-        explicit MagPanel(PluginProcessor &p, zlgui::UIBase &base);
-
-        void run(double next_time_stamp);
-
-        void resized() override;
-
-        void repaintCallBackSlow();
-
-    private:
-        MagBackgroundPanel mag_background_panel_;
-        MagAnalyzerPanel mag_analyzer_panel_;
+    class WavBackgroundPanel {
     };
 }

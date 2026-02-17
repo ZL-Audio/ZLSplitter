@@ -15,6 +15,7 @@
 
 #include "fft_panel/fft_panel.hpp"
 #include "mag_panel/mag_panel.hpp"
+#include "wav_panel/wav_panel.hpp"
 #include "left_control_panel/left_control_panel.hpp"
 #include "left_pop_panel/left_pop_panel.hpp"
 
@@ -52,6 +53,7 @@ namespace zlpanel {
 
         FFTPanel fft_panel_;
         MagPanel mag_panel_;
+        WavPanel wav_panel_;
         LeftControlPanel left_control_panel_;
         LeftPopPanel left_pop_panel_;
 

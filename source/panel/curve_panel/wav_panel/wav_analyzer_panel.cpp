@@ -7,15 +7,13 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#include "mag_analyzer_panel.hpp"
+#include "wav_analyzer_panel.hpp"
 
 namespace zlpanel {
-    MagAnalyzerPanel::MagAnalyzerPanel(PluginProcessor& p, zlgui::UIBase& base) :
+    WavAnalyzerPanel::WavAnalyzerPanel(PluginProcessor& p, zlgui::UIBase& base) :
         p_ref_(p), base_(base),
         split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
         swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
-        analyzer_mag_type_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagType::kID)),
-        analyzer_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagMinDB::kID)),
         analyzer_time_length_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagTimeLength::kID)) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
         for (auto& path : {&path1_, &path2_}) {
@@ -25,37 +23,27 @@ namespace zlpanel {
         setInterceptsMouseClicks(false, false);
     }
 
-    MagAnalyzerPanel::~MagAnalyzerPanel() = default;
+    WavAnalyzerPanel::~WavAnalyzerPanel() = default;
 
-    void MagAnalyzerPanel::paint(juce::Graphics& g) {
+    void WavAnalyzerPanel::paint(juce::Graphics& g) {
         const std::unique_lock lock{mutex_, std::try_to_lock};
         if (!lock.owns_lock()) {
             return;
         }
-        const auto thickness = base_.getFontSize() * .2f * base_.getFFTCurveThickness();
         if (static_cast<zlp::PSplitType::SplitType>(
             std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
             g.setColour(base_.getTextColor());
-            g.strokePath(path1_,
-                         juce::PathStrokeType(thickness,
-                                              juce::PathStrokeType::curved,
-                                              juce::PathStrokeType::rounded));
+            g.fillPath(path1_);
         } else {
             const auto swap = swap_ref_.load(std::memory_order::relaxed) > .5f;
-            g.setColour(base_.getColourByIdx(zlgui::ColourIdx::kOutput2Colour));
-            g.strokePath(swap ? path1_ : path2_,
-                         juce::PathStrokeType(thickness,
-                                              juce::PathStrokeType::curved,
-                                              juce::PathStrokeType::rounded));
-            g.setColour(base_.getColourByIdx(zlgui::ColourIdx::kOutput1Colour));
-            g.strokePath(swap ? path2_ : path1_,
-                         juce::PathStrokeType(thickness,
-                                              juce::PathStrokeType::curved,
-                                              juce::PathStrokeType::rounded));
+            g.setColour(base_.getColourByIdx(zlgui::ColourIdx::kOutput2Colour).withAlpha(.25f));
+            g.fillPath(swap ? path1_ : path2_);
+            g.setColour(base_.getColourByIdx(zlgui::ColourIdx::kOutput1Colour).withAlpha(.75f));
+            g.fillPath(swap ? path2_ : path1_);
         }
     }
 
-    void MagAnalyzerPanel::resized() {
+    void WavAnalyzerPanel::resized() {
         auto bound = getLocalBounds().toFloat();
         constexpr auto pad_p = 1.f / static_cast<float>(zlp::Controller<double>::kAnalyzerPointNum - 1);
         const auto pad = std::max(bound.getWidth() * pad_p, 1.f);
@@ -64,13 +52,9 @@ namespace zlpanel {
         lookAndFeelChanged();
     }
 
-    void MagAnalyzerPanel::run(const double next_time_stamp) {
+    void WavAnalyzerPanel::run(const double next_time_stamp) {
         const auto bound = atomic_bound_.load();
         constexpr auto stereo_type = zldsp::analyzer::StereoType::kStereo;
-        const auto mag_type = static_cast<zldsp::analyzer::MagType>(std::round(
-            analyzer_mag_type_ref_.load(std::memory_order::relaxed)));
-        const auto min_db = zlstate::PMagMinDB::kDBs[static_cast<size_t>(std::round(
-            analyzer_min_db_ref_.load(std::memory_order::relaxed)))];
         const auto time_length_idx = analyzer_time_length_ref_.load(std::memory_order::relaxed);
 
         {
@@ -93,8 +77,9 @@ namespace zlpanel {
                 second_per_point_ = static_cast<double>(time_length_) / static_cast<double>(num_points_);
 
                 xs_.resize(num_points_ + 2);
-                y1s_.resize(num_points_ + 2);
-                y2s_.resize(num_points_ + 2);
+                for (auto& y: {&min1s_, &max1s_, &min2s_, &max2s_}) {
+                    y->resize(num_points_ + 2);
+                }
             }
 
             auto& fifo{sender.getAbstractFIFO()};
@@ -104,10 +89,10 @@ namespace zlpanel {
                     // if not enough samples
                     if (fifo.getNumReady() >= num_samples_per_point_) {
                         const auto range = fifo.prepareToRead(num_samples_per_point_);
-                        db1_ = zldsp::analyzer::MagReceiver::calculate(
-                            range, sender.getSampleFIFOs()[0], mag_type, stereo_type);
-                        db2_ = zldsp::analyzer::MagReceiver::calculate(
-                            range, sender.getSampleFIFOs()[1], mag_type, stereo_type);
+                        minmax1_ = zldsp::analyzer::WaveReceiver::calculate(
+                            range, sender.getSampleFIFOs()[0], stereo_type);
+                        minmax2_ = zldsp::analyzer::WaveReceiver::calculate(
+                            range, sender.getSampleFIFOs()[1], stereo_type);
                         fifo.finishRead(num_samples_per_point_);
                         num_missing_points_ = 0;
                     } else {
@@ -115,18 +100,23 @@ namespace zlpanel {
                             num_missing_points_ += 1;
                         } else if (num_missing_points_ == kPausedThreshold) {
                             const auto shift = static_cast<ptrdiff_t>(
-                                y1s_.size() - static_cast<size_t>(kPausedThreshold));
-                            std::ranges::fill(y1s_.begin() + shift, y1s_.end(), 10000.f);
-                            std::ranges::fill(y2s_.begin() + shift, y2s_.end(), 10000.f);
+                                xs_.size() - static_cast<size_t>(kPausedThreshold));
+                            for (auto& y: {&min1s_, &max1s_, &min2s_, &max2s_}) {
+                                std::ranges::fill(y->begin() + shift, y->end(), 0.f);
+                            }
                         }
                     }
                     {
                         const auto too_many_missing = num_missing_points_ >= kPausedThreshold;
-                        const auto scale = bound.getHeight() / min_db;
-                        std::ranges::rotate(y1s_, y1s_.begin() + 1);
-                        y1s_.back() = too_many_missing ? 10000.f : db1_ * scale;
-                        std::ranges::rotate(y2s_, y2s_.begin() + 1);
-                        y2s_.back() = too_many_missing ? 10000.f : db2_ * scale;
+                        const auto scale = bound.getHeight() * 0.5f;
+                        std::ranges::rotate(min1s_, min1s_.begin() + 1);
+                        min1s_.back() = too_many_missing ? 0.f : minmax1_[0] * scale + scale;
+                        std::ranges::rotate(max1s_, max1s_.begin() + 1);
+                        max1s_.back() = too_many_missing ? 0.f : minmax1_[1] * scale + scale;
+                        std::ranges::rotate(min2s_, min2s_.begin() + 1);
+                        min2s_.back() = too_many_missing ? 0.f : minmax2_[0] * scale + scale;
+                        std::ranges::rotate(max2s_, max2s_.begin() + 1);
+                        max2s_.back() = too_many_missing ? 0.f : minmax2_[1] * scale + scale;
                     }
                     start_time_ += second_per_point_;
                 }
@@ -147,8 +137,9 @@ namespace zlpanel {
                 if (fifo.getNumReady() >= num_samples_per_point_) {
                     is_first_point_ = false;
                     start_time_ = next_time_stamp;
-                    std::ranges::fill(y1s_, 100000.f);
-                    std::ranges::fill(y2s_, 100000.f);
+                    for (auto& y: {&min1s_, &max1s_, &min2s_, &max2s_}) {
+                        std::ranges::fill(y->begin(), y->end(), 0.f);
+                    }
                 }
             }
         }
@@ -170,15 +161,22 @@ namespace zlpanel {
         }
     }
 
-    void MagAnalyzerPanel::updatePaths(const juce::Rectangle<float>) {
+    void WavAnalyzerPanel::updatePaths(const juce::Rectangle<float>) {
         next_path1_.clear();
         next_path2_.clear();
 
-        next_path1_.startNewSubPath(xs_[0], y1s_[0]);
-        next_path2_.startNewSubPath(xs_[0], y2s_[0]);
+        next_path1_.startNewSubPath(xs_[0], min1s_[0]);
+        next_path2_.startNewSubPath(xs_[0], min2s_[0]);
         for (size_t i = 1; i < xs_.size(); ++i) {
-            next_path1_.lineTo(xs_[i], y1s_[i]);
-            next_path2_.lineTo(xs_[i], y2s_[i]);
+            next_path1_.lineTo(xs_[i], min1s_[i]);
+            next_path2_.lineTo(xs_[i], min2s_[i]);
         }
+        for (size_t i = xs_.size(); i > 0; --i) {
+            next_path1_.lineTo(xs_[i - 1], max1s_[i - 1]);
+            next_path2_.lineTo(xs_[i - 1], max2s_[i - 1]);
+        }
+
+        next_path1_.closeSubPath();
+        next_path2_.closeSubPath();
     }
 }

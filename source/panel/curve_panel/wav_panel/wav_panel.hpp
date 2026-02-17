@@ -9,13 +9,12 @@
 
 #pragma once
 
-#include "mag_analyzer_panel.hpp"
-#include "mag_background_panel.hpp"
+#include "wav_analyzer_panel.hpp"
 
 namespace zlpanel {
-    class MagPanel final : public juce::Component {
+    class WavPanel final : public juce::Component {
     public:
-        explicit MagPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit WavPanel(PluginProcessor &p, zlgui::UIBase &base);
 
         void run(double next_time_stamp);
 
@@ -24,7 +23,6 @@ namespace zlpanel {
         void repaintCallBackSlow();
 
     private:
-        MagBackgroundPanel mag_background_panel_;
-        MagAnalyzerPanel mag_analyzer_panel_;
+        WavAnalyzerPanel wav_analyzer_panel_;
     };
 }

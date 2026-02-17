@@ -62,7 +62,55 @@ namespace zldsp::analyzer {
                 peak = std::max(peak, max_op(range.start_index1, range.block_size1));
             }
             if (range.block_size2 > 0) {
-                peak = max_op(range.start_index2, range.block_size2);
+                peak = std::max(peak, max_op(range.start_index2, range.block_size2));
+            }
+            return peak;
+        }
+
+        /**
+         * calculate the maximum value of a given buffer over a specified range
+         * @param range the specified range
+         * @param fifo the buffer
+         * @return
+         */
+        static float calculateMax(const zldsp::container::FIFORange& range,
+                                   const std::vector<float>& fifo) {
+            auto max_op = [&](const int start, const int size) {
+                return kfr::maxof(kfr::make_univector(fifo.data() + static_cast<size_t>(start),
+                                                         static_cast<size_t>(size)));
+            };
+
+            float peak{0.f};
+
+            if (range.block_size1 > 0) {
+                peak = std::max(peak, max_op(range.start_index1, range.block_size1));
+            }
+            if (range.block_size2 > 0) {
+                peak = std::max(peak, max_op(range.start_index2, range.block_size2));
+            }
+            return peak;
+        }
+
+        /**
+         * calculate the minimum value of a given buffer over a specified range
+         * @param range the specified range
+         * @param fifo the buffer
+         * @return
+         */
+        static float calculateMin(const zldsp::container::FIFORange& range,
+                                   const std::vector<float>& fifo) {
+            auto max_op = [&](const int start, const int size) {
+                return kfr::minof(kfr::make_univector(fifo.data() + static_cast<size_t>(start),
+                                                         static_cast<size_t>(size)));
+            };
+
+            float peak{0.f};
+
+            if (range.block_size1 > 0) {
+                peak = std::min(peak, max_op(range.start_index1, range.block_size1));
+            }
+            if (range.block_size2 > 0) {
+                peak = std::min(peak, max_op(range.start_index2, range.block_size2));
             }
             return peak;
         }

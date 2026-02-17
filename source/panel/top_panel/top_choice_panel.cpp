@@ -18,7 +18,8 @@ namespace zlpanel {
             zlgui::button::ClickTextButton(base, "FFT",
                                            tooltip_helper.getToolTipText(multilingual::kFFTAnalyzer)),
             zlgui::button::ClickTextButton(base, "MAG",
-                                           tooltip_helper.getToolTipText(multilingual::kMagAnalyzer))
+                                           tooltip_helper.getToolTipText(multilingual::kMagAnalyzer)),
+            zlgui::button::ClickTextButton(base, "WAV")
         } {
         for (size_t i = 0; i < analyzer_type_buttons_.size(); ++i) {
             analyzer_type_buttons_[i].getButton().onStateChange = [this, i]() {
@@ -48,7 +49,7 @@ namespace zlpanel {
 
     int TopChoicePanel::getIdealWidth() const {
         const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale * 1.5f);
-        return 2 * button_width;
+        return 3 * button_width;
     }
 
     void TopChoicePanel::resized() {

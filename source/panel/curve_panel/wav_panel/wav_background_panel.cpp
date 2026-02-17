@@ -7,24 +7,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by Zishu Liu on 2/16/26.
+//
 
-#include "mag_analyzer_panel.hpp"
-#include "mag_background_panel.hpp"
+#include "wav_background_panel.hpp"
 
 namespace zlpanel {
-    class MagPanel final : public juce::Component {
-    public:
-        explicit MagPanel(PluginProcessor &p, zlgui::UIBase &base);
-
-        void run(double next_time_stamp);
-
-        void resized() override;
-
-        void repaintCallBackSlow();
-
-    private:
-        MagBackgroundPanel mag_background_panel_;
-        MagAnalyzerPanel mag_analyzer_panel_;
-    };
-}
+} // zlpanel

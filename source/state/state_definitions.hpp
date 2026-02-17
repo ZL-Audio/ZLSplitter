@@ -110,7 +110,7 @@ namespace zlstate {
         auto static constexpr kID = "analyzer_show";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "FFT", "MAG"
+            "FFT", "MAG", "WAV"
         };
         int static constexpr kDefaultI = 0;
     };

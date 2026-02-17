@@ -15,15 +15,15 @@
 #include "../../../gui/gui.hpp"
 #include "../../../state/state.hpp"
 #include "../../helper/helper.hpp"
-#include "../../../dsp/analyzer/mag_analyzer/mag_receiver.hpp"
+#include "../../../dsp/analyzer/wave_analyzer/wave_receiver.hpp"
 #include "../../../dsp/lock/spin_lock.hpp"
 
 namespace zlpanel {
-    class MagAnalyzerPanel final : public juce::Component {
+    class WavAnalyzerPanel final : public juce::Component {
     public:
-        explicit MagAnalyzerPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit WavAnalyzerPanel(PluginProcessor &p, zlgui::UIBase &base);
 
-        ~MagAnalyzerPanel() override;
+        ~WavAnalyzerPanel() override;
 
         void paint(juce::Graphics &g) override;
 
@@ -39,14 +39,12 @@ namespace zlpanel {
         zlgui::UIBase& base_;
 
         std::atomic<float> &split_type_ref_, &swap_ref_;
-        std::atomic<float>& analyzer_mag_type_ref_;
-        std::atomic<float>& analyzer_min_db_ref_;
         std::atomic<float>& analyzer_time_length_ref_;
 
         AtomicBound<float> atomic_bound_;
 
-        float db1_{-240.f}, db2_{-240.f};
-        kfr::univector<float> xs_{}, y1s_{}, y2s_{};
+        std::array<float, 2> minmax1_{0.f, 0.f}, minmax2_{0.f, 0.f};
+        kfr::univector<float> xs_{}, min1s_{}, max1s_{}, min2s_{}, max2s_{};
         juce::Path path1_, path2_;
         juce::Path next_path1_, next_path2_;
         zldsp::lock::SpinLock mutex_;

@@ -33,6 +33,6 @@ namespace zlpanel {
         std::atomic<float> &analyzer_type_ref_;
         float c_analyzer_type_{-1.f};
 
-        std::array<zlgui::button::ClickTextButton, 2> analyzer_type_buttons_;
+        std::array<zlgui::button::ClickTextButton, 3> analyzer_type_buttons_;
     };
 }
