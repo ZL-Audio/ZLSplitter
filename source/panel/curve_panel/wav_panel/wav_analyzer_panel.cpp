@@ -77,7 +77,7 @@ namespace zlpanel {
                 second_per_point_ = static_cast<double>(time_length_) / static_cast<double>(num_points_);
 
                 xs_.resize(num_points_ + 2);
-                for (auto& y: {&min1s_, &max1s_, &min2s_, &max2s_}) {
+                for (auto& y : {&min1s_, &max1s_, &min2s_, &max2s_}) {
                     y->resize(num_points_ + 2);
                 }
             }
@@ -101,8 +101,8 @@ namespace zlpanel {
                         } else if (num_missing_points_ == kPausedThreshold) {
                             const auto shift = static_cast<ptrdiff_t>(
                                 xs_.size() - static_cast<size_t>(kPausedThreshold));
-                            for (auto& y: {&min1s_, &max1s_, &min2s_, &max2s_}) {
-                                std::ranges::fill(y->begin() + shift, y->end(), 0.f);
+                            for (auto& y : {&min1s_, &max1s_, &min2s_, &max2s_}) {
+                                std::ranges::fill(y->begin() + shift, y->end(), bound.getHeight() * .5f);
                             }
                         }
                     }
@@ -110,13 +110,13 @@ namespace zlpanel {
                         const auto too_many_missing = num_missing_points_ >= kPausedThreshold;
                         const auto scale = bound.getHeight() * 0.5f;
                         std::ranges::rotate(min1s_, min1s_.begin() + 1);
-                        min1s_.back() = too_many_missing ? 0.f : minmax1_[0] * scale + scale;
+                        min1s_.back() = too_many_missing ? scale : minmax1_[0] * scale + scale;
                         std::ranges::rotate(max1s_, max1s_.begin() + 1);
-                        max1s_.back() = too_many_missing ? 0.f : minmax1_[1] * scale + scale;
+                        max1s_.back() = too_many_missing ? scale : minmax1_[1] * scale + scale;
                         std::ranges::rotate(min2s_, min2s_.begin() + 1);
-                        min2s_.back() = too_many_missing ? 0.f : minmax2_[0] * scale + scale;
+                        min2s_.back() = too_many_missing ? scale : minmax2_[0] * scale + scale;
                         std::ranges::rotate(max2s_, max2s_.begin() + 1);
-                        max2s_.back() = too_many_missing ? 0.f : minmax2_[1] * scale + scale;
+                        max2s_.back() = too_many_missing ? scale : minmax2_[1] * scale + scale;
                     }
                     start_time_ += second_per_point_;
                 }
@@ -137,8 +137,8 @@ namespace zlpanel {
                 if (fifo.getNumReady() >= num_samples_per_point_) {
                     is_first_point_ = false;
                     start_time_ = next_time_stamp;
-                    for (auto& y: {&min1s_, &max1s_, &min2s_, &max2s_}) {
-                        std::ranges::fill(y->begin(), y->end(), 0.f);
+                    for (auto& y : {&min1s_, &max1s_, &min2s_, &max2s_}) {
+                        std::ranges::fill(y->begin(), y->end(), bound.getHeight() * .5f);
                     }
                 }
             }
