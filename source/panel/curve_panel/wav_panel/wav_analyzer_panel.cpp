@@ -85,7 +85,9 @@ namespace zlpanel {
             auto& fifo{sender.getAbstractFIFO()};
             if (!is_first_point_) {
                 // update ys
-                while (next_time_stamp - start_time_ > second_per_point_) {
+                auto current_time = start_time_;
+                const auto target_time = next_time_stamp - second_per_point_;
+                while (current_time < target_time) {
                     // if not enough samples
                     if (fifo.getNumReady() >= num_samples_per_point_) {
                         const auto range = fifo.prepareToRead(num_samples_per_point_);
@@ -118,8 +120,9 @@ namespace zlpanel {
                         std::ranges::rotate(max2s_, max2s_.begin() + 1);
                         max2s_.back() = too_many_missing ? scale : minmax2_[1] * scale + scale;
                     }
-                    start_time_ += second_per_point_;
+                    current_time += second_per_point_;
                 }
+                start_time_ = current_time;
                 // if too much samples
                 const auto num_ready = fifo.getNumReady();
                 const auto threshold = 2 * std::max(static_cast<int>(max_num_samples_), num_samples_per_point_);
