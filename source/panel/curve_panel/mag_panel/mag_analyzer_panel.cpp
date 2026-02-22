@@ -116,17 +116,17 @@ namespace zlpanel {
                         } else if (num_missing_points_ == kPausedThreshold) {
                             const auto shift = static_cast<ptrdiff_t>(
                                 y1s_.size() - static_cast<size_t>(kPausedThreshold));
-                            std::ranges::fill(y1s_.begin() + shift, y1s_.end(), 10000.f);
-                            std::ranges::fill(y2s_.begin() + shift, y2s_.end(), 10000.f);
+                            std::ranges::fill(y1s_.begin() + shift, y1s_.end(), kYMin);
+                            std::ranges::fill(y2s_.begin() + shift, y2s_.end(), kYMin);
                         }
                     }
                     {
                         const auto too_many_missing = num_missing_points_ >= kPausedThreshold;
                         const auto scale = bound.getHeight() / min_db;
                         std::ranges::rotate(y1s_, y1s_.begin() + 1);
-                        y1s_.back() = too_many_missing ? 10000.f : db1_ * scale;
+                        y1s_.back() = too_many_missing ? kYMin : db1_ * scale;
                         std::ranges::rotate(y2s_, y2s_.begin() + 1);
-                        y2s_.back() = too_many_missing ? 10000.f : db2_ * scale;
+                        y2s_.back() = too_many_missing ? kYMin : db2_ * scale;
                     }
                     start_time_ += second_per_point_;
                 }
@@ -147,8 +147,8 @@ namespace zlpanel {
                 if (fifo.getNumReady() >= num_samples_per_point_) {
                     is_first_point_ = false;
                     start_time_ = next_time_stamp;
-                    std::ranges::fill(y1s_, 100000.f);
-                    std::ranges::fill(y2s_, 100000.f);
+                    std::ranges::fill(y1s_, kYMin);
+                    std::ranges::fill(y2s_, kYMin);
                 }
             }
         }

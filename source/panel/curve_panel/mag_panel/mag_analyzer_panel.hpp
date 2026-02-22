@@ -35,6 +35,7 @@ namespace zlpanel {
         static constexpr std::array<int, 4> kNumPointsPerSecond{40, 30, 20, 15};
         static constexpr int kPausedThreshold = 6;
         static constexpr int kTooMuchResetThreshold = 64;
+        static constexpr float kYMin = 100000.f;
         PluginProcessor &p_ref_;
         zlgui::UIBase& base_;
 
