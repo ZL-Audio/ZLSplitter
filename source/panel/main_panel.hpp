@@ -25,7 +25,7 @@ namespace zlpanel {
                             private juce::ValueTree::Listener,
                             private juce::Timer {
     public:
-        explicit MainPanel(PluginProcessor &processor, zlgui::UIBase &base);
+        explicit MainPanel(PluginProcessor &processor, zlgui::UIBase &base, multilingual::TooltipLanguage language);
 
         ~MainPanel() override;
 
@@ -34,7 +34,6 @@ namespace zlpanel {
         void repaintCallBack(double time_stamp);
 
     private:
-        PluginProcessor &p_ref_;
         zlgui::UIBase &base_;
         multilingual::TooltipHelper tooltip_helper_;
 
@@ -53,4 +52,4 @@ namespace zlpanel {
 
         void timerCallback() override;
     };
-} // zlpanel
+}

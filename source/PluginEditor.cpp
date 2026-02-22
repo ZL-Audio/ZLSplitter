@@ -11,10 +11,13 @@
 
 PluginEditor::PluginEditor(PluginProcessor& p) :
     AudioProcessorEditor(&p),
-    p_ref_(p),
-    property_(p.property_),
-    base_(p.state_),
-    main_panel_(p, base_) {
+    state_(dummy_processor_, nullptr,
+           juce::Identifier("ZLSplitState"),
+           zlstate::getStateParameterLayout()),
+    property_(state_),
+    base_(state_),
+    main_panel_(p, base_, static_cast<zlpanel::multilingual::TooltipLanguage>(std::round(
+                    state_.getRawParameterValue(zlstate::PTooltipLang::kID)->load(std::memory_order::relaxed)))) {
     // set font
     const auto font_face = juce::Typeface::createSystemTypefaceFor(
         BinaryData::MiSansLatinMedium_ttf, BinaryData::MiSansLatinMedium_ttfSize);
@@ -34,8 +37,8 @@ PluginEditor::PluginEditor(PluginProcessor& p) :
     this->resizableCorner->setAlwaysOnTop(true);
     this->resizableCorner->resized();
 
-    last_ui_width_.referTo(p.state_.getParameterAsValue(zlstate::PWindowW::kID));
-    last_ui_height_.referTo(p.state_.getParameterAsValue(zlstate::PWindowH::kID));
+    last_ui_width_.referTo(state_.getParameterAsValue(zlstate::PWindowW::kID));
+    last_ui_height_.referTo(state_.getParameterAsValue(zlstate::PWindowH::kID));
     setSize(
         std::clamp(static_cast<int>(last_ui_width_.getValue()), zlstate::PWindowW::kMinV, zlstate::PWindowW::kMaxV),
         std::clamp(static_cast<int>(last_ui_height_.getValue()), zlstate::PWindowH::kMinV, zlstate::PWindowH::kMaxV)
@@ -85,7 +88,7 @@ void PluginEditor::valueTreePropertyChanged(juce::ValueTree&, const juce::Identi
 }
 
 void PluginEditor::handleAsyncUpdate() {
-    property_.saveAPVTS(p_ref_.state_);
+    property_.saveAPVTS(state_);
 }
 
 void PluginEditor::timerCallback() {
