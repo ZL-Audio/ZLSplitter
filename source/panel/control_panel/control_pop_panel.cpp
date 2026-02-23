@@ -1,0 +1,94 @@
+// Copyright (C) 2026 - zsliu98
+// This file is part of ZLSplitter
+//
+// ZLSplitter is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License Version 3 as published by the Free Software Foundation.
+//
+// ZLSplitter is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
+
+#include "control_pop_panel.hpp"
+
+namespace zlpanel {
+    ControlPopPanel::ControlPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+                                     multilingual::TooltipHelper& tooltip_helper) :
+        base_{base},
+        background_(base),
+        lr_pop_panel_(p, base, tooltip_helper) {
+        background_.setBufferedToImage(true);
+        addAndMakeVisible(background_);
+        addChildComponent(lr_pop_panel_);
+    }
+
+    int ControlPopPanel::getIdealHeight() const {
+        const auto font_size = base_.getFontSize();
+        const auto padding = getPaddingSize(font_size);
+        auto height = 2 * padding;
+        switch (split_type_) {
+        case zlp::PSplitType::SplitType::kNone: {
+            height = 0;
+            break;
+        }
+        case zlp::PSplitType::SplitType::kLRight:
+        case zlp::PSplitType::SplitType::kMSide: {
+            height += lr_pop_panel_.getIdealHeight();
+            break;
+        }
+        case zlp::PSplitType::SplitType::kLHigh:
+        case zlp::PSplitType::SplitType::kTSteady:
+        case zlp::PSplitType::SplitType::kPSteady: {
+            break;
+        }
+        }
+        return height;
+    }
+
+    void ControlPopPanel::resized() {
+        auto bound = getLocalBounds();
+        background_.setBounds(bound);
+
+        const auto font_size = base_.getFontSize();
+        const auto padding = getPaddingSize(font_size);
+        bound.reduce(padding, padding);
+        switch (split_type_) {
+        case zlp::PSplitType::SplitType::kNone: {
+            break;
+        }
+        case zlp::PSplitType::SplitType::kLRight:
+        case zlp::PSplitType::SplitType::kMSide: {
+            lr_pop_panel_.setBounds(bound);
+            break;
+        }
+        case zlp::PSplitType::SplitType::kLHigh:
+        case zlp::PSplitType::SplitType::kTSteady:
+        case zlp::PSplitType::SplitType::kPSteady: {
+            break;
+        }
+        }
+    }
+
+    void ControlPopPanel::repaintCallBackSlow() {
+        lr_pop_panel_.repaintCallBackSlow();
+    }
+
+    void ControlPopPanel::setSplitType(const zlp::PSplitType::SplitType split_type) {
+        split_type_ = split_type;
+        switch (split_type_) {
+        case zlp::PSplitType::SplitType::kNone: {
+            lr_pop_panel_.setVisible(false);
+            break;
+        }
+        case zlp::PSplitType::SplitType::kLRight:
+        case zlp::PSplitType::SplitType::kMSide: {
+            lr_pop_panel_.setVisible(true);
+            break;
+        }
+        case zlp::PSplitType::SplitType::kLHigh:
+        case zlp::PSplitType::SplitType::kTSteady:
+        case zlp::PSplitType::SplitType::kPSteady: {
+            lr_pop_panel_.setVisible(false);
+            break;
+        }
+        }
+    }
+}
