@@ -11,7 +11,7 @@
 
 namespace zlpanel {
     TopChoicePanel::TopChoicePanel(PluginProcessor& p, zlgui::UIBase& base,
-                                   multilingual::TooltipHelper& tooltip_helper) :
+                                   const multilingual::TooltipHelper& tooltip_helper) :
         p_ref_(p), base_(base),
         analyzer_type_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PAnalyzerShow::kID)),
         analyzer_type_buttons_{
@@ -48,12 +48,12 @@ namespace zlpanel {
     }
 
     int TopChoicePanel::getIdealWidth() const {
-        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale * 1.5f);
+        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale * 1.75f);
         return 3 * button_width;
     }
 
     void TopChoicePanel::resized() {
-        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale * 1.5f);
+        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale * 1.75f);
         auto bound = getLocalBounds();
         for (auto& button : analyzer_type_buttons_) {
             button.setBounds(bound.removeFromLeft(button_width));

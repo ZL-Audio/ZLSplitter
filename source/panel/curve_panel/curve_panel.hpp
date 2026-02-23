@@ -16,8 +16,6 @@
 #include "fft_panel/fft_panel.hpp"
 #include "mag_panel/mag_panel.hpp"
 #include "wav_panel/wav_panel.hpp"
-#include "left_control_panel/left_control_panel.hpp"
-#include "left_pop_panel/left_pop_panel.hpp"
 
 namespace zlpanel {
     class CurvePanel final : public juce::Component,
@@ -38,8 +36,6 @@ namespace zlpanel {
 
         void repaintCallBackSlow();
 
-        void mouseDown(const juce::MouseEvent &event) override;
-
         void setRefreshRate(const double refresh_rate) {
             fft_panel_.setRefreshRate(refresh_rate);
         }
@@ -54,9 +50,7 @@ namespace zlpanel {
         FFTPanel fft_panel_;
         MagPanel mag_panel_;
         WavPanel wav_panel_;
-        LeftControlPanel left_control_panel_;
-        LeftPopPanel left_pop_panel_;
 
         void run() override;
     };
-} // zlpanel
+}

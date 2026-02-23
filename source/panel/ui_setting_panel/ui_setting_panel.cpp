@@ -16,6 +16,7 @@ namespace zlpanel {
         colour_panel_(p, base),
         control_panel_(p, base),
         other_panel_(p, base),
+        credit_panel_(base),
         save_drawable_(juce::Drawable::createFromImageData(BinaryData::save_svg, BinaryData::save_svgSize)),
         close_drawable_(juce::Drawable::createFromImageData(BinaryData::close_svg, BinaryData::close_svgSize)),
         reset_drawable_(
@@ -49,6 +50,9 @@ namespace zlpanel {
                 other_panel_.saveSetting();
                 break;
             }
+            case kCreditP: {
+                break;
+            }
             }
             base_.setPanelProperty(zlgui::kUISettingChanged,
                                    !static_cast<bool>(base_.getPanelProperty(zlgui::kUISettingChanged)));
@@ -67,6 +71,9 @@ namespace zlpanel {
                 other_panel_.resetSetting();
                 break;
             }
+            case kCreditP: {
+                break;
+            }
             }
         };
         close_button_.getButton().onClick = [this]() {
@@ -77,6 +84,7 @@ namespace zlpanel {
         panel_labels_[0].setText("Colour", juce::dontSendNotification);
         panel_labels_[1].setText("Control", juce::dontSendNotification);
         panel_labels_[2].setText("Other", juce::dontSendNotification);
+        panel_labels_[3].setText("Credit", juce::dontSendNotification);
         for (auto& pL : panel_labels_) {
             pL.setInterceptsMouseClicks(true, false);
             pL.addMouseListener(this, false);
@@ -86,35 +94,32 @@ namespace zlpanel {
         }
 
         label_laf_.setFontScale(1.125f);
-        label_laf_.setAlpha(.5f);
+        version_label_.setAlpha(.5f);
         version_label_.setText(
             juce::String(ZL_PLUGIN_CURRENT_VERSION) + " " + juce::String(ZL_PLUGIN_CURRENT_HASH),
             juce::dontSendNotification);
         version_label_.setJustificationType(juce::Justification::bottomLeft);
         version_label_.setLookAndFeel(&label_laf_);
-        version_label_.setInterceptsMouseClicks(false, false);
         addAndMakeVisible(version_label_);
     }
 
     UISettingPanel::~UISettingPanel() = default;
 
     void UISettingPanel::paint(juce::Graphics& g) {
-        g.fillAll(base_.getBackgroundColor());
+        g.fillAll(base_.getBackgroundColour());
         auto bound = getLocalBounds().toFloat();
         bound = bound.withSizeKeepingCentre(bound.getWidth() * .75f, bound.getHeight() * 1.25f);
         base_.fillRoundedShadowRectangle(g, bound, 0.5f * base_.getFontSize(), {.blur_radius = 0.5f});
     }
 
     void UISettingPanel::resized() {
-        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale);
-        auto bound = getLocalBounds();
-        bound = bound.withSizeKeepingCentre(juce::roundToInt(static_cast<float>(bound.getWidth()) * .75f),
-                                            bound.getHeight());
+        auto bound = getLocalBounds().toFloat();
+        bound = bound.withSizeKeepingCentre(bound.getWidth() * .75f, bound.getHeight());
         {
-            auto label_bound = bound.removeFromTop(button_width);
-            const auto label_width = label_bound.getWidth() / static_cast<int>(panel_labels_.size());
+            auto label_bound = bound.removeFromTop(base_.getFontSize() * 3.f);
+            const auto label_width = label_bound.getWidth() / static_cast<float>(panel_labels_.size());
             for (auto& panel_label : panel_labels_) {
-                panel_label.setBounds(label_bound.removeFromLeft(label_width));
+                panel_label.setBounds(label_bound.removeFromLeft(label_width).toNearestInt());
             }
         }
 
@@ -127,22 +132,31 @@ namespace zlpanel {
         other_panel_.setBounds(0, 0,
                                juce::roundToInt(bound.getWidth()),
                                other_panel_.getIdealHeight());
+        credit_panel_.setBounds(0, 0,
+                               juce::roundToInt(bound.getWidth()),
+                               credit_panel_.getIdeatlHeight());
+        other_panel_.setParentWidth(getWidth());
 
-        view_port_.setBounds(bound.removeFromTop(bound.getHeight() - button_width - button_width / 2));
+        view_port_.setBounds(bound.removeFromTop(bound.getHeight() * .9125f).toNearestInt());
 
-        bound = bound.withSizeKeepingCentre(bound.getWidth(), button_width);
-        const auto left_bound = bound.removeFromLeft(bound.getWidth() / 3);
-        const auto right_bound = bound.removeFromRight(bound.getWidth() / 2);
-        const auto center_bound = bound;
-        save_button_.setBounds(left_bound);
-        reset_button_.setBounds(center_bound);
-        close_button_.setBounds(right_bound);
+        const auto left_bound = bound.removeFromLeft(
+            bound.getWidth() * .3333333f).withSizeKeepingCentre(
+            base_.getFontSize() * 2.f, base_.getFontSize() * 2.f);
+        const auto center_bound = bound.removeFromLeft(
+            bound.getWidth() * .5f).withSizeKeepingCentre(
+            base_.getFontSize() * 2.f, base_.getFontSize() * 2.f);
+        const auto right_bound = bound.withSizeKeepingCentre(
+            base_.getFontSize() * 1.95f, base_.getFontSize() * 1.95f);
+        save_button_.setBounds(left_bound.toNearestInt());
+        reset_button_.setBounds(center_bound.toNearestInt());
+        close_button_.setBounds(right_bound.toNearestInt());
 
-        bound = getLocalBounds();
-        bound = bound.removeFromBottom(button_width);
-        bound.removeFromLeft(button_width / 10);
-        bound.removeFromBottom(button_width / 10);
-        version_label_.setBounds(bound);
+        bound = getLocalBounds().toFloat();
+        bound = bound.removeFromBottom(2.f * base_.getFontSize());
+        bound = bound.removeFromLeft(bound.getWidth() * .125f);
+        bound.removeFromLeft(base_.getFontSize() * .25f);
+        bound.removeFromBottom(base_.getFontSize() * .0625f);
+        version_label_.setBounds(bound.toNearestInt());
     }
 
     void UISettingPanel::loadSetting() {
@@ -175,6 +189,10 @@ namespace zlpanel {
             view_port_.setViewedComponent(&other_panel_, false);
             break;
         }
+        case kCreditP: {
+            view_port_.setViewedComponent(&credit_panel_, false);
+            break;
+        }
         }
     }
 
@@ -185,4 +203,5 @@ namespace zlpanel {
             other_panel_.loadSetting();
         }
     }
-} // zlpanel
+}
+

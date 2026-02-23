@@ -12,12 +12,12 @@
 namespace zlgui::colour_selector {
     class SelectorBox final : public juce::Component {
     public:
-        explicit SelectorBox(const int selectorFlags, zlgui::UIBase& base) :
-            selector_(selectorFlags,
-                      juce::roundToInt(base.getFontSize() * 0.5f),
-                      juce::roundToInt(base.getFontSize() * 0.33f)),
-            base_(base) {
-            selector_.setColour(juce::ColourSelector::ColourIds::backgroundColourId, base_.getBackgroundColor());
+        explicit SelectorBox(const int selectorFlags, zlgui::UIBase& base)
+            : selector_(selectorFlags,
+                        juce::roundToInt(base.getFontSize() * 0.5f),
+                        juce::roundToInt(base.getFontSize() * 0.33f)),
+              base_(base) {
+            selector_.setColour(juce::ColourSelector::ColourIds::backgroundColourId, base_.getBackgroundColour());
             addAndMakeVisible(selector_);
         }
 
@@ -41,17 +41,17 @@ namespace zlgui::colour_selector {
     };
 
     ColourSelector::ColourSelector(zlgui::UIBase& base, juce::Component& parent,
-                                   const float width_s, const float height_s) :
-        base_(base), laf_(base_), parent_ref_(parent),
-        selector_width_s_(width_s), selector_height_s_(height_s) {
+                                   const float width_s, const float height_s)
+        : base_(base), laf_(base_), parent_ref_(parent),
+          selector_width_s_(width_s), selector_height_s_(height_s) {
     }
 
     void ColourSelector::paint(juce::Graphics& g) {
-        g.fillAll(base_.getTextColor().withAlpha(.875f));
+        g.fillAll(base_.getTextColour().withAlpha(.875f));
         auto bound = getLocalBounds().toFloat();
         bound = bound.withSizeKeepingCentre(bound.getWidth() - base_.getFontSize() * .375f,
                                             bound.getHeight() - base_.getFontSize() * .375f);
-        g.setColour(base_.getBackgroundColor());
+        g.setColour(base_.getBackgroundColour());
         g.fillRect(bound);
         g.setColour(colour_);
         g.fillRect(bound);

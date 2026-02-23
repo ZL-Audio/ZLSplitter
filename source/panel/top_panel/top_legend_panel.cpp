@@ -28,7 +28,7 @@ namespace zlpanel {
 
         if (idx >= 5) {
             labels.emplace_back("Input");
-            colours.emplace_back(base_.getTextColor());
+            colours.emplace_back(base_.getTextColour());
         } else {
             labels.emplace_back(c_swap_ ? kText2[idx] : kText1[idx]);
             colours.emplace_back(base_.getColourByIdx(zlgui::ColourIdx::kOutput1Colour));
@@ -37,14 +37,14 @@ namespace zlpanel {
         }
 
         const auto padding = std::round(base_.getFontSize() * kPaddingScale);
-        const auto slider_width = std::round(base_.getFontSize() * kSliderScale);
+        const auto slider_width = std::round(base_.getFontSize() * kSliderWidthScale);
         const auto button_width = std::round(base_.getFontSize() * kButtonScale);
 
         auto bound = getLocalBounds().toFloat();
         const auto legend_size = button_width * .5f;
         for (size_t i = 0; i < labels.size(); ++i) {
             bound.removeFromLeft(padding);
-            g.setColour(base_.getTextColor());
+            g.setColour(base_.getTextColour());
             g.drawText(labels[i], bound.removeFromLeft(slider_width), juce::Justification::centredRight);
             bound.removeFromLeft(padding);
             auto legend_bound = bound.removeFromLeft(button_width);
@@ -57,7 +57,7 @@ namespace zlpanel {
 
     int TopLegendPanel::getIdealWidth() const {
         const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale);
-        const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
+        const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderWidthScale);
         const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale);
         return padding * 6 + slider_width * 2 + button_width * 2;
     }

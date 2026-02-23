@@ -10,124 +10,142 @@
 #include "fft_background_panel.hpp"
 
 namespace zlpanel {
-    FFTBackgroundPanel::Background1::Background1(zlgui::UIBase& base) :
-        base_(base) {
-        setBufferedToImage(true);
-        setInterceptsMouseClicks(false, false);
+    FFTBackgroundPanel::FFTBackgroundPanel(PluginProcessor& p, zlgui::UIBase& base) :
+        base_(base),
+        fft_min_db_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)) {
+        setInterceptsMouseClicks(false, true);
+        lookAndFeelChanged();
     }
 
-    void FFTBackgroundPanel::Background1::paint(juce::Graphics& g) {
-        g.fillAll(base_.getBackgroundColor());
+    void FFTBackgroundPanel::paint(juce::Graphics& g) {
+        g.fillAll(base_.getBackgroundColour());
+        if (freq_max_ < 10000.0 || c_fft_min_db_ < 0.f) {
+            return;
+        }
+        drawFreqs(g);
+        drawDBs(g);
+    }
 
+    void FFTBackgroundPanel::drawFreqs(juce::Graphics& g) const {
         const auto bound = getLocalBounds().toFloat();
+        // draw freq grid
         const auto thickness = base_.getFontSize() * 0.1f;
-        g.setFont(base_.getFontSize());
-
-        const auto grid_colour = base_.getColourByIdx(zlgui::ColourIdx::kGridColour);
-        const auto text_colour = base_.getTextColor().withAlpha(
-            std::clamp(grid_colour.getFloatAlpha() + .2f, .2f, 1.f));
-        for (size_t i = 0; i < kBackgroundFreqs.size(); ++i) {
-            const auto p = std::log(kBackgroundFreqs[i] / min_freq_) / std::log(max_freq_ / min_freq_);
-            const auto x = bound.getX() + static_cast<float>(p) * bound.getWidth();
-            if (x > bound.getRight() - base_.getFontSize() * 4.f) {
+        juce::RectangleList<float> rect_list;
+        for (const auto& freq : kFreqValues) {
+            const auto p = std::log(static_cast<double>(freq) * .1) / std::log(freq_max_ * .1);
+            const auto rect = juce::Rectangle(static_cast<float>(p) * bound.getWidth() - thickness * .5f, 0.f,
+                                              thickness, bound.getHeight());
+            if (rect.getRight() > bound.getWidth()) {
                 break;
             }
-            g.setColour(grid_colour);
-            g.fillRect(juce::Rectangle<float>{x - thickness * .5f, bound.getY(), thickness, bound.getHeight()});
-            const auto text_bound = juce::Rectangle<float>(x - base_.getFontSize() * 3 - base_.getFontSize() * 0.125f,
-                                                           bound.getBottom() - base_.getFontSize() * 2,
-                                                           base_.getFontSize() * 3, base_.getFontSize() * 2);
-            g.setColour(text_colour);
-            g.drawText(std::string(kBackgroundFreqsNames[i]), text_bound, juce::Justification::bottomRight);
+            rect_list.add(rect);
         }
-
-        const auto right_padding = std::round(base_.getFontSize() * .25f);
-        for (size_t i = 1; i < 6; ++i) {
-            const auto y = bound.getY() + static_cast<float>(i) / 6.f * bound.getHeight();
-            g.setColour(grid_colour);
-            g.fillRect(juce::Rectangle<float>{bound.getX(), y - thickness * .5f, bound.getWidth(), thickness});
-            const auto text_bound = juce::Rectangle<float>(bound.getRight() - base_.getFontSize() * 3 - right_padding,
-                                                           y - base_.getFontSize() * 2,
-                                                           base_.getFontSize() * 3, base_.getFontSize() * 2);
-            g.setColour(text_colour);
-            g.drawText(juce::String(juce::roundToInt(static_cast<float>(i) / 6.f * min_db_)),
-                       text_bound, juce::Justification::bottomRight);
+        g.setColour(grid_colour_);
+        g.fillRectList(rect_list);
+        // draw top and bottom gradient
+        juce::ColourGradient gradient;
+        gradient.point1 = juce::Point<float>(bound.getX(), bound.getY());
+        gradient.point2 = juce::Point<float>(bound.getX(), bound.getBottom());
+        gradient.isRadial = false;
+        gradient.clearColours();
+        gradient.addColour(0.0, base_.getBackgroundColour().withAlpha(1.f));
+        gradient.addColour(base_.getFontSize() / bound.getHeight(),
+                           base_.getBackgroundColour().withAlpha(0.f));
+        gradient.addColour(1.f - 2.f * base_.getFontSize() / bound.getHeight(),
+                           base_.getBackgroundColour().withAlpha(0.f));
+        gradient.addColour(1.f - base_.getFontSize() / bound.getHeight(),
+                           base_.getBackgroundColour().withAlpha(1.f));
+        gradient.addColour(1.0, base_.getBackgroundColour().withAlpha(1.f));
+        g.setGradientFill(gradient);
+        g.fillRect(bound);
+        // draw freq labels
+        g.setColour(base_.getTextColour().withAlpha(.5f));
+        g.setFont(base_.getFontSize() * 1.25f);
+        const auto label_y0 = bound.getBottom() - base_.getFontSize() * 1.15f;
+        const auto label_height = base_.getFontSize() * 1.1f;
+        for (const auto& freq : kFreqValues) {
+            const auto label = freq < 1000.f
+                ? juce::String(static_cast<int>(freq))
+                : juce::String(static_cast<int>(std::round(freq * 0.001f))) + "K";
+            const auto label_width = freq < 20000.f
+                ? base_.getFontSize() * 3.f
+                : juce::GlyphArrangement::getStringWidth(g.getCurrentFont(), label) * 1.1f;
+            const auto p = std::log(static_cast<double>(freq) * .1) / std::log(freq_max_ * .1);
+            const auto rect = juce::Rectangle(static_cast<float>(p) * bound.getWidth() - label_width * .5f, label_y0,
+                                              label_width, label_height);
+            if (rect.getRight() > bound.getWidth()) {
+                break;
+            }
+            g.drawText(freq < 1000.f ? juce::String(freq) : juce::String(std::round(freq * 0.001f)) + "K",
+                       rect, juce::Justification::centredBottom, false);
         }
     }
 
-    FFTBackgroundPanel::FFTBackgroundPanel(PluginProcessor& processor, zlgui::UIBase& base) :
-        base_(base), background1_(base),
-        updater_(),
-        fft_min_freq_box_(zlstate::PFFTMinFreq::kChoices, base),
-        fft_min_freq_attach_(fft_min_freq_box_.getBox(), processor.na_parameters_,
-                             zlstate::PFFTMinFreq::kID, updater_),
-        fft_max_freq_box_(zlstate::PFFTMaxFreq::kChoices, base),
-        fft_max_freq_attach_(fft_max_freq_box_.getBox(), processor.na_parameters_,
-                             zlstate::PFFTMaxFreq::kID, updater_),
-        fft_min_db_box_(zlstate::PFFTMinDB::kChoices, base),
-        fft_min_db_attach_(fft_min_db_box_.getBox(), processor.na_parameters_,
-                           zlstate::PFFTMinDB::kID, updater_) {
-        addAndMakeVisible(background1_);
-
-        const auto popup_option = juce::PopupMenu::Options().withPreferredPopupDirection(
-            juce::PopupMenu::Options::PopupDirection::upwards);
-
-        const auto box_alpha = std::clamp(
-            base_.getColourByIdx(zlgui::ColourIdx::kGridColour).getFloatAlpha() + .2f, .2f, 1.f);
-
-        fft_min_freq_box_.getLAF().setLabelJustification(juce::Justification::bottomLeft);
-        fft_max_freq_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);
-        fft_min_db_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);
-
-        for (auto& b : {&fft_min_freq_box_, &fft_max_freq_box_, &fft_min_db_box_}) {
-            b->setAlpha(box_alpha);
-            b->getLAF().setOption(popup_option);
-            b->getLAF().setFontScale(1.f);
-            addAndMakeVisible(b);
+    void FFTBackgroundPanel::drawDBs(juce::Graphics& g) const {
+        const auto bound = getLocalBounds().toFloat();
+        // draw db grid
+        const auto thickness = base_.getFontSize() * 0.1f;
+        const auto unit_height = bound.getHeight() / 7.f;
+        juce::RectangleList<float> rect_list;
+        for (size_t i = 1; i < 7; ++i) {
+            const auto y = unit_height * static_cast<float>(i);
+            rect_list.add(0.f, y - thickness * .5f, bound.getWidth(), thickness);
         }
-
-        setBufferedToImage(true);
-        setInterceptsMouseClicks(false, true);
+        g.setColour(grid_colour_);
+        g.fillRectList(rect_list);
+        // draw right gradient
+        const auto shadow_rect = bound.withLeft(bound.getRight() - base_.getFontSize() * 2.f);
+        juce::ColourGradient gradient;
+        gradient.point1 = juce::Point<float>(shadow_rect.getX(), shadow_rect.getY());
+        gradient.point2 = juce::Point<float>(shadow_rect.getRight(), shadow_rect.getY());
+        gradient.isRadial = false;
+        gradient.clearColours();
+        gradient.addColour(0.0, base_.getBackgroundColour().withAlpha(0.f));
+        gradient.addColour(1.0, base_.getBackgroundColour().withAlpha(1.f));
+        g.setGradientFill(gradient);
+        g.fillRect(shadow_rect);
+        // draw db values
+        g.setColour(base_.getTextColour().withAlpha(.5f));
+        g.setFont(base_.getFontSize() * 1.25f);
+        const auto label_x0 = bound.getRight() - base_.getFontSize() * 3.25f;
+        const auto label_height = base_.getFontSize() * 1.1f;
+        const auto label_width = base_.getFontSize() * 3.f;
+        const auto min_db_unit = zlstate::PFFTMinDB::kDBs[static_cast<size_t>(std::round(
+            c_fft_min_db_))] / 6.f;
+        for (size_t i = 1; i < 7; ++i) {
+            const auto db = min_db_unit * static_cast<float>(i);
+            const auto y = unit_height * static_cast<float>(i);
+            const auto rect = juce::Rectangle(label_x0, y - label_height * .5f,
+                                              label_width, label_height);
+            g.drawText(juce::String(juce::roundToInt(db)),
+                       rect, juce::Justification::centredRight, false);
+        }
     }
 
-    void FFTBackgroundPanel::resized() {
-        const auto bound = getLocalBounds();
-        const auto box_height = juce::roundToInt(base_.getFontSize() * 1.25f);
-        const auto box_width = juce::roundToInt(base_.getFontSize() * 2.5f);
-        const auto padding1 = box_width / 10;
-        const auto padding2 = juce::roundToInt(std::ceil(base_.getFontSize()));
-        const auto padding3 = static_cast<int>(std::round(base_.getFontSize() * .25f));
-        background1_.setBounds(bound);
-        fft_min_freq_box_.setBounds({
-            bound.getX() + padding1, bound.getBottom() - box_height,
-            box_width, box_height
-        });
-        fft_max_freq_box_.setBounds({
-            bound.getRight() - box_width - padding2, bound.getBottom() - box_height,
-            box_width, box_height
-        });
-        fft_min_db_box_.setBounds({
-            bound.getRight() - box_width - padding3, bound.getBottom() - box_height - padding2,
-            box_width, box_height
-        });
+    void FFTBackgroundPanel::updateSampleRate(const double sample_rate) {
+        const auto freq_max = sample_rate * 0.5;
+        if (std::abs(freq_max - freq_max_) > 0.1) {
+            freq_max_ = freq_max;
+            repaint();
+        }
     }
 
     void FFTBackgroundPanel::repaintCallBackSlow() {
-        updater_.updateComponents();
-        if (fft_min_db_box_.getBox().getSelectedItemIndex() != c_min_db_index_) {
-            c_min_db_index_ = fft_min_db_box_.getBox().getSelectedItemIndex();
-            background1_.setMinDB(zlstate::PFFTMinDB::kDBs[static_cast<size_t>(c_min_db_index_)]);
-            background1_.repaint();
+        const auto fft_min_db = fft_min_db_.load(std::memory_order::relaxed);
+        if (std::abs(fft_min_db - c_fft_min_db_) > 0.1f) {
+            c_fft_min_db_ = fft_min_db;
+            repaint();
         }
     }
 
-    void FFTBackgroundPanel::setMinMaxFreq(const double min_freq, const double max_freq) {
-        background1_.setMinFreq(min_freq);
-        background1_.setMaxFreq(max_freq);
-        background1_.repaint();
-
-        fft_max_freq_box_.getLAF().setLabelString(juce::String(
-            static_cast<int>(std::round(max_freq * 0.001))) + "k");
-        fft_max_freq_box_.repaint();
+    void FFTBackgroundPanel::lookAndFeelChanged() {
+        const auto grid_colour = base_.getColourByIdx(zlgui::ColourIdx::kGridColour);
+        const auto background_colour = base_.getBackgroundColour();
+        const auto alpha = grid_colour.getFloatAlpha();
+        grid_colour_ = juce::Colour::fromFloatRGBA(
+            grid_colour.getFloatRed() * alpha + background_colour.getFloatRed() * (1.f - alpha),
+            grid_colour.getFloatGreen() * alpha + background_colour.getFloatGreen() * (1.f - alpha),
+            grid_colour.getFloatBlue() * alpha + background_colour.getFloatBlue() * (1.f - alpha),
+            1.f);
     }
 }

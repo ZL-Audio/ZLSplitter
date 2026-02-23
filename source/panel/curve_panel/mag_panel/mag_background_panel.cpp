@@ -43,7 +43,7 @@ namespace zlpanel {
     }
 
     void MagBackgroundPanel::paint(juce::Graphics& g) {
-        g.fillAll(base_.getBackgroundColor());
+        g.fillAll(base_.getBackgroundColour());
         if (c_mag_min_db_ < 0) {
             return;
         }
@@ -54,7 +54,7 @@ namespace zlpanel {
         g.setFont(base_.getFontSize());
 
         const auto grid_colour = base_.getColourByIdx(zlgui::ColourIdx::kGridColour);
-        const auto text_colour = base_.getTextColor().withAlpha(
+        const auto text_colour = base_.getTextColour().withAlpha(
             std::clamp(grid_colour.getFloatAlpha() + .2f, .2f, 1.f));
 
         const auto right_padding = std::round(base_.getFontSize() * .25f);

@@ -12,7 +12,7 @@
 #include "component_updater.hpp"
 
 namespace zlgui::attachment {
-    template <bool UpdateFromAPVTS = true>
+    template <bool kUpdateFromAPVTS = true>
     class ButtonAttachment final : public ComponentAttachment,
                                    private juce::AudioProcessorValueTreeState::Listener,
                                    private juce::Button::Listener {
@@ -29,13 +29,13 @@ namespace zlgui::attachment {
             // add button listener
             button_.addListener(this);
             // add parameter listener
-            if constexpr (UpdateFromAPVTS) {
+            if constexpr (kUpdateFromAPVTS) {
                 apvts_.addParameterListener(parameter_ref_.getParameterID(), this);
             }
             parameterChanged(parameter_ref_.getParameterID(),
                              apvts_.getRawParameterValue(
                                  parameter_ref_.getParameterID())->load(std::memory_order::relaxed));
-            if constexpr (UpdateFromAPVTS) {
+            if constexpr (kUpdateFromAPVTS) {
                 updater_ref_.addAttachment(*this);
             } else {
                 updateComponent();
@@ -43,7 +43,7 @@ namespace zlgui::attachment {
         }
 
         ~ButtonAttachment() override {
-            if constexpr (UpdateFromAPVTS) {
+            if constexpr (kUpdateFromAPVTS) {
                 updater_ref_.removeAttachment(*this);
                 apvts_.removeParameterListener(parameter_ref_.getParameterID(), this);
             }

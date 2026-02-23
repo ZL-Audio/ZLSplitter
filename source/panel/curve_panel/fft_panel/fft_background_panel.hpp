@@ -16,61 +16,31 @@
 namespace zlpanel {
     class FFTBackgroundPanel final : public juce::Component {
     public:
-        explicit FFTBackgroundPanel(PluginProcessor &processor, zlgui::UIBase &base);
+        explicit FFTBackgroundPanel(PluginProcessor &p, zlgui::UIBase &base);
 
-        void resized() override;
+        void paint(juce::Graphics& g) override;
+
+        void updateSampleRate(double sample_rate);
 
         void repaintCallBackSlow();
 
-        void setMinMaxFreq(double min_freq, double max_freq);
-
     private:
-        static constexpr std::array<double, 11> kBackgroundFreqs = {
-            20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0, 10000.0, 20000.0, 50000.0
+        static constexpr std::array kFreqValues = {
+            20.f, 50.f, 100.f, 200.f, 500.f, 1000.f, 2000.f, 5000.f,
+            10000.f, 20000.f, 50000.f, 100000.f, 200000.f
         };
 
-        static constexpr std::array<std::string_view, 11> kBackgroundFreqsNames = {
-            "20", "50", "100", "200", "500", "1k", "2k", "5k", "10k", "20k", "50k"
-        };
+        zlgui::UIBase& base_;
+        std::atomic<float>& fft_min_db_;
+        float c_fft_min_db_{-1.f};
+        double freq_max_{0.};
 
-        class Background1 final : public juce::Component {
-        public:
-            explicit Background1(zlgui::UIBase &base);
+        juce::Colour grid_colour_;
 
-            void paint(juce::Graphics &g) override;
+        void drawFreqs(juce::Graphics& g) const;
 
-            void setMinFreq(const double x) {
-                min_freq_ = x;
-            }
+        void drawDBs(juce::Graphics& g) const;
 
-            void setMaxFreq(const double x) {
-                max_freq_ = x;
-            }
-
-            void setMinDB(const float x) {
-                min_db_ = x;
-            }
-
-        private:
-            zlgui::UIBase &base_;
-
-            double min_freq_{10.0}, max_freq_{22000.0};
-            float min_db_{-72.f};
-        };
-
-        zlgui::UIBase &base_;
-        Background1 background1_;
-
-        zlgui::attachment::ComponentUpdater updater_;
-
-        zlgui::combobox::CompactCombobox fft_min_freq_box_;
-        zlgui::attachment::ComboBoxAttachment<true> fft_min_freq_attach_;
-
-        zlgui::combobox::CompactCombobox fft_max_freq_box_;
-        zlgui::attachment::ComboBoxAttachment<true> fft_max_freq_attach_;
-
-        zlgui::combobox::CompactCombobox fft_min_db_box_;
-        zlgui::attachment::ComboBoxAttachment<true> fft_min_db_attach_;
-        int c_min_db_index_{-1};
+        void lookAndFeelChanged() override;
     };
-} // zlpanel
+}

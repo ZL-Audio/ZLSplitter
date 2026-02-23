@@ -10,7 +10,6 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
-
 #include "../interface_definitions.hpp"
 
 namespace zlgui {
@@ -20,18 +19,19 @@ namespace zlgui {
 
         enum ScaleType {
             kScaleWithWidth,
-            kScaleWithHeight
+            kScaleWithHeight,
+            kScaleWithFontSize
         };
 
         ResizeCorner(UIBase& base,
                      juce::Component* componentToResize,
                      juce::ComponentBoundsConstrainer* constrainer,
                      const ScaleType scale_type = kScaleWithWidth,
-                     const float corner_scale = .025f) :
-            juce::ResizableCornerComponent(componentToResize, constrainer),
-            base_(base),
-            corner_scale_(corner_scale),
-            scale_type_(scale_type) {
+                     const float corner_scale = .025f)
+            : juce::ResizableCornerComponent(componentToResize, constrainer),
+              base_(base),
+              corner_scale_(corner_scale),
+              scale_type_(scale_type) {
             setAlpha(.1f);
             setBufferedToImage(true);
         }
@@ -47,14 +47,14 @@ namespace zlgui {
                 bound.getWidth(), bound.getHeight() * kDefaultRectScale
             };
 
-            g.setColour(base_.getBackgroundColor());
+            g.setColour(base_.getBackgroundColour());
             g.fillRect(rect1);
             g.fillRect(rect2);
 
             rect1.reduce(bound.getWidth() * 0.05f, bound.getHeight() * 0.05f);
             rect2.reduce(bound.getWidth() * 0.05f, bound.getHeight() * 0.05f);
 
-            g.setColour(base_.getTextColor());
+            g.setColour(base_.getTextColour());
             g.fillRect(rect1);
             g.fillRect(rect2);
         }
@@ -93,6 +93,14 @@ namespace zlgui {
                 case kScaleWithHeight: {
                     corner_size = parent_bound.getHeight();
                     break;
+                }
+                case kScaleWithFontSize: {
+                    const auto max_font_size = static_cast<float>(parent_bound.getWidth()) * 0.016f;
+                    const auto min_font_size = max_font_size * .25f;
+                    const auto font_size = base_.getFontMode() == 0
+                        ? max_font_size * base_.getFontScale()
+                        : std::clamp(base_.getStaticFontSize(), min_font_size, max_font_size);
+                    corner_size = static_cast<int>(std::round(font_size));
                 }
                 }
                 corner_size = std::max(1, static_cast<int>(

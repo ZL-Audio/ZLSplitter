@@ -14,7 +14,7 @@
 #include "component_updater.hpp"
 
 namespace zlgui::attachment {
-    template <bool UpdateFromAPVTS = true>
+    template <bool kUpdateFromAPVTS = true>
     class SliderAttachment final : public ComponentAttachment,
                                    private juce::AudioProcessorValueTreeState::Listener,
                                    private juce::Slider::Listener {
@@ -64,13 +64,12 @@ namespace zlgui::attachment {
             // add slider listener
             slider_.addListener(this);
             // add parameter listener
-            if constexpr (UpdateFromAPVTS) {
+            if constexpr (kUpdateFromAPVTS) {
                 apvts_.addParameterListener(parameter_ref_.getParameterID(), this);
             }
-            parameterChanged(parameter_ref_.getParameterID(),
-                             apvts_.getRawParameterValue(
-                                 parameter_ref_.getParameterID())->load(std::memory_order::relaxed));
-            if constexpr (UpdateFromAPVTS) {
+            parameterChanged(parameter_ID,
+                             apvts_.getRawParameterValue(parameter_ID)->load(std::memory_order::relaxed));
+            if constexpr (kUpdateFromAPVTS) {
                 updater_ref_.addAttachment(*this);
             } else {
                 updateComponent();
@@ -103,13 +102,12 @@ namespace zlgui::attachment {
             // add slider listener
             slider_.addListener(this);
             // add parameter listener
-            if constexpr (UpdateFromAPVTS) {
+            if constexpr (kUpdateFromAPVTS) {
                 apvts_.addParameterListener(parameter_ref_.getParameterID(), this);
             }
-            parameterChanged(parameter_ref_.getParameterID(),
-                             apvts_.getRawParameterValue(
-                                 parameter_ref_.getParameterID())->load(std::memory_order::relaxed));
-            if constexpr (UpdateFromAPVTS) {
+            parameterChanged(parameter_ID,
+                             apvts_.getRawParameterValue(parameter_ID)->load(std::memory_order::relaxed));
+            if constexpr (kUpdateFromAPVTS) {
                 updater_ref_.addAttachment(*this);
             } else {
                 updateComponent();
@@ -117,7 +115,7 @@ namespace zlgui::attachment {
         }
 
         ~SliderAttachment() override {
-            if constexpr (UpdateFromAPVTS) {
+            if constexpr (kUpdateFromAPVTS) {
                 updater_ref_.removeAttachment(*this);
                 apvts_.removeParameterListener(parameter_ref_.getParameterID(), this);
             }

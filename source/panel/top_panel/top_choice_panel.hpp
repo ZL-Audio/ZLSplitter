@@ -18,7 +18,7 @@ namespace zlpanel {
     class TopChoicePanel final : public juce::Component {
     public:
         explicit TopChoicePanel(PluginProcessor &p, zlgui::UIBase &base,
-                                multilingual::TooltipHelper &tooltip_helper);
+                                const multilingual::TooltipHelper &tooltip_helper);
 
         int getIdealWidth() const;
 

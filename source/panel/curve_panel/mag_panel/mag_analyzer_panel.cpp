@@ -32,10 +32,10 @@ namespace zlpanel {
         if (!lock.owns_lock()) {
             return;
         }
-        const auto thickness = base_.getFontSize() * .2f * base_.getFFTCurveThickness();
+        const auto thickness = base_.getFontSize() * .2f;
         if (static_cast<zlp::PSplitType::SplitType>(
             std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
-            g.setColour(base_.getTextColor());
+            g.setColour(base_.getTextColour());
             g.strokePath(path1_,
                          juce::PathStrokeType(thickness,
                                               juce::PathStrokeType::curved,

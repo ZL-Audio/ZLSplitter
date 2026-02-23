@@ -43,16 +43,61 @@ namespace zlgui::combobox {
         }
     }
 
+    CompactCombobox::CompactCombobox(const std::vector<std::unique_ptr<juce::Drawable>>& icons,
+                                     UIBase& base,
+                                     const juce::String& tooltip_text,
+                                     const std::vector<juce::String>& item_labels) :
+        base_(base),
+        box_laf_(base) {
+        const auto menu = combo_box_.getRootMenu();
+        for (size_t i = 0; i < icons.size(); ++i) {
+            juce::PopupMenu::Item item;
+            item.itemID = static_cast<int>(i + 1);
+            item.text = "";
+            if (i < item_labels.size()) {
+                item.tooltipText = item_labels[i];
+            }
+            item.isEnabled = true;
+            item.isTicked = false;
+            item.image = icons[i]->createCopy();
+            menu->addItem(item);
+        }
+
+        box_laf_.setIcons(icons);
+
+        combo_box_.setScrollWheelEnabled(false);
+        combo_box_.setInterceptsMouseClicks(false, false);
+        combo_box_.setLookAndFeel(&box_laf_);
+        combo_box_.setJustificationType(juce::Justification::centred);
+        addAndMakeVisible(combo_box_);
+
+        setEditable(true);
+
+        if (tooltip_text.length() > 0) {
+            SettableTooltipClient::setTooltip(tooltip_text);
+        }
+    }
 
     CompactCombobox::~CompactCombobox() {
         combo_box_.setLookAndFeel(nullptr);
     }
 
+    void CompactCombobox::paint(juce::Graphics& g) {
+        g.setFont(box_laf_.getFontScale() * base_.getFontSize());
+        float max_text_width = 0.f;
+        for (int i = 0; i < combo_box_.getNumItems(); ++i) {
+            const auto text = combo_box_.getItemText(i);
+            const auto text_width = juce::GlyphArrangement::getStringWidth(g.getCurrentFont(), text);
+            max_text_width = std::max(max_text_width, text_width);
+        }
+        const auto padding = (static_cast<float>(getLocalBounds().getWidth()) - max_text_width) * .5f;
+        box_laf_.setPadding(padding * .975f);
+    }
+
     void CompactCombobox::resized() {
-        auto bound = getLocalBounds().toFloat();
-        bound = bound.withSizeKeepingCentre(bound.getWidth(),
-                                            juce::jmin(bound.getHeight(), base_.getFontSize() * 2.f));
-        combo_box_.setBounds(bound.toNearestInt());
+        auto bound = getLocalBounds();
+        box_laf_.setItemSize(bound.getWidth(), bound.getHeight());
+        combo_box_.setBounds(getLocalBounds());
     }
 
     void CompactCombobox::mouseUp(const juce::MouseEvent& event) {

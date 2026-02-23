@@ -10,14 +10,19 @@
 #include "other_ui_setting_panel.hpp"
 
 namespace zlpanel {
-    OtherUISettingPanel::OtherUISettingPanel(PluginProcessor &p, zlgui::UIBase &base) : p_ref_(p),
+    OtherUISettingPanel::OtherUISettingPanel(PluginProcessor& p, zlgui::UIBase& base) :
+        p_ref_(p),
         base_(base), name_laf_(base),
         refresh_rate_box_(zlstate::PTargetRefreshSpeed::kChoices, base),
         fft_tilt_slider_("Tilt", base),
         fft_speed_slider_("Speed", base),
         mag_curve_slider_("Mag", base),
         fft_curve_slider_("FFT", base),
-        tooltip_box_(zlstate::PTooltipLang::kChoices, base) {
+        tooltip_box_(zlstate::PTooltipLang::kChoices, base),
+        font_mode_box_(zlstate::PFontMode::kChoices, base),
+        font_scale_slider_("Scale", base),
+        static_font_size_slider_("Static", base),
+        window_size_fix_box_(zlstate::PWindowSizeFix::kChoices, base) {
         juce::ignoreUnused(p_ref_);
         name_laf_.setFontScale(zlgui::kFontHuge);
 
@@ -42,10 +47,10 @@ namespace zlpanel {
         curve_thick_label_.setJustificationType(juce::Justification::centredRight);
         curve_thick_label_.setLookAndFeel(&name_laf_);
         addAndMakeVisible(curve_thick_label_);
-        mag_curve_slider_.getSlider().setNormalisableRange(juce::NormalisableRange<double>(0., 4., .01));
+        mag_curve_slider_.getSlider().setNormalisableRange(juce::NormalisableRange<double>(0., 2., .01));
         mag_curve_slider_.getSlider().setDoubleClickReturnValue(true, 1.0);
         addAndMakeVisible(mag_curve_slider_);
-        fft_curve_slider_.getSlider().setNormalisableRange(juce::NormalisableRange<double>(0., 4., .01));
+        fft_curve_slider_.getSlider().setNormalisableRange(juce::NormalisableRange<double>(0., 2., .01));
         fft_curve_slider_.getSlider().setDoubleClickReturnValue(true, 1.0);
         addAndMakeVisible(fft_curve_slider_);
 
@@ -54,6 +59,24 @@ namespace zlpanel {
         tooltip_label_.setLookAndFeel(&name_laf_);
         addAndMakeVisible(tooltip_label_);
         addAndMakeVisible(tooltip_box_);
+
+        font_label_.setText("UI Scaling", juce::dontSendNotification);
+        font_label_.setJustificationType(juce::Justification::centredRight);
+        font_label_.setLookAndFeel(&name_laf_);
+        addAndMakeVisible(font_label_);
+        font_mode_box_.getBox().addListener(this);
+        addAndMakeVisible(font_mode_box_);
+        font_scale_slider_.getSlider().setNormalisableRange(juce::NormalisableRange<double>(0.5, 1.0, .01));
+        font_scale_slider_.getSlider().setDoubleClickReturnValue(true, 0.9);
+        addAndMakeVisible(font_scale_slider_);
+        static_font_size_slider_.setInterceptsMouseClicks(false, false);
+        addAndMakeVisible(static_font_size_slider_);
+
+        window_size_fix_label_.setText("Window Size Fix", juce::dontSendNotification);
+        window_size_fix_label_.setJustificationType(juce::Justification::centredRight);
+        window_size_fix_label_.setLookAndFeel(&name_laf_);
+        addAndMakeVisible(window_size_fix_label_);
+        addAndMakeVisible(window_size_fix_box_);
     }
 
     void OtherUISettingPanel::loadSetting() {
@@ -61,8 +84,13 @@ namespace zlpanel {
         fft_tilt_slider_.getSlider().setValue(static_cast<double>(base_.getFFTExtraTilt()));
         fft_speed_slider_.getSlider().setValue(static_cast<double>(base_.getFFTExtraSpeed()));
         mag_curve_slider_.getSlider().setValue(base_.getMagCurveThickness());
-        tooltip_box_.getBox().setSelectedItemIndex(static_cast<int>(base_.getTooltipLangID()));
         fft_curve_slider_.getSlider().setValue(base_.getFFTCurveThickness());
+        tooltip_box_.getBox().setSelectedItemIndex(static_cast<int>(base_.getTooltipLangID()));
+        font_mode_box_.getBox().setSelectedItemIndex(static_cast<int>(base_.getFontMode()), juce::sendNotificationSync);
+        font_scale_slider_.getSlider().setValue(static_cast<double>(base_.getFontScale()));
+        static_font_size_slider_.getSlider().setValue(static_cast<double>(base_.getFontSize()));
+        window_size_fix_box_.getBox().setSelectedItemIndex(static_cast<int>(base_.getWindowSizeFix()));
+        comboBoxChanged(&font_mode_box_.getBox());
     }
 
     void OtherUISettingPanel::saveSetting() {
@@ -72,6 +100,10 @@ namespace zlpanel {
         base_.setMagCurveThickness(static_cast<float>(mag_curve_slider_.getSlider().getValue()));
         base_.setFFTCurveThickness(static_cast<float>(fft_curve_slider_.getSlider().getValue()));
         base_.setTooltipLandID(static_cast<size_t>(tooltip_box_.getBox().getSelectedItemIndex()));
+        base_.setFontMode(static_cast<size_t>(font_mode_box_.getBox().getSelectedItemIndex()));
+        base_.setFontScale(static_cast<float>(font_scale_slider_.getSlider().getValue()));
+        base_.setStaticFontSize(static_cast<float>(static_font_size_slider_.getSlider().getValue()));
+        base_.setWindowSizeFix(window_size_fix_box_.getBox().getSelectedItemIndex() > 0);
         base_.saveToAPVTS();
     }
 
@@ -82,12 +114,12 @@ namespace zlpanel {
         const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale * 3.f);
         const auto slider_height = juce::roundToInt(base_.getFontSize() * kSliderHeightScale);
 
-        return padding * 5 + slider_height * 4;
+        return 7 * padding + 6 * slider_height;
     }
 
     void OtherUISettingPanel::resized() {
         const auto padding = juce::roundToInt(base_.getFontSize() * kPaddingScale * 3.f);
-        const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderScale);
+        const auto slider_width = juce::roundToInt(base_.getFontSize() * kSliderWidthScale);
         const auto slider_height = juce::roundToInt(base_.getFontSize() * kSliderHeightScale);
 
         auto bound = getLocalBounds();
@@ -96,7 +128,7 @@ namespace zlpanel {
             auto local_bound = bound.removeFromTop(slider_height);
             refresh_rate_label_.setBounds(local_bound.removeFromLeft(slider_width * 2));
             local_bound.removeFromLeft(padding);
-            refresh_rate_box_.setBounds(local_bound.removeFromLeft(slider_width));
+            refresh_rate_box_.setBounds(local_bound.removeFromLeft(slider_width).reduced(0, padding / 3));
         }
         {
             bound.removeFromTop(padding);
@@ -121,7 +153,55 @@ namespace zlpanel {
             auto local_bound = bound.removeFromTop(slider_height);
             tooltip_label_.setBounds(local_bound.removeFromLeft(slider_width * 2));
             local_bound.removeFromLeft(padding);
-            tooltip_box_.setBounds(local_bound.removeFromLeft(slider_width));
+            tooltip_box_.setBounds(local_bound.removeFromLeft(slider_width).reduced(0, padding / 3));
+        }
+        {
+            bound.removeFromTop(padding);
+            auto local_bound = bound.removeFromTop(slider_height);
+            font_label_.setBounds(local_bound.removeFromLeft(slider_width * 2));
+            local_bound.removeFromLeft(padding);
+            font_mode_box_.setBounds(local_bound.removeFromLeft(slider_width).reduced(0, padding / 3));
+            local_bound.removeFromLeft(padding);
+            font_scale_slider_.setBounds(local_bound.removeFromLeft(slider_width));
+            local_bound.removeFromLeft(padding);
+            static_font_size_slider_.setBounds(local_bound.removeFromLeft(slider_width));
+
+            if (parent_width_ < 2) {
+                static_font_size_slider_.setVisible(false);
+                return;
+            }
+            static_font_size_slider_.setVisible(true);
+            const auto max_font_size = std::floor(static_cast<float>(parent_width_) * kFontSizeOverWidth);
+            const auto min_font_size = std::ceil(static_cast<float>(parent_width_) * kFontSizeOverWidth * .25f);
+            static_font_size_slider_.getSlider().setNormalisableRange(juce::NormalisableRange<double>(
+                min_font_size, max_font_size, 0.01));
+            static_font_size_slider_.getSlider().setDoubleClickReturnValue(
+                true, .5f * (min_font_size + max_font_size));
+        }
+        {
+            bound.removeFromTop(padding);
+            auto local_bound = bound.removeFromTop(slider_height);
+            window_size_fix_label_.setBounds(local_bound.removeFromLeft(slider_width * 2));
+            local_bound.removeFromLeft(padding);
+            window_size_fix_box_.setBounds(local_bound.removeFromLeft(slider_width).reduced(0, padding / 3));
         }
     }
-} // zlpanel
+
+    void OtherUISettingPanel::setParentWidth(const int width) {
+        parent_width_ = width;
+    }
+
+    void OtherUISettingPanel::comboBoxChanged(juce::ComboBox*) {
+        if (font_mode_box_.getBox().getSelectedItemIndex() == 0) {
+            font_scale_slider_.setInterceptsMouseClicks(true, true);
+            font_scale_slider_.setAlpha(1.f);
+            static_font_size_slider_.setInterceptsMouseClicks(false, false);
+            static_font_size_slider_.setAlpha(.5f);
+        } else {
+            font_scale_slider_.setInterceptsMouseClicks(false, false);
+            font_scale_slider_.setAlpha(.5f);
+            static_font_size_slider_.setInterceptsMouseClicks(true, true);
+            static_font_size_slider_.setAlpha(1.f);
+        }
+    }
+}

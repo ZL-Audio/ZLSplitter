@@ -34,7 +34,7 @@ namespace zlpanel {
         const auto thickness = base_.getFontSize() * .2f * base_.getFFTCurveThickness();
         if (static_cast<zlp::PSplitType::SplitType>(
             std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
-            g.setColour(base_.getTextColor());
+            g.setColour(base_.getTextColour());
             g.strokePath(out_path1_,
                          juce::PathStrokeType(thickness,
                                               juce::PathStrokeType::curved,
@@ -62,7 +62,7 @@ namespace zlpanel {
     void FFTAnalyzerPanel::run() {
         const auto bound = atomic_bound_.load();
         const auto min_db = zlstate::PFFTMinDB::kDBs[static_cast<size_t>(std::round(
-            fft_min_db_ref_.load(std::memory_order::relaxed)))];
+            fft_min_db_ref_.load(std::memory_order::relaxed)))] / 6.f * 7.f;
         if (std::abs(min_db - c_fft_min_db_) > .1f) {
             c_fft_min_db_ = min_db;
             to_update_decay_.store(true, std::memory_order::relaxed);

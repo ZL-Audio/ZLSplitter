@@ -12,7 +12,6 @@
 #include "logo_panel.hpp"
 #include "top_legend_panel.hpp"
 #include "top_choice_panel.hpp"
-#include "top_control_panel.hpp"
 
 namespace zlpanel {
     class TopPanel final : public juce::Component {
@@ -30,9 +29,21 @@ namespace zlpanel {
 
     private:
         zlgui::UIBase &base_;
+        zlgui::attachment::ComponentUpdater updater_;
+
         LogoPanel logo_panel_;
         TopLegendPanel top_legend_panel_;
         TopChoicePanel top_choice_panel_;
-        TopControlPanel top_control_panel_;
+
+        zlgui::combobox::CompactCombobox split_type_box_;
+        zlgui::attachment::ComboBoxAttachment<true> split_type_attachment_;
+
+        std::unique_ptr<juce::Drawable> swap_drawable_;
+        zlgui::button::ClickButton swap_button_;
+        zlgui::attachment::ButtonAttachment<true> swap_attach_;
+
+        std::unique_ptr<juce::Drawable> bypass_drawable_;
+        zlgui::button::ClickButton bypass_button_;
+        zlgui::attachment::ButtonAttachment<true> bypass_attach_;
     };
 }

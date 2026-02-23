@@ -9,28 +9,18 @@
 
 #pragma once
 
-#include "../../../PluginProcessor.hpp"
-#include "../../../gui/gui.hpp"
-#include "../../helper/helper.hpp"
-#include "../../multilingual/tooltip_helper.hpp"
+#include "../../gui/gui.hpp"
+#include "../helper/helper.hpp"
 
 namespace zlpanel {
-    class LRPopPanel final : public juce::Component {
+    class ControlBackground final : public juce::Component {
     public:
-        LRPopPanel(PluginProcessor &p, zlgui::UIBase &base,
-                   multilingual::TooltipHelper &tooltip_helper);
+        explicit ControlBackground(zlgui::UIBase& base, float alpha = .5f);
 
-        int getIdealHeight() const;
-
-        void resized() override;
-
-        void repaintCallBackSlow();
+        void paint(juce::Graphics& g) override;
 
     private:
-        zlgui::UIBase &base_;
-        zlgui::attachment::ComponentUpdater updater_{};
-
-        zlgui::slider::TwoValueRotarySlider<false, false, true> mix_slider_;
-        zlgui::attachment::SliderAttachment<true> mix_attach_;
+        zlgui::UIBase& base_;
+        const float alpha_;
     };
 }

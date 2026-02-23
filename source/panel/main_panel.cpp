@@ -40,15 +40,21 @@ namespace zlpanel {
     void MainPanel::resized() {
         auto bound = getLocalBounds();
 
-        const auto height = static_cast<float>(bound.getHeight());
-        const auto width = static_cast<float>(bound.getWidth());
-        if (height < width * 0.45f) {
-            bound.setHeight(juce::roundToInt(width * .45f));
-        } else if (height > width * 2.f) {
-            bound.setWidth(juce::roundToInt(height * .5f));
+        {
+            const auto height = static_cast<float>(bound.getHeight());
+            const auto width = static_cast<float>(bound.getWidth());
+            if (height < width * 0.575f) {
+                bound.setHeight(static_cast<int>(std::ceil(width * .575f)));
+            } else if (height > width * 1.f) {
+                bound.setWidth(static_cast<int>(std::ceil(height * 1.f)));
+            }
         }
 
-        const auto font_size = static_cast<float>(bound.getWidth()) * 0.016f;
+        const auto max_font_size = static_cast<float>(bound.getWidth()) * kFontSizeOverWidth;
+        const auto min_font_size = max_font_size * .25f;
+        const auto font_size = base_.getFontMode() == 0
+            ? max_font_size * base_.getFontScale()
+            : std::clamp(base_.getStaticFontSize(), min_font_size, max_font_size);
         base_.setFontSize(font_size);
 
         ui_setting_panel_.setBounds(bound);

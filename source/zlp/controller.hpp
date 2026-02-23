@@ -106,7 +106,6 @@ namespace zlp {
 
         std::atomic<int> latency_{0};
 
-        // magnitude analyzer
         std::atomic<bool> analyzer_on_{true};
         zldsp::analyzer::AnalyzerSenderBase<FloatType, 2> analyzer_sender_{};
 

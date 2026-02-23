@@ -10,10 +10,10 @@
 #include "colour_map_selector.hpp"
 
 namespace zlgui::colour_selector {
-    ColourMapSelector::ColourMapSelector(zlgui::UIBase& base, const float box_width) :
-        base_(base),
-        map_box_(zlstate::PColourMapIdx::kChoices, base_),
-        map_box_width_p_(box_width) {
+    ColourMapSelector::ColourMapSelector(zlgui::UIBase& base, const float box_width)
+        : base_(base),
+          map_box_(zlstate::PColourMapIdx::kChoices, base_),
+          map_box_width_p_(box_width) {
         addAndMakeVisible(map_box_);
         map_box_.getBox().addListener(this);
     }
@@ -22,7 +22,7 @@ namespace zlgui::colour_selector {
         auto bound = getLocalBounds().toFloat();
 
         bound.removeFromLeft(bound.getWidth() * map_box_width_p_ + base_.getFontSize());
-        g.setColour(base_.getTextColor().withAlpha(.875f));
+        g.setColour(base_.getTextColour().withAlpha(.875f));
         g.fillRect(bound);
         bound = bound.withSizeKeepingCentre(bound.getWidth() - base_.getFontSize() * .375f,
                                             bound.getHeight() - base_.getFontSize() * .375f);
