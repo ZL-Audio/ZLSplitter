@@ -44,6 +44,8 @@ namespace zlpanel {
         freq_label_.setLookAndFeel(&label_laf_);
         freq_label_.setJustificationType(juce::Justification::centred);
         addAndMakeVisible(freq_label_);
+
+        setInterceptsMouseClicks(false, true);
     }
 
     int LHPopPanel::getIdealHeight() const {

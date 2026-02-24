@@ -15,11 +15,13 @@ namespace zlpanel {
         base_{base},
         background_(base),
         lr_pop_panel_(p, base, tooltip_helper),
-        lh_pop_panel_(p, base, tooltip_helper) {
+        lh_pop_panel_(p, base, tooltip_helper),
+        ts_pop_panel_(p, base, tooltip_helper) {
         background_.setBufferedToImage(true);
         addAndMakeVisible(background_);
         addChildComponent(lr_pop_panel_);
         addChildComponent(lh_pop_panel_);
+        addChildComponent(ts_pop_panel_);
     }
 
     int ControlPopPanel::getIdealHeight() const {
@@ -40,7 +42,10 @@ namespace zlpanel {
             height += lh_pop_panel_.getIdealHeight();
             break;
         }
-        case zlp::PSplitType::SplitType::kTSteady:
+        case zlp::PSplitType::SplitType::kTSteady: {
+            height += ts_pop_panel_.getIdealHeight();
+            break;
+        }
         case zlp::PSplitType::SplitType::kPSteady: {
             break;
         }
@@ -68,7 +73,10 @@ namespace zlpanel {
             lh_pop_panel_.setBounds(bound);
             break;
         }
-        case zlp::PSplitType::SplitType::kTSteady:
+        case zlp::PSplitType::SplitType::kTSteady: {
+            ts_pop_panel_.setBounds(bound);
+            break;
+        }
         case zlp::PSplitType::SplitType::kPSteady: {
             break;
         }
@@ -89,7 +97,10 @@ namespace zlpanel {
             lh_pop_panel_.repaintCallBackSlow();
             break;
         }
-        case zlp::PSplitType::SplitType::kTSteady:
+        case zlp::PSplitType::SplitType::kTSteady: {
+            ts_pop_panel_.repaintCallBackSlow();
+            break;
+        }
         case zlp::PSplitType::SplitType::kPSteady: {
             break;
         }
@@ -107,23 +118,32 @@ namespace zlpanel {
         case zlp::PSplitType::SplitType::kNone: {
             lr_pop_panel_.setVisible(false);
             lh_pop_panel_.setVisible(false);
+            ts_pop_panel_.setVisible(false);
             break;
         }
         case zlp::PSplitType::SplitType::kLRight:
         case zlp::PSplitType::SplitType::kMSide: {
             lr_pop_panel_.setVisible(true);
             lh_pop_panel_.setVisible(false);
+            ts_pop_panel_.setVisible(false);
             break;
         }
         case zlp::PSplitType::SplitType::kLHigh: {
             lr_pop_panel_.setVisible(false);
             lh_pop_panel_.setVisible(true);
+            ts_pop_panel_.setVisible(false);
             break;
         }
-        case zlp::PSplitType::SplitType::kTSteady:
+        case zlp::PSplitType::SplitType::kTSteady: {
+            lr_pop_panel_.setVisible(false);
+            lh_pop_panel_.setVisible(false);
+            ts_pop_panel_.setVisible(true);
+            break;
+        }
         case zlp::PSplitType::SplitType::kPSteady: {
             lr_pop_panel_.setVisible(false);
             lh_pop_panel_.setVisible(false);
+            ts_pop_panel_.setVisible(false);
             break;
         }
         }

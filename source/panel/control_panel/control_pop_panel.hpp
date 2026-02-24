@@ -11,6 +11,7 @@
 
 #include "lr_pop_panel.hpp"
 #include "lh_pop_panel.hpp"
+#include "ts_pop_panel.hpp"
 #include "control_background.hpp"
 
 namespace zlpanel {
@@ -34,5 +35,6 @@ namespace zlpanel {
         ControlBackground background_;
         LRPopPanel lr_pop_panel_;
         LHPopPanel lh_pop_panel_;
+        TSPopPanel ts_pop_panel_;
     };
 }
