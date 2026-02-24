@@ -18,7 +18,7 @@ namespace zlpanel {
     class LRPopPanel final : public juce::Component {
     public:
         explicit LRPopPanel(PluginProcessor& p, zlgui::UIBase& base,
-                            multilingual::TooltipHelper& tooltip_helper);
+                            const multilingual::TooltipHelper& tooltip_helper);
 
         int getIdealHeight() const;
 

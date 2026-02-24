@@ -10,7 +10,8 @@
 #include "lr_pop_panel.hpp"
 
 namespace zlpanel {
-    LRPopPanel::LRPopPanel(PluginProcessor& p, zlgui::UIBase& base, multilingual::TooltipHelper& tooltip_helper) :
+    LRPopPanel::LRPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+                           const multilingual::TooltipHelper& tooltip_helper) :
         base_(base), updater_(),
         mix_slider_("", base,
                     tooltip_helper.getToolTipText(multilingual::kMix), 1.25f),
@@ -18,6 +19,8 @@ namespace zlpanel {
                     zlp::PMix::kID, updater_),
         label_laf_(base),
         mix_label_("", "Mix") {
+        label_laf_.setFontScale(1.5f);
+        mix_label_.setLookAndFeel(&label_laf_);
         mix_label_.setJustificationType(juce::Justification::centred);
         addAndMakeVisible(mix_label_);
         addAndMakeVisible(mix_slider_);
@@ -30,7 +33,7 @@ namespace zlpanel {
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
         const auto button_size = getButtonSize(font_size);
-        return 2 * padding + slider_width + button_size;
+        return padding + slider_width + button_size;
     }
 
     void LRPopPanel::resized() {

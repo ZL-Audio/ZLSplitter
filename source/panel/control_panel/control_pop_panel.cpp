@@ -11,13 +11,15 @@
 
 namespace zlpanel {
     ControlPopPanel::ControlPopPanel(PluginProcessor& p, zlgui::UIBase& base,
-                                     multilingual::TooltipHelper& tooltip_helper) :
+                                     const multilingual::TooltipHelper& tooltip_helper) :
         base_{base},
         background_(base),
-        lr_pop_panel_(p, base, tooltip_helper) {
+        lr_pop_panel_(p, base, tooltip_helper),
+        lh_pop_panel_(p, base, tooltip_helper) {
         background_.setBufferedToImage(true);
         addAndMakeVisible(background_);
         addChildComponent(lr_pop_panel_);
+        addChildComponent(lh_pop_panel_);
     }
 
     int ControlPopPanel::getIdealHeight() const {
@@ -34,7 +36,10 @@ namespace zlpanel {
             height += lr_pop_panel_.getIdealHeight();
             break;
         }
-        case zlp::PSplitType::SplitType::kLHigh:
+        case zlp::PSplitType::SplitType::kLHigh: {
+            height += lh_pop_panel_.getIdealHeight();
+            break;
+        }
         case zlp::PSplitType::SplitType::kTSteady:
         case zlp::PSplitType::SplitType::kPSteady: {
             break;
@@ -59,7 +64,10 @@ namespace zlpanel {
             lr_pop_panel_.setBounds(bound);
             break;
         }
-        case zlp::PSplitType::SplitType::kLHigh:
+        case zlp::PSplitType::SplitType::kLHigh: {
+            lh_pop_panel_.setBounds(bound);
+            break;
+        }
         case zlp::PSplitType::SplitType::kTSteady:
         case zlp::PSplitType::SplitType::kPSteady: {
             break;
@@ -68,7 +76,29 @@ namespace zlpanel {
     }
 
     void ControlPopPanel::repaintCallBackSlow() {
-        lr_pop_panel_.repaintCallBackSlow();
+        switch (split_type_) {
+        case zlp::PSplitType::SplitType::kNone: {
+            break;
+        }
+        case zlp::PSplitType::SplitType::kLRight:
+        case zlp::PSplitType::SplitType::kMSide: {
+            lr_pop_panel_.repaintCallBackSlow();
+            break;
+        }
+        case zlp::PSplitType::SplitType::kLHigh: {
+            lh_pop_panel_.repaintCallBackSlow();
+            break;
+        }
+        case zlp::PSplitType::SplitType::kTSteady:
+        case zlp::PSplitType::SplitType::kPSteady: {
+            break;
+        }
+        }
+        if (isMouseOver(true)) {
+            setAlpha(1.f);
+        } else {
+            setAlpha(.75f);
+        }
     }
 
     void ControlPopPanel::setSplitType(const zlp::PSplitType::SplitType split_type) {
@@ -76,17 +106,24 @@ namespace zlpanel {
         switch (split_type_) {
         case zlp::PSplitType::SplitType::kNone: {
             lr_pop_panel_.setVisible(false);
+            lh_pop_panel_.setVisible(false);
             break;
         }
         case zlp::PSplitType::SplitType::kLRight:
         case zlp::PSplitType::SplitType::kMSide: {
             lr_pop_panel_.setVisible(true);
+            lh_pop_panel_.setVisible(false);
             break;
         }
-        case zlp::PSplitType::SplitType::kLHigh:
+        case zlp::PSplitType::SplitType::kLHigh: {
+            lr_pop_panel_.setVisible(false);
+            lh_pop_panel_.setVisible(true);
+            break;
+        }
         case zlp::PSplitType::SplitType::kTSteady:
         case zlp::PSplitType::SplitType::kPSteady: {
             lr_pop_panel_.setVisible(false);
+            lh_pop_panel_.setVisible(false);
             break;
         }
         }

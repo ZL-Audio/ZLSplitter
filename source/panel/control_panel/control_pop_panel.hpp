@@ -10,13 +10,14 @@
 #pragma once
 
 #include "lr_pop_panel.hpp"
+#include "lh_pop_panel.hpp"
 #include "control_background.hpp"
 
 namespace zlpanel {
     class ControlPopPanel final : public juce::Component {
     public:
         explicit ControlPopPanel(PluginProcessor& p, zlgui::UIBase& base,
-                                 multilingual::TooltipHelper& tooltip_helper);
+                                 const multilingual::TooltipHelper& tooltip_helper);
 
         int getIdealHeight() const;
 
@@ -32,5 +33,6 @@ namespace zlpanel {
 
         ControlBackground background_;
         LRPopPanel lr_pop_panel_;
+        LHPopPanel lh_pop_panel_;
     };
 }

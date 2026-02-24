@@ -7,13 +7,43 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-//
-// Created by Zishu Liu on 2/23/26.
-//
-
 #pragma once
 
+#include "../../PluginProcessor.hpp"
+#include "../../gui/gui.hpp"
+#include "../helper/helper.hpp"
+#include "../multilingual/tooltip_helper.hpp"
+
 namespace zlpanel {
-    class LHPopPanel {
+    class LHPopPanel final : public juce::Component {
+    public:
+        LHPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+                   const multilingual::TooltipHelper& tooltip_helper);
+
+        int getIdealHeight() const;
+
+        void resized() override;
+
+        void repaintCallBackSlow();
+
+    private:
+        zlgui::UIBase& base_;
+        zlgui::attachment::ComponentUpdater updater_{};
+
+        zlgui::slider::TwoValueRotarySlider<false, false, false> mix_slider_;
+        zlgui::attachment::SliderAttachment<true> mix_attach_;
+
+        zlgui::combobox::CompactCombobox filter_type_box_;
+        zlgui::attachment::ComboBoxAttachment<true> filter_type_attach_;
+
+        zlgui::combobox::CompactCombobox filter_slope_box_;
+        zlgui::attachment::ComboBoxAttachment<true> filter_slope_attach_;
+
+        zlgui::slider::TwoValueRotarySlider<false, false, false> freq_slider_;
+        zlgui::attachment::SliderAttachment<true> freq_attach_;
+
+        zlgui::label::NameLookAndFeel label_laf_;
+        juce::Label mix_label_;
+        juce::Label freq_label_;
     };
-} // zlpanel
+}
