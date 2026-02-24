@@ -9,7 +9,43 @@
 
 #pragma once
 
+#include "../../PluginProcessor.hpp"
+#include "../../gui/gui.hpp"
+#include "../helper/helper.hpp"
+#include "../multilingual/tooltip_helper.hpp"
+
 namespace zlpanel {
-    class PSPopPanel {
+    class PSPopPanel final : public juce::Component {
+    public:
+        PSPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+                   const multilingual::TooltipHelper& tooltip_helper);
+
+        int getIdealHeight() const;
+
+        void resized() override;
+
+        void repaintCallBackSlow();
+
+    private:
+        zlgui::UIBase& base_;
+        zlgui::attachment::ComponentUpdater updater_{};
+
+        zlgui::slider::TwoValueRotarySlider<false, false, false> balance_slider_;
+        zlgui::attachment::SliderAttachment<true> balance_attach_;
+
+        zlgui::slider::CompactLinearSlider<false, false, false> attack_slider_;
+        zlgui::attachment::SliderAttachment<true> attack_attach_;
+
+        zlgui::slider::CompactLinearSlider<false, false, false> hold_slider_;
+        zlgui::attachment::SliderAttachment<true> hold_attach_;
+
+        zlgui::slider::CompactLinearSlider<false, false, false> smooth_slider_;
+        zlgui::attachment::SliderAttachment<true> smooth_attach_;
+
+        zlgui::label::NameLookAndFeel label_laf_;
+        juce::Label balance_label_;
+        juce::Label attack_label_;
+        juce::Label hold_label_;
+        juce::Label smooth_label_;
     };
 }

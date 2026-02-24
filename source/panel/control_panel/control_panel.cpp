@@ -30,12 +30,15 @@ namespace zlpanel {
 
     void ControlPanel::resized() {
         const auto ideal_height = control_pop_panel_.getIdealHeight();
-        control_pop_panel_.setBounds({0, 0, getWidth(), ideal_height});
+        const auto bound = juce::Rectangle{0, 0, getWidth(), ideal_height};
+        if (bound != control_pop_panel_.getBounds()) {
+            control_pop_panel_.setBounds(bound);
+        } else {
+            control_pop_panel_.resized();
+        }
     }
 
     void ControlPanel::repaintCallBackSlow() {
-        control_pop_panel_.repaintCallBackSlow();
-
         const auto split_type = static_cast<zlp::PSplitType::SplitType>(std::round(
             split_type_idx_.load(std::memory_order::relaxed)));
         if (split_type != split_type_) {
@@ -43,5 +46,6 @@ namespace zlpanel {
             control_pop_panel_.setSplitType(split_type_);
             resized();
         }
+        control_pop_panel_.repaintCallBackSlow();
     }
 }
