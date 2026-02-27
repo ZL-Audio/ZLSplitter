@@ -11,10 +11,13 @@
 
 namespace zlpanel {
     WavPanel::WavPanel(PluginProcessor& p, zlgui::UIBase& base) :
-        wav_analyzer_panel_(p, base) {
+        wav_analyzer_panel_(p, base),
+        wav_background_panel_(p, base) {
+        wav_background_panel_.setBufferedToImage(true);
+        addAndMakeVisible(wav_background_panel_);
         addAndMakeVisible(wav_analyzer_panel_);
 
-        setInterceptsMouseClicks(false, true);
+        setInterceptsMouseClicks(false, false);
     }
 
     void WavPanel::run(const double next_time_stamp) {
@@ -22,10 +25,11 @@ namespace zlpanel {
     }
 
     void WavPanel::resized() {
+        wav_background_panel_.setBounds(getLocalBounds());
         wav_analyzer_panel_.setBounds(getLocalBounds());
     }
 
     void WavPanel::repaintCallBackSlow() {
-
+        wav_background_panel_.repaintCallBackSlow();
     }
 }

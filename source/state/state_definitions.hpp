@@ -187,11 +187,27 @@ namespace zlstate {
         }
     };
 
+    class PWavMaxDB : public ChoiceParameters<PWavMaxDB> {
+    public:
+        auto static constexpr kID = "wav_max_db";
+        auto static constexpr kName = "";
+        inline auto static const kChoices = juce::StringArray{
+            "0", "-1", "-4", "-16"
+        };
+        static constexpr std::array kDBs = {0.f, -1.f, -2.f, -4.f, -8.f, -16.f};
+        int static constexpr kDefaultI = 0;
+
+        static float getMinDBFromIndex(const float x) {
+            return kDBs[static_cast<size_t>(std::round(x))];
+        }
+    };
+
     inline juce::AudioProcessorValueTreeState::ParameterLayout getNAParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(PAnalyzerShow::get(),
                    PFFTMinDB::get(), PFFTMinFreq::get(), PFFTMaxFreq::get(),
-                   PMagType::get(), PMagMinDB::get(), PMagTimeLength::get());
+                   PMagType::get(), PMagMinDB::get(), PMagTimeLength::get(),
+                   PWavMaxDB::get());
         return layout;
     }
 

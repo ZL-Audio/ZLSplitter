@@ -21,23 +21,20 @@ namespace zlpanel {
 
         void paint(juce::Graphics &g) override;
 
-        void resized() override;
-
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase &base_;
-        zlgui::attachment::ComponentUpdater updater_;
+        zlgui::UIBase& base_;
+        std::atomic<float>& max_db_ref_;
 
-        zlgui::combobox::CompactCombobox mag_time_length_box_;
-        zlgui::attachment::ComboBoxAttachment<true> mag_time_length_attach_;
+        int c_max_db_{0};
 
-        zlgui::combobox::CompactCombobox min_db_box_;
-        zlgui::attachment::ComboBoxAttachment<true> min_db_attach_;
+        juce::Colour grid_colour_;
 
-        zlgui::combobox::CompactCombobox mag_type_box_;
-        zlgui::attachment::ComboBoxAttachment<true> mag_type_attach_;
+        static constexpr std::array kDBs = {-1.f, -2.f, -4.f, -8.f, -16.f, -32.f, -64.f};
 
-        int c_mag_min_db_{-1};
+        void drawDBs(juce::Graphics& g) const;
+
+        void lookAndFeelChanged() override;
     };
 }

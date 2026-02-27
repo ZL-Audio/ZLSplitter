@@ -59,8 +59,7 @@ namespace zlpanel {
         const auto label_x0 = bound.getRight() - base_.getFontSize() * 3.25f;
         const auto label_height = base_.getFontSize() * 1.1f;
         const auto label_width = base_.getFontSize() * 3.f;
-        const auto min_db_unit = zlstate::PMagMinDB::kDBs[static_cast<size_t>(std::round(
-            c_min_db_))] / 6.f;
+        const auto min_db_unit = zlstate::PMagMinDB::kDBs[static_cast<size_t>(c_min_db_)] / 6.f;
         for (size_t i = 1; i < 7; ++i) {
             const auto db = min_db_unit * static_cast<float>(i);
             const auto y = unit_height * static_cast<float>(i);

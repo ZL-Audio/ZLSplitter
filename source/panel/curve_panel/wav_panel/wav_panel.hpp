@@ -10,6 +10,7 @@
 #pragma once
 
 #include "wav_analyzer_panel.hpp"
+#include "wav_background_panel.hpp"
 
 namespace zlpanel {
     class WavPanel final : public juce::Component {
@@ -24,5 +25,6 @@ namespace zlpanel {
 
     private:
         WavAnalyzerPanel wav_analyzer_panel_;
+        WavBackgroundPanel wav_background_panel_;
     };
 }
