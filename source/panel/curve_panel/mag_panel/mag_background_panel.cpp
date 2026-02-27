@@ -11,92 +11,74 @@
 
 namespace zlpanel {
     MagBackgroundPanel::MagBackgroundPanel(PluginProcessor& p, zlgui::UIBase& base) :
-        base_(base), updater_(),
-        mag_time_length_box_(zlstate::PMagTimeLength::kChoices, base),
-        mag_time_length_attach_(mag_time_length_box_.getBox(), p.na_parameters_,
-                                zlstate::PMagTimeLength::kID, updater_),
-        min_db_box_(zlstate::PMagMinDB::kChoices, base),
-        min_db_attach_(min_db_box_.getBox(), p.na_parameters_,
-                       zlstate::PMagMinDB::kID, updater_),
-        mag_type_box_(zlstate::PMagType::kChoices, base),
-        mag_type_attach_(mag_type_box_.getBox(), p.na_parameters_,
-                         zlstate::PMagType::kID, updater_) {
-        const auto popup_option = juce::PopupMenu::Options().withPreferredPopupDirection(
-            juce::PopupMenu::Options::PopupDirection::upwards);
-
-        const auto box_alpha = std::clamp(
-            base_.getColourByIdx(zlgui::ColourIdx::kGridColour).getFloatAlpha() + .2f, .2f, 1.f);
-
-        mag_time_length_box_.getLAF().setLabelJustification(juce::Justification::bottomLeft);
-        min_db_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);
-        mag_type_box_.getLAF().setLabelJustification(juce::Justification::bottomRight);
-
-        for (auto& b : {&mag_time_length_box_, &min_db_box_, &mag_type_box_}) {
-            b->setAlpha(box_alpha);
-            b->getLAF().setOption(popup_option);
-            b->getLAF().setFontScale(1.f);
-            addAndMakeVisible(b);
-        }
-
-        setBufferedToImage(true);
-        setInterceptsMouseClicks(false, true);
+        base_(base),
+        min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagMinDB::kID)) {
+        setInterceptsMouseClicks(false, false);
+        lookAndFeelChanged();
     }
 
     void MagBackgroundPanel::paint(juce::Graphics& g) {
         g.fillAll(base_.getBackgroundColour());
-        if (c_mag_min_db_ < 0) {
-            return;
-        }
-        const auto bound = getLocalBounds().toFloat();
-        const auto thickness = base_.getFontSize() * 0.1f;
-        const auto min_db = zlstate::PMagMinDB::kDBs[static_cast<size_t>(c_mag_min_db_)];
-
-        g.setFont(base_.getFontSize());
-
-        const auto grid_colour = base_.getColourByIdx(zlgui::ColourIdx::kGridColour);
-        const auto text_colour = base_.getTextColour().withAlpha(
-            std::clamp(grid_colour.getFloatAlpha() + .2f, .2f, 1.f));
-
-        const auto right_padding = std::round(base_.getFontSize() * .25f);
-        for (size_t i = 1; i < 6; ++i) {
-            const auto y = bound.getY() + static_cast<float>(i) / 6.f * bound.getHeight();
-            g.setColour(grid_colour);
-            g.fillRect(juce::Rectangle<float>{bound.getX(), y - thickness * .5f, bound.getWidth(), thickness});
-            const auto text_bound = juce::Rectangle<float>(bound.getRight() - base_.getFontSize() * 3 - right_padding,
-                                                           y - base_.getFontSize() * 2,
-                                                           base_.getFontSize() * 3, base_.getFontSize() * 2);
-            g.setColour(text_colour);
-            g.drawText(juce::String(juce::roundToInt(static_cast<float>(i) / 6.f * min_db)),
-                       text_bound, juce::Justification::bottomRight);
-        }
-    }
-
-    void MagBackgroundPanel::resized() {
-        const auto bound = getLocalBounds();
-        const auto box_height = juce::roundToInt(base_.getFontSize() * 1.25f);
-        const auto box_width = juce::roundToInt(base_.getFontSize() * 2.5f);
-        const auto padding1 = box_width / 10;
-        const auto padding2 = juce::roundToInt(std::ceil(base_.getFontSize()));
-        const auto padding3 = static_cast<int>(std::round(base_.getFontSize() * .25f));
-        mag_time_length_box_.setBounds({
-            bound.getX() + padding1, bound.getBottom() - box_height,
-            box_width, box_height
-        });
-        mag_type_box_.setBounds({
-            bound.getRight() - box_width - padding2, bound.getBottom() - box_height,
-            box_width, box_height
-        });
-        min_db_box_.setBounds({
-            bound.getRight() - box_width - padding3, bound.getBottom() - box_height - padding2,
-            box_width, box_height
-        });
+        drawDBs(g);
     }
 
     void MagBackgroundPanel::repaintCallBackSlow() {
-        updater_.updateComponents();
-        if (c_mag_min_db_ != min_db_box_.getBox().getSelectedItemIndex()) {
-            c_mag_min_db_ = min_db_box_.getBox().getSelectedItemIndex();
+        const auto min_db = static_cast<int>(std::round(min_db_ref_.load(std::memory_order::relaxed)));
+        if (c_min_db_ != min_db) {
+            c_min_db_ = min_db;
             repaint();
         }
+    }
+
+    void MagBackgroundPanel::drawDBs(juce::Graphics& g) const {
+        const auto bound = getLocalBounds().toFloat();
+        // draw db grid
+        const auto thickness = base_.getFontSize() * 0.1f;
+        const auto unit_height = bound.getHeight() / 7.f;
+        juce::RectangleList<float> rect_list;
+        for (size_t i = 1; i < 7; ++i) {
+            const auto y = unit_height * static_cast<float>(i);
+            rect_list.add(0.f, y - thickness * .5f, bound.getWidth(), thickness);
+        }
+        g.setColour(grid_colour_);
+        g.fillRectList(rect_list);
+        // draw right gradient
+        const auto shadow_rect = bound.withLeft(bound.getRight() - base_.getFontSize() * 2.f);
+        juce::ColourGradient gradient;
+        gradient.point1 = juce::Point<float>(shadow_rect.getX(), shadow_rect.getY());
+        gradient.point2 = juce::Point<float>(shadow_rect.getRight(), shadow_rect.getY());
+        gradient.isRadial = false;
+        gradient.clearColours();
+        gradient.addColour(0.0, base_.getBackgroundColour().withAlpha(0.f));
+        gradient.addColour(1.0, base_.getBackgroundColour().withAlpha(1.f));
+        g.setGradientFill(gradient);
+        g.fillRect(shadow_rect);
+        // draw db values
+        g.setColour(base_.getTextColour().withAlpha(.5f));
+        g.setFont(base_.getFontSize() * 1.25f);
+        const auto label_x0 = bound.getRight() - base_.getFontSize() * 3.25f;
+        const auto label_height = base_.getFontSize() * 1.1f;
+        const auto label_width = base_.getFontSize() * 3.f;
+        const auto min_db_unit = zlstate::PMagMinDB::kDBs[static_cast<size_t>(std::round(
+            c_min_db_))] / 6.f;
+        for (size_t i = 1; i < 7; ++i) {
+            const auto db = min_db_unit * static_cast<float>(i);
+            const auto y = unit_height * static_cast<float>(i);
+            const auto rect = juce::Rectangle(label_x0, y - label_height * .5f,
+                                              label_width, label_height);
+            g.drawText(juce::String(juce::roundToInt(db)),
+                       rect, juce::Justification::centredRight, false);
+        }
+    }
+
+    void MagBackgroundPanel::lookAndFeelChanged() {
+        const auto grid_colour = base_.getColourByIdx(zlgui::ColourIdx::kGridColour);
+        const auto background_colour = base_.getBackgroundColour();
+        const auto alpha = grid_colour.getFloatAlpha();
+        grid_colour_ = juce::Colour::fromFloatRGBA(
+            grid_colour.getFloatRed() * alpha + background_colour.getFloatRed() * (1.f - alpha),
+            grid_colour.getFloatGreen() * alpha + background_colour.getFloatGreen() * (1.f - alpha),
+            grid_colour.getFloatBlue() * alpha + background_colour.getFloatBlue() * (1.f - alpha),
+            1.f);
     }
 }

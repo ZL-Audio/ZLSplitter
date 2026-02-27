@@ -70,7 +70,7 @@ namespace zlpanel {
         const auto mag_type = static_cast<zldsp::analyzer::MagType>(std::round(
             analyzer_mag_type_ref_.load(std::memory_order::relaxed)));
         const auto min_db = zlstate::PMagMinDB::kDBs[static_cast<size_t>(std::round(
-            analyzer_min_db_ref_.load(std::memory_order::relaxed)))];
+            analyzer_min_db_ref_.load(std::memory_order::relaxed)))] / 6.f * 7.f;
         const auto time_length_idx = analyzer_time_length_ref_.load(std::memory_order::relaxed);
 
         {

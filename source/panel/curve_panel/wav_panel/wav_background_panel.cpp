@@ -7,11 +7,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-//
-// Created by Zishu Liu on 2/16/26.
-//
-
 #include "wav_background_panel.hpp"
 
 namespace zlpanel {
-} // zlpanel
+}

@@ -13,6 +13,7 @@ namespace zlpanel {
     MagPanel::MagPanel(PluginProcessor& p, zlgui::UIBase& base) :
         mag_background_panel_(p, base),
         mag_analyzer_panel_(p, base) {
+        mag_background_panel_.setBufferedToImage(true);
         addAndMakeVisible(mag_background_panel_);
         addAndMakeVisible(mag_analyzer_panel_);
 

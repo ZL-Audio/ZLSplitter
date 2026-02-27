@@ -48,12 +48,12 @@ namespace zlpanel {
     }
 
     int TopChoicePanel::getIdealWidth() const {
-        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale * 1.75f);
+        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale * 2.f);
         return 3 * button_width;
     }
 
     void TopChoicePanel::resized() {
-        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale * 1.75f);
+        const auto button_width = juce::roundToInt(base_.getFontSize() * kButtonScale * 2.f);
         auto bound = getLocalBounds();
         for (auto& button : analyzer_type_buttons_) {
             button.setBounds(bound.removeFromLeft(button_width));
