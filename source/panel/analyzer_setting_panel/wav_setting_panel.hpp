@@ -7,13 +7,35 @@
 //
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
-//
-// Created by Zishu Liu on 3/12/26.
-//
-
 #pragma once
 
+#include "../../PluginProcessor.hpp"
+#include "../../gui/gui.hpp"
+#include "../helper/helper.hpp"
+#include "../multilingual/tooltip_helper.hpp"
+
 namespace zlpanel {
-    class WavSettingPanel {
+    class WavSettingPanel final : public juce::Component {
+    public:
+        explicit WavSettingPanel(PluginProcessor& p, zlgui::UIBase& base);
+
+        int getIdealHeight() const;
+
+        void resized() override;
+
+        void repaintCallBackSlow();
+
+    private:
+        zlgui::UIBase& base_;
+        zlgui::attachment::ComponentUpdater updater_{};
+
+        zlgui::combobox::CompactCombobox wav_max_db_box_;
+        zlgui::attachment::ComboBoxAttachment<true> wav_max_db_attach_;
+
+        zlgui::combobox::CompactCombobox mag_length_box_;
+        zlgui::attachment::ComboBoxAttachment<true> mag_length_attach_;
+
+        zlgui::label::NameLookAndFeel label_laf_;
+        std::array<juce::Label, 2> labels;
     };
 }

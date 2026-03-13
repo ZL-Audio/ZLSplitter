@@ -14,10 +14,12 @@ namespace zlpanel {
         base_(base),
         background_(base),
         fft_setting_panel_(p, base),
-        mag_setting_panel_(p, base) {
+        mag_setting_panel_(p, base),
+        wav_setting_panel_(p, base) {
         addAndMakeVisible(background_);
         addAndMakeVisible(fft_setting_panel_);
         addChildComponent(mag_setting_panel_);
+        addChildComponent(wav_setting_panel_);
 
         setAlpha(.5f);
     }
@@ -30,6 +32,8 @@ namespace zlpanel {
             height += fft_setting_panel_.getIdealHeight();
         } else if (analyzer_type_ == 1) {
             height += mag_setting_panel_.getIdealHeight();
+        } else if (analyzer_type_ == 2) {
+            height += wav_setting_panel_.getIdealHeight();
         }
         return height;
     }
@@ -45,6 +49,8 @@ namespace zlpanel {
             fft_setting_panel_.setBounds(bound);
         } else if (analyzer_type_ == 1) {
             mag_setting_panel_.setBounds(bound);
+        } else if (analyzer_type_ == 2) {
+            wav_setting_panel_.setBounds(bound);
         }
     }
 
@@ -53,6 +59,8 @@ namespace zlpanel {
             fft_setting_panel_.repaintCallBackSlow();
         } else if (analyzer_type_ == 1) {
             mag_setting_panel_.repaintCallBackSlow();
+        } else if (analyzer_type_ == 2) {
+            wav_setting_panel_.repaintCallBackSlow();
         }
         if (isMouseOver(true)) {
             setAlpha(1.f);
@@ -65,5 +73,6 @@ namespace zlpanel {
         analyzer_type_ = idx;
         fft_setting_panel_.setVisible(idx == 0);
         mag_setting_panel_.setVisible(idx == 1);
+        wav_setting_panel_.setVisible(idx == 2);
     }
 }

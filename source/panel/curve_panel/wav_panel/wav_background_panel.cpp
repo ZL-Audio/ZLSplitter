@@ -44,7 +44,7 @@ namespace zlpanel {
             const auto gain = zldsp::chore::decibelsToGain(kDBs[i]);
             const auto ratio = gain / max_gain;
             if (ratio > 0.2f) {
-                if (ratio < 1.f) {
+                if (ratio < .9f) {
                     ys.emplace_back(ratio * bias);
                     dbs.emplace_back(kDBs[i]);
                 }

@@ -185,7 +185,7 @@ namespace zlstate {
         auto static constexpr kID = "mag_min_db";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "-9", "-18", "-36", "-54", "-72", "-90"
+            "-9 dB", "-18 dB", "-36 dB", "-54 dB", "-72 dB", "-90 dB"
         };
         static constexpr std::array kDBs = {-9.f, -18.f, -36.f, -54.f, -72.f, -90.f};
         int static constexpr kDefaultI = 3;
@@ -215,7 +215,7 @@ namespace zlstate {
         auto static constexpr kID = "wav_max_db";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "0", "-1", "-4", "-16"
+            "0 dB", "-1 dB", "-2 dB", "-4 dB", "-8 dB", "-16 dB"
         };
         static constexpr std::array kDBs = {0.f, -1.f, -2.f, -4.f, -8.f, -16.f};
         int static constexpr kDefaultI = 0;
