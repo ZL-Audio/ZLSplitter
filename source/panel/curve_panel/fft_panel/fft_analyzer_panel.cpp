@@ -26,6 +26,8 @@ namespace zlpanel {
         }
         receiver_.setON({true, true});
         setInterceptsMouseClicks(false, false);
+
+        lookAndFeelChanged();
     }
 
     FFTAnalyzerPanel::~FFTAnalyzerPanel() = default;
@@ -154,7 +156,9 @@ namespace zlpanel {
             to_update_tilt_.store(true, std::memory_order::relaxed);
         }
         if (to_update_tilt_.exchange(false, std::memory_order::acquire)) {
-            spectrum_tilter_.setTiltSlope(sample_rate, zlstate::PFFTTilt::kSlopes[static_cast<size_t>(fft_tilt_idx_)]);
+            spectrum_tilter_.setTiltSlope(sample_rate,
+                                          zlstate::PFFTTilt::kSlopes[static_cast<size_t>(fft_tilt_idx_)] +
+                                          fft_extra_tilt_.load(std::memory_order::relaxed));
         }
         if (to_update_xs || std::abs(bound.getWidth() - c_width_) > 0.1f) {
             c_width_ = bound.getWidth();
@@ -177,9 +181,9 @@ namespace zlpanel {
             to_update_decay_.store(true, std::memory_order::relaxed);
         }
         if (to_update_decay_.exchange(false, std::memory_order::acquire)) {
-            const auto refresh_rate = refresh_rate_.load(std::memory_order::acquire);
+            const auto refresh_rate = refresh_rate_.load(std::memory_order::relaxed);
             const auto decay_db = c_fft_min_db_ * zlstate::PFFTSpeed::kFFTSpeed[
-                static_cast<size_t>(fft_speed_idx_)];
+                static_cast<size_t>(fft_speed_idx_)] * fft_extra_speed_.load(std::memory_order::relaxed);
             spectrum_decayers_[0].setDecaySpeed(refresh_rate, static_cast<float>(decay_db));
             spectrum_decayers_[1].setDecaySpeed(refresh_rate, static_cast<float>(decay_db));
         }
@@ -223,6 +227,14 @@ namespace zlpanel {
 
     void FFTAnalyzerPanel::setRefreshRate(const double refresh_rate) {
         refresh_rate_.store(static_cast<float>(refresh_rate), std::memory_order::relaxed);
+        to_update_decay_.store(true, std::memory_order::release);
+    }
+
+    void FFTAnalyzerPanel::lookAndFeelChanged() {
+        fft_extra_tilt_.store(base_.getFFTExtraTilt(), std::memory_order::relaxed);
+        fft_extra_speed_.store(base_.getFFTExtraSpeed(), std::memory_order::relaxed);
+
+        to_update_tilt_.store(true, std::memory_order::release);
         to_update_decay_.store(true, std::memory_order::release);
     }
 }

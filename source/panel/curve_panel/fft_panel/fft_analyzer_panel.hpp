@@ -51,6 +51,9 @@ namespace zlpanel {
         std::atomic<float> &fft_order_idx_ref_;
         int fft_order_idx_{zlstate::PFFTOrder::kDefaultI};
 
+        std::atomic<float> fft_extra_tilt_{0.f};
+        std::atomic<float> fft_extra_speed_{1.f};
+
         AtomicBound<float> atomic_bound_;
 
         kfr::univector<float> xs_{}, y1s_{}, y2s_{};
@@ -80,5 +83,7 @@ namespace zlpanel {
         size_t inter_num_{0};
         kfr::univector<float> inter_xs_{}, inter_y1s_{}, inter_y2s_{};
         std::unique_ptr<zldsp::interpolation::SeqMakima<float>> interpolator1_, interpolator2_;
+
+        void lookAndFeelChanged() override;
     };
 }

@@ -348,11 +348,11 @@ namespace zlgui {
         }
 
         float getFFTCurveThickness() const {
-            return mag_curve_thickness_.load(std::memory_order::relaxed);
+            return fft_curve_thickness_.load(std::memory_order::relaxed);
         }
 
         void setFFTCurveThickness(const float x) {
-            mag_curve_thickness_.store(x, std::memory_order::relaxed);
+            fft_curve_thickness_.store(x, std::memory_order::relaxed);
         }
 
         size_t getTooltipLangID() const {
