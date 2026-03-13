@@ -34,7 +34,7 @@ namespace zldsp::analyzer {
 
         /**
          * pull data from FIFO into circular buffer
-         * @param range
+         * @param range must be smaller than FFT size
          * @param sample_fifos
          */
         void pull(const zldsp::container::FIFORange range,

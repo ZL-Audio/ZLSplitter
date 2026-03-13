@@ -133,10 +133,14 @@ namespace zlpanel {
             }
             auto& fifo{sender.getAbstractFIFO()};
             auto num_read = fifo.getNumReady();
-            if (num_read > static_cast<int>(receiver_.getFFTSize())) {
-                (void)fifo.prepareToRead(num_read - static_cast<int>(receiver_.getFFTSize()));
-                fifo.finishRead(num_read - static_cast<int>(receiver_.getFFTSize()));
-                num_read = static_cast<int>(receiver_.getFFTSize());
+            const auto fft_size = static_cast<int>(receiver_.getFFTSize());
+            if (num_read > fft_size) {
+                num_read = num_read / 2;
+            }
+            if (num_read > fft_size) {
+                (void)fifo.prepareToRead(num_read - fft_size);
+                fifo.finishRead(num_read - fft_size);
+                num_read = fft_size;
             }
             const auto range = fifo.prepareToRead(num_read);
             receiver_.pull(range, sender.getSampleFIFOs());
