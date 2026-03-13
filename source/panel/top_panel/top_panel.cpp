@@ -45,23 +45,31 @@ namespace zlpanel {
         bypass_button_(base, bypass_drawable_.get(), bypass_drawable_.get(),
                        tooltip_helper.getToolTipText(multilingual::kBypass)),
         bypass_attach_(bypass_button_.getButton(), p.parameters_,
-                       zlp::PBypass::kID, updater_) {
+                       zlp::PBypass::kID, updater_),
+        analyzer_setting_drawable_(
+            juce::Drawable::createFromImageData(BinaryData::settings_svg, BinaryData::settings_svgSize)),
+        analyzer_setting_button_(base, analyzer_setting_drawable_.get(), analyzer_setting_drawable_.get()) {
         logo_panel_.setTooltip(tooltip_helper.getToolTipText(multilingual::kLogo));
         addAndMakeVisible(logo_panel_);
         addAndMakeVisible(top_legend_panel_);
         addAndMakeVisible(top_choice_panel_);
-        // addAndMakeVisible(top_control_panel_);
 
         split_type_box_.setBufferedToImage(true);
         addAndMakeVisible(split_type_box_);
 
         swap_button_.setImageAlpha(.5f, .75f, 1.f, 1.f);
         bypass_button_.setImageAlpha(1.f, 1.f, .5f, .75f);
+        analyzer_setting_button_.setImageAlpha(.5f, .75f, 1.f, 1.f);
 
-        for (auto& b : {&swap_button_, &bypass_button_}) {
+        for (auto& b : {&swap_button_, &bypass_button_, &analyzer_setting_button_}) {
             b->setBufferedToImage(true);
             addAndMakeVisible(b);
         }
+
+        analyzer_setting_button_.getButton().onClick = [this]() {
+            base_.setPanelProperty(zlgui::PanelSettingIdx::kAnalyzerPanel,
+                                   static_cast<float>(analyzer_setting_button_.getToggleState()));
+        };
 
         setInterceptsMouseClicks(false, true);
     }
@@ -90,6 +98,8 @@ namespace zlpanel {
         bound.removeFromLeft(padding);
         top_legend_panel_.setBounds(bound.removeFromLeft(top_legend_panel_.getIdealWidth()));
         bypass_button_.setBounds(bound.removeFromRight(bound.getHeight()));
+        bound.removeFromRight(padding);
+        analyzer_setting_button_.setBounds(bound.removeFromRight(bound.getHeight()));
         bound.removeFromRight(padding);
         top_choice_panel_.setBounds(bound.removeFromRight(top_choice_panel_.getIdealWidth()));
     }

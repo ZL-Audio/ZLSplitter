@@ -15,7 +15,9 @@ namespace zlpanel {
         base_(base),
         split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
         swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
-        fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)) {
+        fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)),
+        fft_smooth_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTSmooth::kID)),
+        fft_speed_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTSpeed::kID)) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
         for (auto& path : {&out_path1_, &out_path2_, &next_out_path1_, &next_out_path2_}) {
             path->preallocateSpace(preallocateSpace);
@@ -68,6 +70,7 @@ namespace zlpanel {
             to_update_decay_.store(true, std::memory_order::relaxed);
         }
         bool to_update_xs_{false};
+        bool to_update_smooth{false};
         double sample_rate;
         {
             auto& sender{p_ref_.getController().getAnalyzerSender()};
@@ -89,8 +92,7 @@ namespace zlpanel {
                 }
                 fft_size_ = 1 << fft_order;
                 receiver_.prepare(static_cast<int>(fft_order), {2, 2});
-                spectrum_smoother_.prepare(static_cast<size_t>(fft_size_));
-                spectrum_smoother_.setSmooth(1.0 / 12.0);
+                to_update_smooth = true;
                 spectrum_tilter_.prepare(static_cast<size_t>(fft_size_));
                 spectrum_decayers_[0].prepare(static_cast<size_t>(fft_size_));
                 spectrum_decayers_[1].prepare(static_cast<size_t>(fft_size_));
@@ -109,7 +111,17 @@ namespace zlpanel {
                     xs_.data(), y2s_.data(), inter_num_ + 1, 0.f, 0.f);
                 to_update_xs_ = true;
             }
-
+            const auto fft_smooth_idx = static_cast<int>(std::round(
+            fft_smooth_idx_ref_.load(std::memory_order::relaxed)));
+            if (fft_smooth_idx != fft_smooth_idx_) {
+                fft_smooth_idx_ = fft_smooth_idx;
+                to_update_smooth = true;
+            }
+            if (to_update_smooth) {
+                spectrum_smoother_.prepare(static_cast<size_t>(fft_size_));
+                spectrum_smoother_.setSmooth(
+                    zlstate::PFFTSmooth::kFFTOct[static_cast<size_t>(fft_smooth_idx_)]);
+            }
             auto& fifo{sender.getAbstractFIFO()};
             auto num_read = fifo.getNumReady();
             if (num_read > static_cast<int>(receiver_.getFFTSize())) {
@@ -147,19 +159,26 @@ namespace zlpanel {
                 inter_xs_[i] = (xs_[i] + xs_[i + 1]) * .5f;
             }
         }
+        const auto fft_speed_idx = static_cast<int>(std::round(
+            fft_speed_idx_ref_.load(std::memory_order::relaxed)));
+        if (fft_speed_idx != fft_speed_idx_) {
+            fft_speed_idx_ = fft_speed_idx;
+            to_update_decay_.store(true, std::memory_order::relaxed);
+        }
         if (to_update_decay_.exchange(false, std::memory_order::acquire)) {
             const auto refresh_rate = refresh_rate_.load(std::memory_order::acquire);
-            const auto decay_db = c_fft_min_db_ * spectrum_decay_speed_.load(std::memory_order::relaxed);
-            spectrum_decayers_[0].setDecaySpeed(refresh_rate, decay_db);
-            spectrum_decayers_[1].setDecaySpeed(refresh_rate, decay_db);
+            const auto decay_db = c_fft_min_db_ * zlstate::PFFTSpeed::kFFTSpeed[
+                static_cast<size_t>(fft_speed_idx_)];
+            spectrum_decayers_[0].setDecaySpeed(refresh_rate, static_cast<float>(decay_db));
+            spectrum_decayers_[1].setDecaySpeed(refresh_rate, static_cast<float>(decay_db));
         }
 
         auto calculate_path = [&](kfr::univector<float>& spectrum,
-            kfr::univector<float>& ys,
-            zldsp::analyzer::SpectrumDecayer& decayer,
-            juce::Path& path,
-            std::unique_ptr<zldsp::interpolation::SeqMakima<float>>& interpolator,
-            kfr::univector<float>& inter_ys) {
+                                  kfr::univector<float>& ys,
+                                  zldsp::analyzer::SpectrumDecayer& decayer,
+                                  juce::Path& path,
+                                  std::unique_ptr<zldsp::interpolation::SeqMakima<float>>& interpolator,
+                                  kfr::univector<float>& inter_ys) {
             spectrum_smoother_.smooth(spectrum);
             spectrum = 10.f * kfr::log10(kfr::max(spectrum, 1e-24f));
             decayer.decay(spectrum, is_fft_frozen_.load(std::memory_order::relaxed));
@@ -182,9 +201,9 @@ namespace zlpanel {
         };
 
         calculate_path(receiver_.getAbsSqrFFTBuffers()[0], y1s_, spectrum_decayers_[0], next_out_path1_,
-            interpolator1_, inter_y1s_);
+                       interpolator1_, inter_y1s_);
         calculate_path(receiver_.getAbsSqrFFTBuffers()[1], y2s_, spectrum_decayers_[1], next_out_path2_,
-            interpolator2_, inter_y2s_);
+                       interpolator2_, inter_y2s_);
 
         std::lock_guard lock{mutex_};
         out_path1_.swapWithPath(next_out_path1_);

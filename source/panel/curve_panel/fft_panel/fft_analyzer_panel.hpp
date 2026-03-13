@@ -39,6 +39,12 @@ namespace zlpanel {
         zlgui::UIBase &base_;
         std::atomic<float> &split_type_ref_, &swap_ref_, &fft_min_db_ref_;
 
+        std::atomic<float> &fft_smooth_idx_ref_;
+        int fft_smooth_idx_{zlstate::PFFTSmooth::kDefaultI};
+
+        std::atomic<float> &fft_speed_idx_ref_;
+        int fft_speed_idx_{zlstate::PFFTSpeed::kDefaultI};
+
         AtomicBound<float> atomic_bound_;
 
         kfr::univector<float> xs_{}, y1s_{}, y2s_{};
@@ -53,7 +59,6 @@ namespace zlpanel {
         float c_fft_min_db_{0.f};
 
         std::atomic<float> refresh_rate_{30.f};
-        std::atomic<float> spectrum_decay_speed_{.375f};
         std::atomic<bool> to_update_decay_{false};
 
         std::atomic<float> spectrum_tilt_slope_{4.5f};

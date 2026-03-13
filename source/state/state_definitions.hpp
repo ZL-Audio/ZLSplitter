@@ -120,30 +120,31 @@ namespace zlstate {
         auto static constexpr kID = "fft_min_db";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "-60", "-72", "-96", "-120"
+            "-60 dB", "-72 dB", "-96 dB", "-120 dB"
         };
         static constexpr std::array kDBs = {-60.f, -72.f, -96.f, -120.f};
         int static constexpr kDefaultI = 1;
     };
 
-    class PFFTMinFreq : public ChoiceParameters<PFFTMinFreq> {
+    class PFFTSmooth : public ChoiceParameters<PFFTSmooth> {
     public:
-        auto static constexpr kID = "fft_min_freq";
+        auto static constexpr kID = "fft_smooth";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "10", "20", "50", "100"
+            "1/16 oct", "1/8 oct", "1/4 oct", "1/2 oct", "1 oct"
         };
-        static constexpr std::array kFreqs = {10.0, 20.0, 50.0, 100.0};
-        int static constexpr kDefaultI = 0;
+        static constexpr std::array kFFTOct = {1.0/16.0, 1.0/8.0, 1.0/4.0, 1.0/2.0, 1.0};
+        int static constexpr kDefaultI = 1;
     };
 
-    class PFFTMaxFreq : public ChoiceParameters<PFFTMaxFreq> {
+    class PFFTSpeed : public ChoiceParameters<PFFTSpeed> {
     public:
-        auto static constexpr kID = "fft_max_freq";
+        auto static constexpr kID = "fft_speed";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "10k", "20k", "Auto"
+            "Very Fast", "Fast", "Medium", "Slow", "Very Slow"
         };
+        static constexpr std::array kFFTSpeed = {2.0, 1.0, 0.5, 0.25, 0.125};
         int static constexpr kDefaultI = 2;
     };
 
@@ -205,7 +206,7 @@ namespace zlstate {
     inline juce::AudioProcessorValueTreeState::ParameterLayout getNAParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(PAnalyzerShow::get(),
-                   PFFTMinDB::get(), PFFTMinFreq::get(), PFFTMaxFreq::get(),
+                   PFFTMinDB::get(), PFFTSmooth::get(), PFFTSpeed::get(),
                    PMagType::get(), PMagMinDB::get(), PMagTimeLength::get(),
                    PWavMaxDB::get());
         return layout;

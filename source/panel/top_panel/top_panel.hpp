@@ -45,5 +45,8 @@ namespace zlpanel {
         std::unique_ptr<juce::Drawable> bypass_drawable_;
         zlgui::button::ClickButton bypass_button_;
         zlgui::attachment::ButtonAttachment<true> bypass_attach_;
+
+        std::unique_ptr<juce::Drawable> analyzer_setting_drawable_;
+        zlgui::button::ClickButton analyzer_setting_button_;
     };
 }

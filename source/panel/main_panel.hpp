@@ -19,6 +19,7 @@
 #include "curve_panel/curve_panel.hpp"
 #include "control_panel/control_panel.hpp"
 #include "top_panel/top_panel.hpp"
+#include "analyzer_setting_panel/analyzer_setting_panel.hpp"
 #include "ui_setting_panel/ui_setting_panel.hpp"
 
 namespace zlpanel {
@@ -41,6 +42,7 @@ namespace zlpanel {
         CurvePanel curve_panel_;
         ControlPanel control_panel_;
         TopPanel top_panel_;
+        AnalyzerSettingPanel analyzer_setting_panel_;
         UISettingPanel ui_setting_panel_;
 
         zlgui::tooltip::TooltipLookAndFeel tooltip_laf_;

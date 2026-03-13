@@ -17,6 +17,7 @@ namespace zlpanel {
         curve_panel_(p, base_, tooltip_helper_),
         control_panel_(p, base_, tooltip_helper_),
         top_panel_(p, base_, tooltip_helper_),
+        analyzer_setting_panel_(p, base),
         ui_setting_panel_(p, base_),
         tooltip_laf_(base_), tooltip_window_(&curve_panel_),
         refresh_handler_(zlstate::PTargetRefreshSpeed::kRates[base_.getRefreshRateID()]) {
@@ -24,6 +25,7 @@ namespace zlpanel {
         addAndMakeVisible(curve_panel_);
         addAndMakeVisible(control_panel_);
         addAndMakeVisible(top_panel_);
+        addChildComponent(analyzer_setting_panel_);
         addChildComponent(ui_setting_panel_);
 
         tooltip_window_.setLookAndFeel(&tooltip_laf_);
@@ -65,6 +67,7 @@ namespace zlpanel {
         top_panel_.setBounds(bound.removeFromTop(top_panel_.getIdealHeight()));
         curve_panel_.setBounds(bound);
         control_panel_.setBounds(bound.removeFromLeft(control_panel_.getIdealWidth()));
+        analyzer_setting_panel_.setBounds(bound.removeFromRight(analyzer_setting_panel_.getIdealWidth()));
     }
 
     void MainPanel::repaintCallBack(const double time_stamp) {
@@ -73,6 +76,7 @@ namespace zlpanel {
                 previous_time_stamp_ = time_stamp;
                 curve_panel_.repaintCallBackSlow();
                 control_panel_.repaintCallBackSlow();
+                analyzer_setting_panel_.repaintCallBackSlow();
                 top_panel_.repaintCallBackSlow();
             }
 
