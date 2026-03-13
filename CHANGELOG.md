@@ -4,6 +4,18 @@ LICENSE and CODE are available at [https://github.com/ZL-Audio/ZLSplitter](https
 
 # Changelog
 
+## 0.3.0
+
+New Features
+
+- add wave display panel
+- add more analyzer settings
+
+Bug fixes and Improvements
+
+- improve FFT analyzer display
+- improve magnitude analyzer display
+
 ## 0.2.1
 
 Bug fixes and Improvements
