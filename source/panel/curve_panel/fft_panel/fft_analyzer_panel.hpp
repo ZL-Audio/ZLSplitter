@@ -45,6 +45,9 @@ namespace zlpanel {
         std::atomic<float> &fft_speed_idx_ref_;
         int fft_speed_idx_{zlstate::PFFTSpeed::kDefaultI};
 
+        std::atomic<float> &fft_tilt_idx_ref_;
+        int fft_tilt_idx_{zlstate::PFFTSpeed::kDefaultI};
+
         AtomicBound<float> atomic_bound_;
 
         kfr::univector<float> xs_{}, y1s_{}, y2s_{};

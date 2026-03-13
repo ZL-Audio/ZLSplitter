@@ -37,5 +37,11 @@ namespace zlpanel {
 
         zlgui::combobox::CompactCombobox fft_speed_box_;
         zlgui::attachment::ComboBoxAttachment<true> fft_speed_attach_;
+
+        zlgui::combobox::CompactCombobox fft_tilt_box_;
+        zlgui::attachment::ComboBoxAttachment<true> fft_tilt_attach_;
+
+        zlgui::label::NameLookAndFeel label_laf_;
+        std::array<juce::Label, 4> labels;
     };
 }

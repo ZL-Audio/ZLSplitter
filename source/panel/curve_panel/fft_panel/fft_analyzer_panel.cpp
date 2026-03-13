@@ -17,7 +17,8 @@ namespace zlpanel {
         swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
         fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)),
         fft_smooth_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTSmooth::kID)),
-        fft_speed_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTSpeed::kID)) {
+        fft_speed_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTSpeed::kID)),
+        fft_tilt_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTTilt::kID)) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
         for (auto& path : {&out_path1_, &out_path2_, &next_out_path1_, &next_out_path2_}) {
             path->preallocateSpace(preallocateSpace);
@@ -69,7 +70,7 @@ namespace zlpanel {
             c_fft_min_db_ = min_db;
             to_update_decay_.store(true, std::memory_order::relaxed);
         }
-        bool to_update_xs_{false};
+        bool to_update_xs{false};
         bool to_update_smooth{false};
         double sample_rate;
         {
@@ -109,10 +110,10 @@ namespace zlpanel {
                     xs_.data(), y1s_.data(), inter_num_ + 1, 0.f, 0.f);
                 interpolator2_ = std::make_unique<zldsp::interpolation::SeqMakima<float>>(
                     xs_.data(), y2s_.data(), inter_num_ + 1, 0.f, 0.f);
-                to_update_xs_ = true;
+                to_update_xs = true;
             }
             const auto fft_smooth_idx = static_cast<int>(std::round(
-            fft_smooth_idx_ref_.load(std::memory_order::relaxed)));
+                fft_smooth_idx_ref_.load(std::memory_order::relaxed)));
             if (fft_smooth_idx != fft_smooth_idx_) {
                 fft_smooth_idx_ = fft_smooth_idx;
                 to_update_smooth = true;
@@ -140,12 +141,16 @@ namespace zlpanel {
             return;
         }
         receiver_.forward(zldsp::analyzer::StereoType::kStereo);
-
-        if (to_update_tilt_.exchange(false, std::memory_order::acquire)) {
-            spectrum_tilter_.setTiltSlope(sample_rate,
-                                          spectrum_tilt_slope_.load(std::memory_order::relaxed));
+        const auto fft_tilt_idx = static_cast<int>(std::round(
+            fft_tilt_idx_ref_.load(std::memory_order::relaxed)));
+        if (fft_tilt_idx != fft_speed_idx_) {
+            fft_tilt_idx_ = fft_tilt_idx;
+            to_update_tilt_.store(true, std::memory_order::relaxed);
         }
-        if (to_update_xs_ || std::abs(bound.getWidth() - c_width_) > 0.1f) {
+        if (to_update_tilt_.exchange(false, std::memory_order::acquire)) {
+            spectrum_tilter_.setTiltSlope(sample_rate, zlstate::PFFTTilt::kSlopes[static_cast<size_t>(fft_tilt_idx_)]);
+        }
+        if (to_update_xs || std::abs(bound.getWidth() - c_width_) > 0.1f) {
             c_width_ = bound.getWidth();
             const auto delta_freq = static_cast<float>(sample_rate / static_cast<double>(fft_size_));
             const auto temp_scale = static_cast<float>(1.0 / std::log(sample_rate * 0.5 / 10.0)) * bound.getWidth();

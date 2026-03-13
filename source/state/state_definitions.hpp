@@ -126,15 +126,26 @@ namespace zlstate {
         int static constexpr kDefaultI = 1;
     };
 
+    class PFFTTilt : public ChoiceParameters<PFFTTilt> {
+    public:
+        static constexpr auto kID = "fft_tilt";
+        static constexpr auto kName = "";
+        inline static const auto kChoices = juce::StringArray{
+            "0 dB/oct", "1.5 dB/oct", "3 dB/oct", "4.5 dB/oct", "6 dB/oct"
+        };
+        static constexpr std::array<float, 5> kSlopes{0.f, 1.5f, 3.f, 4.5f, 6.f};
+        static constexpr int kDefaultI = 3;
+    };
+
     class PFFTSmooth : public ChoiceParameters<PFFTSmooth> {
     public:
         auto static constexpr kID = "fft_smooth";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "1/16 oct", "1/8 oct", "1/4 oct", "1/2 oct", "1 oct"
+            "Raw", "1/16 oct", "1/8 oct", "1/4 oct", "1/2 oct", "1 oct"
         };
-        static constexpr std::array kFFTOct = {1.0/16.0, 1.0/8.0, 1.0/4.0, 1.0/2.0, 1.0};
-        int static constexpr kDefaultI = 1;
+        static constexpr std::array kFFTOct = {0.01, 1.0 / 16.0, 1.0 / 8.0, 1.0 / 4.0, 1.0 / 2.0, 1.0};
+        int static constexpr kDefaultI = 2;
     };
 
     class PFFTSpeed : public ChoiceParameters<PFFTSpeed> {
@@ -206,7 +217,7 @@ namespace zlstate {
     inline juce::AudioProcessorValueTreeState::ParameterLayout getNAParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(PAnalyzerShow::get(),
-                   PFFTMinDB::get(), PFFTSmooth::get(), PFFTSpeed::get(),
+                   PFFTMinDB::get(), PFFTSmooth::get(), PFFTSpeed::get(), PFFTTilt::get(),
                    PMagType::get(), PMagMinDB::get(), PMagTimeLength::get(),
                    PWavMaxDB::get());
         return layout;

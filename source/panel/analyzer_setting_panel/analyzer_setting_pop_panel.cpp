@@ -47,7 +47,7 @@ namespace zlpanel {
         if (isMouseOver(true)) {
             setAlpha(1.f);
         } else {
-            setAlpha(.75f);
+            setAlpha(.5f);
         }
     }
 

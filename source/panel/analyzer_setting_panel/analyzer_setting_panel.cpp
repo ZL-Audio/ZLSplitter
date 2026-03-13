@@ -31,7 +31,7 @@ namespace zlpanel {
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
 
-        return padding * 4 + slider_width;
+        return padding * 4 + slider_width * 2;
     }
 
     int AnalyzerSettingPanel::getIdealHeight() const {
