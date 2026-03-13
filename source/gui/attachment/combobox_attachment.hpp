@@ -39,7 +39,9 @@ namespace zlgui::attachment {
             apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
             updater_ref_(updater), forward_map_(forward_map), backward_map_(backward_map) {
             jassert(forward_map.size() == backward_map.size());
-            jassert(forward_map_.size() == box.getNumItems());
+            if (!forward_map_.empty()) {
+                jassert(forward_map_.size() == box.getNumItems());
+            }
             // add combobox listener
             box_.addListener(this);
             // add parameter listener
