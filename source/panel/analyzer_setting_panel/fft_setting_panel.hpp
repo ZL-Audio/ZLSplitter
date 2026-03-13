@@ -41,7 +41,10 @@ namespace zlpanel {
         zlgui::combobox::CompactCombobox fft_tilt_box_;
         zlgui::attachment::ComboBoxAttachment<true> fft_tilt_attach_;
 
+        zlgui::combobox::CompactCombobox fft_order_box_;
+        zlgui::attachment::ComboBoxAttachment<true> fft_order_attach_;
+
         zlgui::label::NameLookAndFeel label_laf_;
-        std::array<juce::Label, 4> labels;
+        std::array<juce::Label, 5> labels;
     };
 }

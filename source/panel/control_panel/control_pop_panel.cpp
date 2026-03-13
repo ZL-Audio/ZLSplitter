@@ -24,6 +24,8 @@ namespace zlpanel {
         addChildComponent(lh_pop_panel_);
         addChildComponent(ts_pop_panel_);
         addChildComponent(ps_pop_panel_);
+
+        setAlpha(.5f);
     }
 
     int ControlPopPanel::getIdealHeight() const {

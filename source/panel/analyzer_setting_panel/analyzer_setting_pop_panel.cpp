@@ -16,6 +16,8 @@ namespace zlpanel {
         fft_setting_panel_(p, base) {
         addAndMakeVisible(background_);
         addAndMakeVisible(fft_setting_panel_);
+
+        setAlpha(.5f);
     }
 
     int AnalyzerSettingPopPanel::getIdealHeight() const {

@@ -46,7 +46,10 @@ namespace zlpanel {
         int fft_speed_idx_{zlstate::PFFTSpeed::kDefaultI};
 
         std::atomic<float> &fft_tilt_idx_ref_;
-        int fft_tilt_idx_{zlstate::PFFTSpeed::kDefaultI};
+        int fft_tilt_idx_{zlstate::PFFTTilt::kDefaultI};
+
+        std::atomic<float> &fft_order_idx_ref_;
+        int fft_order_idx_{zlstate::PFFTOrder::kDefaultI};
 
         AtomicBound<float> atomic_bound_;
 

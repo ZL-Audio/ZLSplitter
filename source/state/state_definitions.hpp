@@ -159,6 +159,17 @@ namespace zlstate {
         int static constexpr kDefaultI = 2;
     };
 
+    class PFFTOrder : public ChoiceParameters<PFFTOrder> {
+    public:
+        auto static constexpr kID = "fft_order";
+        auto static constexpr kName = "";
+        inline auto static const kChoices = juce::StringArray{
+            "Very Low", "Low", "Medium", "High", "Very High"
+        };
+        static constexpr std::array kOrderShift = {-2, -1, 0, 1, 2};
+        int static constexpr kDefaultI = 2;
+    };
+
     class PMagType : public ChoiceParameters<PMagType> {
     public:
         auto static constexpr kID = "mag_type";
@@ -217,7 +228,7 @@ namespace zlstate {
     inline juce::AudioProcessorValueTreeState::ParameterLayout getNAParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(PAnalyzerShow::get(),
-                   PFFTMinDB::get(), PFFTSmooth::get(), PFFTSpeed::get(), PFFTTilt::get(),
+                   PFFTMinDB::get(), PFFTSmooth::get(), PFFTSpeed::get(), PFFTTilt::get(), PFFTOrder::get(),
                    PMagType::get(), PMagMinDB::get(), PMagTimeLength::get(),
                    PWavMaxDB::get());
         return layout;

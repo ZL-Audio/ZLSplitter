@@ -24,16 +24,21 @@ namespace zlpanel {
         fft_tilt_box_(zlstate::PFFTTilt::kChoices, base_),
         fft_tilt_attach_(fft_tilt_box_.getBox(), p.na_parameters_,
                          zlstate::PFFTTilt::kID, updater_),
+        fft_order_box_(zlstate::PFFTOrder::kChoices, base_),
+        fft_order_attach_(fft_order_box_.getBox(), p.na_parameters_,
+                          zlstate::PFFTOrder::kID, updater_),
         label_laf_(base) {
         addAndMakeVisible(fft_min_db_box_);
         addAndMakeVisible(fft_smooth_box_);
         addAndMakeVisible(fft_speed_box_);
         addAndMakeVisible(fft_tilt_box_);
+        addAndMakeVisible(fft_order_box_);
 
         labels[0].setText("Min dB", juce::dontSendNotification);
         labels[1].setText("Smooth", juce::dontSendNotification);
         labels[2].setText("Speed", juce::dontSendNotification);
         labels[3].setText("Tilt", juce::dontSendNotification);
+        labels[4].setText("Order", juce::dontSendNotification);
 
         for (auto& label : labels) {
             label.setJustificationType(juce::Justification::centredRight);
@@ -48,7 +53,7 @@ namespace zlpanel {
         const auto font_size = base_.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto button_size = getButtonSize(font_size);
-        return (padding + button_size) * 4;
+        return (padding + button_size) * 5;
     }
 
     void FFTSettingPanel::resized() {
@@ -70,6 +75,8 @@ namespace zlpanel {
         fft_speed_box_.setBounds(bound.removeFromTop(button_size));
         bound.removeFromTop(padding);
         fft_tilt_box_.setBounds(bound.removeFromTop(button_size));
+        bound.removeFromTop(padding);
+        fft_order_box_.setBounds(bound.removeFromTop(button_size));
     }
 
     void FFTSettingPanel::repaintCallBackSlow() {

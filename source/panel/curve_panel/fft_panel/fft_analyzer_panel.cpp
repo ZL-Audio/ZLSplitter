@@ -18,7 +18,8 @@ namespace zlpanel {
         fft_min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTMinDB::kID)),
         fft_smooth_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTSmooth::kID)),
         fft_speed_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTSpeed::kID)),
-        fft_tilt_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTTilt::kID)) {
+        fft_tilt_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTTilt::kID)),
+        fft_order_idx_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PFFTOrder::kID)) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
         for (auto& path : {&out_path1_, &out_path2_, &next_out_path1_, &next_out_path2_}) {
             path->preallocateSpace(preallocateSpace);
@@ -77,19 +78,24 @@ namespace zlpanel {
             auto& sender{p_ref_.getController().getAnalyzerSender()};
             std::lock_guard lock{sender.getLock()};
             sample_rate = sender.getSampleRate();
-            if (std::abs(c_sample_rate_ - sample_rate) > 0.1) {
+
+            const auto fft_order_idx = static_cast<int>(std::round(
+                fft_order_idx_ref_.load(std::memory_order::relaxed)));
+
+            if (std::abs(c_sample_rate_ - sample_rate) > 0.1 || fft_order_idx != fft_order_idx_) {
                 c_sample_rate_ = sample_rate;
+                fft_order_idx_ = fft_order_idx;
                 to_update_tilt_.store(true, std::memory_order::relaxed);
 
-                int fft_order;
+                int fft_order = zlstate::PFFTOrder::kOrderShift[static_cast<size_t>(fft_order_idx_)];
                 if (sample_rate <= 50000) {
-                    fft_order = 12;
+                    fft_order += 12;
                 } else if (sample_rate <= 100000) {
-                    fft_order = 13;
+                    fft_order += 13;
                 } else if (sample_rate <= 200000) {
-                    fft_order = 14;
+                    fft_order += 14;
                 } else {
-                    fft_order = 15;
+                    fft_order += 15;
                 }
                 fft_size_ = 1 << fft_order;
                 receiver_.prepare(static_cast<int>(fft_order), {2, 2});
