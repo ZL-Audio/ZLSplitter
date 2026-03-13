@@ -39,6 +39,7 @@ namespace zlpanel {
         zlgui::UIBase& base_;
 
         std::atomic<float> &split_type_ref_, &swap_ref_;
+        std::atomic<float>& analyzer_max_db_ref_;
         std::atomic<float>& analyzer_time_length_ref_;
 
         AtomicBound<float> atomic_bound_;

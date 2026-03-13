@@ -14,6 +14,7 @@ namespace zlpanel {
         p_ref_(p), base_(base),
         split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
         swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
+        analyzer_max_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PWavMaxDB::kID)),
         analyzer_time_length_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagTimeLength::kID)) {
         constexpr auto preallocateSpace = static_cast<int>(zlp::Controller<double>::kAnalyzerPointNum) * 3 + 1;
         for (auto& path : {&path1_, &path2_}) {
@@ -109,16 +110,20 @@ namespace zlpanel {
                         }
                     }
                     {
+                        const auto max_db = zlstate::PWavMaxDB::getMaxDBFromIndex(
+                            analyzer_max_db_ref_.load(std::memory_order::relaxed));
+                        const auto max_gain = zldsp::chore::decibelsToGain(max_db);
                         const auto too_many_missing = num_missing_points_ >= kPausedThreshold;
-                        const auto scale = bound.getHeight() * 0.5f;
+                        const auto scale = bound.getHeight() * 0.5f / max_gain;
+                        const auto bias = bound.getHeight() * 0.5f;
                         std::ranges::rotate(min1s_, min1s_.begin() + 1);
-                        min1s_.back() = too_many_missing ? scale : minmax1_[0] * scale + scale;
+                        min1s_.back() = too_many_missing ? bias : minmax1_[0] * scale + bias;
                         std::ranges::rotate(max1s_, max1s_.begin() + 1);
-                        max1s_.back() = too_many_missing ? scale : minmax1_[1] * scale + scale;
+                        max1s_.back() = too_many_missing ? bias : minmax1_[1] * scale + bias;
                         std::ranges::rotate(min2s_, min2s_.begin() + 1);
-                        min2s_.back() = too_many_missing ? scale : minmax2_[0] * scale + scale;
+                        min2s_.back() = too_many_missing ? bias : minmax2_[0] * scale + bias;
                         std::ranges::rotate(max2s_, max2s_.begin() + 1);
-                        max2s_.back() = too_many_missing ? scale : minmax2_[1] * scale + scale;
+                        max2s_.back() = too_many_missing ? bias : minmax2_[1] * scale + bias;
                     }
                     current_time += second_per_point_;
                 }

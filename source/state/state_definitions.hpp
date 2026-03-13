@@ -220,7 +220,7 @@ namespace zlstate {
         static constexpr std::array kDBs = {0.f, -1.f, -2.f, -4.f, -8.f, -16.f};
         int static constexpr kDefaultI = 0;
 
-        static float getMinDBFromIndex(const float x) {
+        static float getMaxDBFromIndex(const float x) {
             return kDBs[static_cast<size_t>(std::round(x))];
         }
     };
