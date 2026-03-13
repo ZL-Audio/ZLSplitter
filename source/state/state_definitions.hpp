@@ -185,9 +185,9 @@ namespace zlstate {
         auto static constexpr kID = "mag_min_db";
         auto static constexpr kName = "";
         inline auto static const kChoices = juce::StringArray{
-            "-9", "-18", "-36", "-54", "-72"
+            "-9", "-18", "-36", "-54", "-72", "-90"
         };
-        static constexpr std::array kDBs = {-9.f, -18.f, -36.f, -54.f, -72.f};
+        static constexpr std::array kDBs = {-9.f, -18.f, -36.f, -54.f, -72.f, -90.f};
         int static constexpr kDefaultI = 3;
 
         static float getMinDBFromIndex(const float x) {

@@ -61,6 +61,7 @@ namespace zlpanel {
         if (analyzer_type != analyzer_type_) {
             analyzer_type_ = analyzer_type;
             pop_panel_.setAnalyzerType(analyzer_type);
+            resized();
         }
         pop_panel_.repaintCallBackSlow();
     }
@@ -68,6 +69,7 @@ namespace zlpanel {
     void AnalyzerSettingPanel::valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier& identifier) {
         if (base_.isPanelIdentifier(zlgui::PanelSettingIdx::kAnalyzerPanel, identifier)) {
             setVisible(static_cast<float>(base_.getPanelProperty(zlgui::PanelSettingIdx::kAnalyzerPanel)) > .5f);
+            repaintCallBackSlow();
         }
     }
 }

@@ -13,9 +13,11 @@ namespace zlpanel {
     AnalyzerSettingPopPanel::AnalyzerSettingPopPanel(PluginProcessor& p, zlgui::UIBase& base) :
         base_(base),
         background_(base),
-        fft_setting_panel_(p, base) {
+        fft_setting_panel_(p, base),
+        mag_setting_panel_(p, base) {
         addAndMakeVisible(background_);
         addAndMakeVisible(fft_setting_panel_);
+        addChildComponent(mag_setting_panel_);
 
         setAlpha(.5f);
     }
@@ -26,6 +28,8 @@ namespace zlpanel {
         auto height = 2 * padding;
         if (analyzer_type_ == 0) {
             height += fft_setting_panel_.getIdealHeight();
+        } else if (analyzer_type_ == 1) {
+            height += mag_setting_panel_.getIdealHeight();
         }
         return height;
     }
@@ -39,12 +43,16 @@ namespace zlpanel {
         bound.reduce(padding, padding);
         if (analyzer_type_ == 0) {
             fft_setting_panel_.setBounds(bound);
+        } else if (analyzer_type_ == 1) {
+            mag_setting_panel_.setBounds(bound);
         }
     }
 
     void AnalyzerSettingPopPanel::repaintCallBackSlow() {
         if (analyzer_type_ == 0) {
             fft_setting_panel_.repaintCallBackSlow();
+        } else if (analyzer_type_ == 1) {
+            mag_setting_panel_.repaintCallBackSlow();
         }
         if (isMouseOver(true)) {
             setAlpha(1.f);
@@ -56,5 +64,6 @@ namespace zlpanel {
     void AnalyzerSettingPopPanel::setAnalyzerType(const size_t idx) {
         analyzer_type_ = idx;
         fft_setting_panel_.setVisible(idx == 0);
+        mag_setting_panel_.setVisible(idx == 1);
     }
 }

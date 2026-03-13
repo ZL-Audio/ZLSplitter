@@ -53,7 +53,7 @@ namespace zlpanel {
         const auto font_size = base_.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto button_size = getButtonSize(font_size);
-        return (padding + button_size) * 5;
+        return (padding + button_size) * static_cast<int>(labels.size());
     }
 
     void FFTSettingPanel::resized() {
