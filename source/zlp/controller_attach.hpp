@@ -34,7 +34,8 @@ namespace zlp {
             PSplitType::kID, PMix::kID, PSwap::kID,
             PLHFilterType::kID, PLHSlope::kID, PLHFreq::kID,
             PTSStrength::kID, PTSBalance::kID, PTSHold::kID, PTSSmooth::kID,
-            PPSAttack::kID, PPSBalance::kID, PPSHold::kID, PPSSmooth::kID
+            PPSAttack::kID, PPSBalance::kID, PPSHold::kID, PPSSmooth::kID,
+            PTiltFreq::kID, PTiltGain::kID
         };
 
         static constexpr std::array kDefaultVs{
@@ -42,7 +43,8 @@ namespace zlp {
             PMix::kDefaultV, static_cast<float>(PSwap::kDefaultV),
             static_cast<float>(PLHFilterType::kDefaultI), static_cast<float>(PLHSlope::kDefaultI), PLHFreq::kDefaultV,
             PTSStrength::kDefaultV, PTSBalance::kDefaultV, PTSHold::kDefaultV, PTSSmooth::kDefaultV,
-            PPSAttack::kDefaultV, PPSBalance::kDefaultV, PPSHold::kDefaultV, PPSSmooth::kDefaultV
+            PPSAttack::kDefaultV, PPSBalance::kDefaultV, PPSHold::kDefaultV, PPSSmooth::kDefaultV,
+            PTiltFreq::kDefaultV, PTiltGain::kDefaultV
         };
 
         void parameterChanged(const juce::String &parameter_ID, float new_value) override;

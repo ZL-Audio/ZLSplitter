@@ -341,12 +341,29 @@ namespace zlp {
         auto static constexpr kDefaultV = 50.f;
     };
 
+    class PTiltFreq : public FloatParameters<PTiltFreq> {
+    public:
+        auto static constexpr kID = "tilt_freq";
+        auto static constexpr kName = "Tilt Freq";
+        inline auto static const kRange = getLogMidRange(20.f, 20000.f, 1000.f, 0.1f);
+        auto static constexpr kDefaultV = 1000.f;
+    };
+
+    class PTiltGain : public FloatParameters<PTiltGain> {
+    public:
+        auto static constexpr kID = "tilt_gain";
+        auto static constexpr kName = "Tilt Gain";
+        inline auto static const kRange = juce::NormalisableRange<float>(-12.f, 12.f, .1f);
+        auto static constexpr kDefaultV = 0.f;
+    };
+
     inline juce::AudioProcessorValueTreeState::ParameterLayout getParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(PSplitType::get(), PMix::get(), PSwap::get(), PBypass::get(),
                    PLHFilterType::get(), PLHSlope::get(), PLHFreq::get(),
                    PTSBalance::get(), PTSStrength::get(), PTSHold::get(), PTSSmooth::get(),
-                   PPSBalance::get(), PPSAttack::get(), PPSHold::get(), PPSSmooth::get());
+                   PPSBalance::get(), PPSAttack::get(), PPSHold::get(), PPSSmooth::get(),
+                   PTiltFreq::get(), PTiltGain::get());
         return layout;
     }
 }

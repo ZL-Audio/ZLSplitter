@@ -29,6 +29,8 @@ namespace zlpanel::multilingual {
         kPSAttack,
         kPSHold,
         kPSSmooth,
+        kTiltFreq,
+        kTiltGain,
         kFFTAnalyzer,
         kMagAnalyzer,
         kSwap,

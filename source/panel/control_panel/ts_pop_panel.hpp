@@ -42,10 +42,18 @@ namespace zlpanel {
         zlgui::slider::CompactLinearSlider<false, false, false> smooth_slider_;
         zlgui::attachment::SliderAttachment<true> smooth_attach_;
 
+        zlgui::slider::CompactLinearSlider<false, false, false> tilt_freq_slider_;
+        zlgui::attachment::SliderAttachment<true> tilt_freq_attach_;
+
+        zlgui::slider::CompactLinearSlider<false, false, false> tilt_gain_slider_;
+        zlgui::attachment::SliderAttachment<true> tilt_gain_attach_;
+
         zlgui::label::NameLookAndFeel label_laf_;
         juce::Label balance_label_;
         juce::Label strength_label_;
         juce::Label hold_label_;
         juce::Label smooth_label_;
+        juce::Label tilt_freq_label_;
+        juce::Label tilt_gain_label_;
     };
 }

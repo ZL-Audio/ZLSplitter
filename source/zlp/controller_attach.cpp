@@ -76,6 +76,12 @@ namespace zlp {
             const auto x = new_value / 100.f;
             ps_splitter_[0].setSmooth(x);
             ps_splitter_[1].setSmooth(x);
+        } else if (parameter_ID == zlp::PTiltFreq::kID) {
+            controller_ref_.setTiltFreq(static_cast<double>(new_value));
+        } else if (parameter_ID == zlp::PTiltGain::kID) {
+            const auto db = static_cast<double>(new_value);
+            const auto gain = std::pow(10.0, db * 0.1);
+            controller_ref_.setTiltGain(gain);
         }
     }
 

@@ -33,6 +33,8 @@ namespace zlpanel::multilingual::en {
         "Adjust the attack of peak/steady split.",
         "Adjust the hold of peak/steady split. The larger the hold, the slower the decay of peak signal.",
         "Adjust the smoothness of peak/steady split. The larger the smooth, the larger the RMS window size.",
+        "Adjust the pre-tilt filter frequency before transient/peak splitting.",
+        "Adjust the pre-tilt filter gain before transient/peak splitting.",
         "Press: turn on spectrum analyzer.",
         "Press: turn on magnitude analyzer.",
         "Press: swap Output 1 and Output 2",

@@ -27,6 +27,14 @@ namespace zlp {
         ps_splitter_[0].prepare(sample_rate);
         ps_splitter_[1].prepare(sample_rate);
 
+        tilt_filter_.prepare(sample_rate, 2);
+        tilt_filter_.template setFilterType<false>(zldsp::filter::FilterType::kTiltShelf);
+        tilt_filter_.template setOrder<false>(2);
+        tilt_filter_.template setQ<false, false, true>(0.707f);
+        tilt_filter_.template setGain<false, false, true>(1.0f);
+        tilt_filter_.prepareBuffer();
+        tilt_filter_.skipSmooth();
+
         analyzer_sender_.prepare(sample_rate, max_num_samples, {2, 2}, 0.1);
         for (size_t i = 0; i < 2; ++i) {
             analyzer_sender_.setON(i, true);
@@ -111,6 +119,7 @@ namespace zlp {
                                         std::array<FloatType*, 4>& out_buffer,
                                         const size_t num_samples) {
         prepareBuffer();
+        tilt_filter_.prepareBuffer();
         out_buffer1_[0] = out_buffer[0];
         out_buffer1_[1] = out_buffer[1];
         out_buffer2_[0] = out_buffer[2];
@@ -134,11 +143,13 @@ namespace zlp {
             break;
         }
         case zlp::PSplitType::kTSteady: {
+            tilt_filter_.process(in_buffer, num_samples);
             ts_splitter_[0].process(in_buffer[0], out_buffer1_[0], out_buffer2_[0], num_samples);
             ts_splitter_[1].process(in_buffer[1], out_buffer1_[1], out_buffer2_[1], num_samples);
             break;
         }
         case zlp::PSplitType::kPSteady: {
+            tilt_filter_.process(in_buffer, num_samples);
             ps_splitter_[0].process(in_buffer[0], out_buffer1_[0], out_buffer2_[0], num_samples);
             ps_splitter_[1].process(in_buffer[1], out_buffer1_[1], out_buffer2_[1], num_samples);
             break;

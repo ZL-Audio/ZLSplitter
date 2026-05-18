@@ -15,6 +15,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include "../dsp/splitter/splitter.hpp"
+#include "../dsp/filter/iir_filter/iir_filter.hpp"
 #include "../dsp/analyzer/analyzer_base/analyzer_sender_base.hpp"
 #include "zlp_definitions.hpp"
 
@@ -58,6 +59,14 @@ namespace zlp {
             to_update_.store(true, std::memory_order::release);
         }
 
+        void setTiltFreq(const double freq) {
+            tilt_filter_.template setFreq<true, true, false>(static_cast<FloatType>(freq));
+        }
+
+        void setTiltGain(const double gain) {
+            tilt_filter_.template setGain<true, true, false>(static_cast<FloatType>(gain));
+        }
+
         zldsp::splitter::LHSplitter<FloatType>& getLHSplitter() {
             return lh_splitter_;
         }
@@ -91,6 +100,8 @@ namespace zlp {
         zldsp::splitter::LHFIRSplitter<FloatType> lh_fir_splitter_;
         std::array<zldsp::splitter::TSSplitter<FloatType>, 2> ts_splitter_;
         std::array<zldsp::splitter::PSSplitter<FloatType>, 2> ps_splitter_;
+
+        zldsp::filter::IIR<FloatType, 2> tilt_filter_;
 
         std::atomic<bool> to_update_{true};
 

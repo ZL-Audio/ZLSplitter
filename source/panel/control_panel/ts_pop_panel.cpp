@@ -29,21 +29,33 @@ namespace zlpanel {
                        tooltip_helper.getToolTipText(multilingual::kTSSmooth)),
         smooth_attach_(smooth_slider_.getSlider(), p.parameters_,
                        zlp::PTSSmooth::kID, updater_),
+        tilt_freq_slider_("", base,
+                          tooltip_helper.getToolTipText(multilingual::kTiltFreq)),
+        tilt_freq_attach_(tilt_freq_slider_.getSlider(), p.parameters_,
+                          zlp::PTiltFreq::kID, updater_),
+        tilt_gain_slider_("", base,
+                          tooltip_helper.getToolTipText(multilingual::kTiltGain)),
+        tilt_gain_attach_(tilt_gain_slider_.getSlider(), p.parameters_,
+                          zlp::PTiltGain::kID, updater_),
         label_laf_(base),
         balance_label_("", "Balance"),
         strength_label_("", "Strength"),
         hold_label_("", "Hold"),
-        smooth_label_("", "Smooth") {
+        smooth_label_("", "Smooth"),
+        tilt_freq_label_("", "Tilt Freq"),
+        tilt_gain_label_("", "Tilt Gain") {
         addAndMakeVisible(balance_slider_);
         addAndMakeVisible(strength_slider_);
         addAndMakeVisible(hold_slider_);
         addAndMakeVisible(smooth_slider_);
+        addAndMakeVisible(tilt_freq_slider_);
+        addAndMakeVisible(tilt_gain_slider_);
 
         label_laf_.setFontScale(1.5f);
         balance_label_.setLookAndFeel(&label_laf_);
         balance_label_.setJustificationType(juce::Justification::centred);
         addAndMakeVisible(balance_label_);
-        for (auto& l : {&strength_label_, &hold_label_, &smooth_label_}) {
+        for (auto& l : {&strength_label_, &hold_label_, &smooth_label_, &tilt_freq_label_, &tilt_gain_label_}) {
             l->setLookAndFeel(&label_laf_);
             l->setJustificationType(juce::Justification::centredRight);
             addAndMakeVisible(l);
@@ -57,7 +69,7 @@ namespace zlpanel {
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
         const auto button_size = getButtonSize(font_size);
-        return 4 * padding + slider_width + 4 * button_size;
+        return 6 * padding + slider_width + 6 * button_size;
     }
 
     void TSPopPanel::resized() {
@@ -89,6 +101,18 @@ namespace zlpanel {
             auto temp_bound = bound.removeFromTop(button_size);
             smooth_label_.setBounds(temp_bound.removeFromLeft(label_width));
             smooth_slider_.setBounds(temp_bound);
+        }
+        bound.removeFromTop(padding);
+        {
+            auto temp_bound = bound.removeFromTop(button_size);
+            tilt_freq_label_.setBounds(temp_bound.removeFromLeft(label_width));
+            tilt_freq_slider_.setBounds(temp_bound);
+        }
+        bound.removeFromTop(padding);
+        {
+            auto temp_bound = bound.removeFromTop(button_size);
+            tilt_gain_label_.setBounds(temp_bound.removeFromLeft(label_width));
+            tilt_gain_slider_.setBounds(temp_bound);
         }
     }
 

@@ -33,6 +33,8 @@ namespace zlpanel::multilingual::de {
         "Passen Sie den Attack der Spitzen-/Stationär-Trennung an.",
         "Passen Sie die Haltezeit der Spitzen-/Stationär-Trennung an. Je größer die Haltezeit, desto langsamer der Abfall des Spitzensignals.",
         "Passen Sie die Glätte der Spitzen-/Stationär-Trennung an. Je größer die Glätte, desto größer die RMS-Fenstergröße.",
+        "Passen Sie die Vor-Tilt-Filterfrequenz vor der Transienten-/Spitzen-Trennung an.",
+        "Passen Sie den Vor-Tilt-Filterverstärkung vor der Transienten-/Spitzen-Trennung an.",
         "Drücken: Spektrumanalysator einschalten.",
         "Drücken: Amplitudenanalysator einschalten.",
         "Drücken: tausche Output 1 und Output 2.",

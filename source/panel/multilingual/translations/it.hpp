@@ -33,6 +33,8 @@ namespace zlpanel::multilingual::it {
         "Regola l'attacco della separazione picco/stazionario.",
         "Regola l'hold della separazione picco/stazionario. Maggiore è l'hold, più lento è il decadimento del segnale di picco.",
         "Regola la levigatezza della separazione picco/stazionario. Maggiore è la levigatezza, maggiore è la dimensione della finestra RMS.",
+        "Regola la frequenza del filtro tilt pre-separazione transiente/picco.",
+        "Regola il guadagno del filtro tilt pre-separazione transiente/picco.",
         "Pressione: attiva l'analizzatore di spettro.",
         "Pressione: attiva l'analizzatore di magnitudine.",
         "Pressione: scambia Output 1 e Output 2.",

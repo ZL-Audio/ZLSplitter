@@ -33,6 +33,8 @@ namespace zlpanel::multilingual::es {
         "Ajustar el ataque de la división pico/constante.",
         "Ajustar el tiempo de espera de la división pico/constante. Cuanto mayor sea el tiempo, más lenta será la caída de la señal de pico.",
         "Ajustar la suavidad de la división pico/constante. Cuanto mayor sea la suavidad, mayor será el tamaño de la ventana RMS.",
+        "Ajustar la frecuencia del filtro de inclinación previo a la división transitorio/pico.",
+        "Ajustar la ganancia del filtro de inclinación previo a la división transitorio/pico.",
         "Pulsar: activar el analizador de espectro.",
         "Pulsar: activar el analizador de magnitud.",
         "Pulsar: intercambiar Output 1 y Output 2.",
