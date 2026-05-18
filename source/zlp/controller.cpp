@@ -50,6 +50,7 @@ namespace zlp {
         if (to_update_.exchange(false, std::memory_order::acquire)) {
             if (to_update_split_type_.exchange(false, std::memory_order::acquire)) {
                 c_split_type_ = split_type_.load(std::memory_order::relaxed);
+                tilt_filter_.reset();
             }
             c_use_fir_ = use_fir_.load(std::memory_order::relaxed);
             switch (c_split_type_) {

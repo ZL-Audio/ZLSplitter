@@ -34,7 +34,12 @@ namespace zlp {
     template <typename FloatType>
     void ControllerAttach<FloatType>::parameterChanged(const juce::String& parameter_ID, const float new_value) {
         if (parameter_ID == zlp::PSplitType::kID) {
-            controller_ref_.setSplitType(static_cast<zlp::PSplitType::SplitType>(std::round(new_value)));
+            const auto split_type = static_cast<zlp::PSplitType::SplitType>(std::round(new_value));
+            controller_ref_.setSplitType(split_type);
+            if (split_type == zlp::PSplitType::kTSteady || split_type == zlp::PSplitType::kPSteady) {
+                parameters_ref_.getParameterAsValue(zlp::PTiltGain::kID).setValue(zlp::PTiltGain::kDefaultV);
+                parameters_ref_.getParameterAsValue(zlp::PTiltFreq::kID).setValue(zlp::PTiltFreq::kDefaultV);
+            }
         } else if (parameter_ID == zlp::PMix::kID) {
             controller_ref_.setMix(static_cast<FloatType>(new_value * 0.005f));
         } else if (parameter_ID == zlp::PLHFreq::kID) {
