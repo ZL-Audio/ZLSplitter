@@ -36,10 +36,12 @@ namespace zlp {
         if (parameter_ID == zlp::PSplitType::kID) {
             const auto split_type = static_cast<zlp::PSplitType::SplitType>(std::round(new_value));
             controller_ref_.setSplitType(split_type);
-            parameters_ref_.getParameterAsValue(zlp::PMix::kID).setValue(zlp::PMix::kDefaultV);
+            parameters_ref_.getParameterAsValue(zlp::PMix::kID).setValue(zlp::PMix::convertTo01(zlp::PMix::kDefaultV));
+            parameters_ref_.getParameterAsValue(zlp::PTSBalance::kID).setValue(zlp::PTSBalance::convertTo01(zlp::PTSBalance::kDefaultV));
+            parameters_ref_.getParameterAsValue(zlp::PPSBalance::kID).setValue(zlp::PPSBalance::convertTo01(zlp::PPSBalance::kDefaultV));
             if (split_type == zlp::PSplitType::kTSteady || split_type == zlp::PSplitType::kPSteady) {
-                parameters_ref_.getParameterAsValue(zlp::PTiltGain::kID).setValue(zlp::PTiltGain::kDefaultV);
-                parameters_ref_.getParameterAsValue(zlp::PTiltFreq::kID).setValue(zlp::PTiltFreq::kDefaultV);
+                parameters_ref_.getParameterAsValue(zlp::PTiltGain::kID).setValue(zlp::PTiltGain::convertTo01(zlp::PTiltGain::kDefaultV));
+                parameters_ref_.getParameterAsValue(zlp::PTiltFreq::kID).setValue(zlp::PTiltFreq::convertTo01(zlp::PTiltFreq::kDefaultV));
             }
         } else if (parameter_ID == zlp::PMix::kID) {
             controller_ref_.setMix(static_cast<FloatType>(new_value * 0.005f));
