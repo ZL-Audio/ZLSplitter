@@ -36,6 +36,7 @@ namespace zlp {
         if (parameter_ID == zlp::PSplitType::kID) {
             const auto split_type = static_cast<zlp::PSplitType::SplitType>(std::round(new_value));
             controller_ref_.setSplitType(split_type);
+            parameters_ref_.getParameterAsValue(zlp::PMix::kID).setValue(zlp::PMix::kDefaultV);
             if (split_type == zlp::PSplitType::kTSteady || split_type == zlp::PSplitType::kPSteady) {
                 parameters_ref_.getParameterAsValue(zlp::PTiltGain::kID).setValue(zlp::PTiltGain::kDefaultV);
                 parameters_ref_.getParameterAsValue(zlp::PTiltFreq::kID).setValue(zlp::PTiltFreq::kDefaultV);
