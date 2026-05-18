@@ -14,7 +14,7 @@
 namespace zlgui::tooltip {
     class TooltipWindow final : public juce::TooltipWindow {
     public:
-        explicit TooltipWindow(Component* parent_component, const int milliseconds_before_appears = 700)
+        explicit TooltipWindow(Component* parent_component, const int milliseconds_before_appears = 200)
             : juce::TooltipWindow(parent_component, milliseconds_before_appears) {
             setInterceptsMouseClicks(false, false);
         }
