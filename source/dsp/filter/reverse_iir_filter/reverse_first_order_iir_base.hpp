@@ -31,8 +31,8 @@ namespace zldsp::filter {
             std::fill(states_.begin(), states_.end(), FloatType(0));
         }
 
-        void prepare(const size_t num_channels) {
-            reverse_pole_.prepare(num_channels);
+        void prepare(const size_t max_num_samples, const size_t num_channels) {
+            reverse_pole_.prepare(max_num_samples, num_channels);
             states_.resize(num_channels);
             reset();
         }
@@ -57,7 +57,7 @@ namespace zldsp::filter {
         }
 
         [[nodiscard]] inline int getLatency() const {
-            return reverse_pole_.getLatency();
+            return reverse_pole_.getLatency() + 1;
         }
 
     private:

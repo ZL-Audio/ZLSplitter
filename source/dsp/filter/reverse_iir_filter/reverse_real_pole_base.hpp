@@ -9,10 +9,12 @@
 
 #pragma once
 
+#include <array>
 #include <span>
 #include <vector>
 
-#include "../../delay/delay.hpp"
+#include "../../delay/block_fifo_delay.hpp"
+#include "../../vector/highway_import.hpp"
 
 namespace zldsp::filter {
     /**
@@ -32,7 +34,6 @@ namespace zldsp::filter {
         }
 
         void reset() {
-            std::fill(cs_.begin(), cs_.end(), FloatType(0));
             for (auto &delay: delays_) {
                 for (auto &d: delay) {
                     d.reset();
@@ -40,30 +41,29 @@ namespace zldsp::filter {
             }
         }
 
-        void prepare(const size_t num_channels) {
+        void prepare(const size_t max_num_samples, const size_t num_channels) {
+            max_num_samples_ = std::max(size_t(1), max_num_samples);
             delays_.resize(num_channels);
             for (auto &delay: delays_) {
-                int num_delay = 1;
                 delay.resize(num_stage_ + 1);
-                for (auto &d: delay) {
-                    d.setMaximumDelayInSamples(num_delay);
-                    d.setDelay(num_delay);
-                    num_delay *= 2;
+                for (size_t stage = 0; stage <= num_stage_; ++stage) {
+                    delay[stage].prepare(size_t(1) << stage, max_num_samples_);
                 }
             }
-            reset();
         }
 
         void process(std::span<FloatType *> buffer, const size_t num_samples) {
-            for (size_t chan = 0; chan < buffer.size(); ++chan) {
-                auto &delay(delays_[chan]);
-                auto chan_buffer = buffer[chan];
-                for (int index = 0; index < static_cast<int>(num_samples); ++index) {
+            for (size_t offset = 0; offset < num_samples;) {
+                const auto count = std::min(max_num_samples_, num_samples - offset);
+                for (size_t chan = 0; chan < buffer.size(); ++chan) {
+                    auto* output = buffer[chan] + offset;
                     for (size_t stage = 0; stage <= num_stage_; ++stage) {
-                        const auto current = chan_buffer[index];
-                        chan_buffer[index] = cs_[stage] * current + delay[stage].push(current);
+                        const auto block = delays_[chan][stage].push({output}, count);
+                        processStage(output, block[0].data[0], cs_[stage], block[0].size);
+                        processStage(output + block[0].size, block[1].data[0], cs_[stage], block[1].size);
                     }
                 }
+                offset += count;
             }
         }
 
@@ -75,13 +75,22 @@ namespace zldsp::filter {
         }
 
         [[nodiscard]] inline int getLatency() const {
-            return (1 << (1 + static_cast<int>(num_stage_))) + 1;
+            return (1 << (1 + static_cast<int>(num_stage_))) - 1;
         }
 
     private:
         size_t num_stage_{0};
+        size_t max_num_samples_{1};
 
-        std::vector<std::vector<zldsp::delay::FIFODelay<FloatType>>> delays_;
+        std::vector<std::vector<zldsp::delay::BlockFIFODelay<FloatType>>> delays_;
         std::vector<FloatType> cs_;
+
+        static void processStage(FloatType* HWY_RESTRICT output,
+                                 const FloatType* delayed,
+                                 const FloatType coefficient, const size_t num_samples) {
+            for (size_t i = 0; i < num_samples; ++i) {
+                output[i] = coefficient * output[i] + delayed[i];
+            }
+        }
     };
 }

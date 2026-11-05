@@ -62,7 +62,7 @@ namespace zldsp::filter {
         }
 
         [[nodiscard]] inline int getLatency() const {
-            return reverse_pole_.getLatency();
+            return reverse_pole_.getLatency() + 2;
         }
 
     private:

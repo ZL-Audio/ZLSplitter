@@ -9,10 +9,13 @@
 
 #pragma once
 
+#include <array>
+#include <cmath>
 #include <span>
 #include <vector>
 
-#include "../../delay/delay.hpp"
+#include "../../delay/block_fifo_delay.hpp"
+#include "../../vector/highway_import.hpp"
 
 namespace zldsp::filter {
     /**
@@ -33,43 +36,30 @@ namespace zldsp::filter {
         }
 
         void reset() {
-            for (auto &delay: u_delays_) {
-                for (auto &d: delay) {
-                    d.reset();
-                }
+            for (auto& delay : input_delays_) {
+                delay.reset();
             }
-
-            for (auto &delay: v_delays_) {
-                for (auto &d: delay) {
-                    d.reset();
+            for (auto& channel : delays_) {
+                for (auto& delay : channel) {
+                    delay.reset();
                 }
             }
         }
 
-        void prepare(const size_t /*max_num_samples*/, const size_t num_channels) {
-            u_delays_.resize(num_channels);
-            v_delays_.resize(num_channels);
-
-            for (auto &delay: u_delays_) {
-                int num_delay = 1;
-                delay.resize(num_stage_ + 1);
-                for (size_t i = 0; i < num_stage_ + 1; ++i) {
-                    delay[i].setMaximumDelayInSamples(num_delay);
-                    delay[i].setDelay(num_delay);
-                    num_delay *= 2;
+        void prepare(const size_t max_num_samples, const size_t num_channels) {
+            max_num_samples_ = std::max(size_t(1), max_num_samples);
+            v_buffer_.resize(max_num_samples_);
+            input_delays_.resize(num_channels);
+            for (auto& delay : input_delays_) {
+                delay.prepare(1, max_num_samples_);
+            }
+            delays_.resize(num_channels);
+            for (auto& channel : delays_) {
+                channel.resize(num_stage_);
+                for (size_t stage = 1; stage <= num_stage_; ++stage) {
+                    channel[stage - 1].prepare(size_t(1) << stage, max_num_samples_);
                 }
             }
-
-            for (auto &delay: v_delays_) {
-                int num_delay = 1;
-                delay.resize(num_stage_ + 1);
-                for (size_t i = 0; i < num_stage_ + 1; ++i) {
-                    delay[i].setMaximumDelayInSamples(num_delay);
-                    delay[i].setDelay(num_delay);
-                    num_delay *= 2;
-                }
-            }
-            reset();
         }
 
         void process(std::span<FloatType *> buffer, const size_t num_samples) {
@@ -85,7 +75,7 @@ namespace zldsp::filter {
                 a_state_[0] = -static_cast<FloatType>(a[1] / 2);
                 b_state_[0] = -static_cast<FloatType>(std::sqrt(a[2] - a[1] * a[1] / 4));
                 aB_ = a_state_[0] / b_state_[0];
-                for (size_t i = 1; i < num_stage_; ++i) {
+                for (size_t i = 1; i <= num_stage_; ++i) {
                     const auto ii = i - 1;
                     a_state_[i] = a_state_[ii] * a_state_[ii] - b_state_[ii] * b_state_[ii];
                     b_state_[i] = 2 * a_state_[ii] * b_state_[ii];
@@ -94,35 +84,63 @@ namespace zldsp::filter {
         }
 
         [[nodiscard]] inline int getLatency() const {
-            return (1 << (1 + static_cast<int>(num_stage_))) + 1;
+            return (1 << (1 + static_cast<int>(num_stage_))) - 1;
         }
 
     private:
         size_t num_stage_{0};
-        std::vector<std::vector<zldsp::delay::FIFODelay<FloatType>>> u_delays_, v_delays_;
+        size_t max_num_samples_{1};
+        std::vector<zldsp::delay::BlockFIFODelay<FloatType>> input_delays_;
+        std::vector<std::vector<zldsp::delay::BlockFIFODelay<FloatType, 2>>> delays_;
+        std::vector<FloatType> v_buffer_;
         std::vector<FloatType> a_state_, b_state_;
-        FloatType aB_;
+        FloatType aB_{0};
 
         bool is_complex_{false};
 
         void processComplex(std::span<FloatType *> buffer, const size_t num_samples) {
-            for (size_t chan = 0; chan < buffer.size(); ++chan) {
-                auto &u_delay(u_delays_[chan]);
-                auto &v_delay(v_delays_[chan]);
-
-                auto chan_buffer = buffer[chan];
-                for (size_t index = 0; index < num_samples; ++index) {
-                    const auto current = chan_buffer[index];
-                    auto u = a_state_[0] * current + u_delay[0].push(current);
-                    auto v = b_state_[0] * current;
+            for (size_t offset = 0; offset < num_samples;) {
+                const auto count = std::min(max_num_samples_, num_samples - offset);
+                for (size_t chan = 0; chan < buffer.size(); ++chan) {
+                    auto* u = buffer[chan] + offset;
+                    auto* v = v_buffer_.data();
+                    const auto input = input_delays_[chan].push({u}, count);
+                    processInput(u, v, input[0].data[0], a_state_[0], b_state_[0], input[0].size);
+                    processInput(u + input[0].size, v + input[0].size, input[1].data[0],
+                                 a_state_[0], b_state_[0], input[1].size);
                     for (size_t stage = 1; stage <= num_stage_; ++stage) {
-                        const auto u_current = u;
-                        const auto v_current = v;
-                        u = a_state_[stage] * u_current - b_state_[stage] * v_current + u_delay[stage].push(u_current);
-                        v = b_state_[stage] * u_current + a_state_[stage] * v_current + v_delay[stage].push(v_current);
+                        const auto block = delays_[chan][stage - 1].push({u, v}, count);
+                        processStage(u, v, block[0].data[0], block[0].data[1],
+                                     a_state_[stage], b_state_[stage], block[0].size);
+                        processStage(u + block[0].size, v + block[0].size, block[1].data[0], block[1].data[1],
+                                     a_state_[stage], b_state_[stage], block[1].size);
                     }
-                    chan_buffer[index] = u + aB_ * v;
+                    for (size_t i = 0; i < count; ++i) {
+                        u[i] += aB_ * v[i];
+                    }
                 }
+                offset += count;
+            }
+        }
+
+        static void processInput(FloatType* HWY_RESTRICT u, FloatType* HWY_RESTRICT v,
+                                 const FloatType* delayed,
+                                 const FloatType a, const FloatType b, const size_t num_samples) {
+            for (size_t i = 0; i < num_samples; ++i) {
+                const auto current = u[i];
+                u[i] = a * current + delayed[i];
+                v[i] = b * current;
+            }
+        }
+
+        static void processStage(FloatType* HWY_RESTRICT u, FloatType* HWY_RESTRICT v,
+                                 const FloatType* u_delayed, const FloatType* v_delayed,
+                                 const FloatType a, const FloatType b, const size_t num_samples) {
+            for (size_t i = 0; i < num_samples; ++i) {
+                const auto u_current = u[i];
+                const auto v_current = v[i];
+                u[i] = a * u_current - b * v_current + u_delayed[i];
+                v[i] = b * u_current + a * v_current + v_delayed[i];
             }
         }
     };

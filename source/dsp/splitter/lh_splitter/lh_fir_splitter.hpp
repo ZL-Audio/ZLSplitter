@@ -55,7 +55,7 @@ namespace zldsp::splitter {
             sample_rate_ = sample_rate;
 
             first_order_filter_.setNumStage(kFirstOrderNumStage + extra_stage_);
-            first_order_filter_.prepare(num_channels);
+            first_order_filter_.prepare(max_num_samples, num_channels);
             filter_[0].setNumStage(kSecondOrderNumStage + extra_stage_);
             filter_[0].prepare(max_num_samples, num_channels);
             filter_[1].setNumStage(kSecondOrderNumStage + extra_stage_);
