@@ -19,7 +19,7 @@ namespace zlpanel {
 
         void paint(juce::Graphics& g) override;
 
-        int getIdeatlHeight() const;
+        int getIdealHeight() const;
 
     private:
         zlgui::UIBase& base_;
@@ -29,7 +29,7 @@ namespace zlpanel {
             "Copyright (c) 2024 - [zsliu98](https://github.com/zsliu98)\n\n"
             "JUCE framework from [JUCE](https://github.com/juce-framework/JUCE)\n\n"
             "JUCE template from [pamplejuce](https://github.com/sudara/pamplejuce)\n\n"
-            "[kfr](https://github.com/kfrlib/kfr) by [KFR](https://github.com/kfrlib)\n\n"
+            "[zldsp_fft](https://github.com/ZL-Audio/zldsp_fft) by ZL Audio\n\nHighway by Google\n\n"
             "[Material Symbols](https://github.com/google/material-design-icons) by [Google](https://github.com/google)\n\n"
             "[inter](https://github.com/rsms/inter) by [The Inter Project Authors](https://github.com/rsms/inter)\n\n"
             "Vicanek, Martin. A New Reverse IIR Filtering Algorithm. (2022).\n\n"

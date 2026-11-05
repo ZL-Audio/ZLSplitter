@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
 #include "../helper/helper.hpp"
@@ -17,7 +19,7 @@
 namespace zlpanel {
     class TSPopPanel final : public juce::Component {
     public:
-        TSPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+        TSPopPanel(PluginProcessor& p, zlgui::UIState& base,
                    const multilingual::TooltipHelper& tooltip_helper);
 
         int getIdealHeight() const;
@@ -27,7 +29,7 @@ namespace zlpanel {
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         zlgui::attachment::ComponentUpdater updater_{};
 
         zlgui::slider::TwoValueRotarySlider<false, false, false> balance_slider_;

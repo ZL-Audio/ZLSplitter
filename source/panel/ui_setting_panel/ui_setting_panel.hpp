@@ -9,6 +9,10 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
+#include "../../gui/interface_definitions.hpp"
+
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
 
@@ -16,40 +20,46 @@
 #include "control_setting_panel.hpp"
 #include "other_ui_setting_panel.hpp"
 #include "credit_panel.hpp"
+#include "ui_setting_components.hpp"
+#include "../../gui/label/name_look_and_feel.hpp"
+#include "../../gui/scrolling/scrollable_viewport.hpp"
+#include "../common/panel_background.hpp"
 
 namespace zlpanel {
     class UISettingPanel final : public juce::Component {
     public:
-        explicit UISettingPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit UISettingPanel(PluginProcessor &p, zlgui::UIState &base);
 
         ~UISettingPanel() override;
-
-        void paint(juce::Graphics &g) override;
 
         void resized() override;
 
         void loadSetting();
 
-        void mouseDown(const juce::MouseEvent &event) override;
+        void flushPendingScroll();
+
+        [[nodiscard]] int getIdealWidth() const;
+
+        [[nodiscard]] int getIdealHeight() const;
 
     private:
         PluginProcessor &p_ref_;
-        zlgui::UIBase &base_;
-        juce::Viewport view_port_;
+        zlgui::UIState &base_;
 
         ColourSettingPanel colour_panel_;
         ControlSettingPanel control_panel_;
         OtherUISettingPanel other_panel_;
         CreditPanel credit_panel_;
 
-        const std::unique_ptr<juce::Drawable> save_drawable_, close_drawable_, reset_drawable_;
-        zlgui::button::ClickButton save_button_, close_button_, reset_button_;
+        PanelBackground background_;
+        zlgui::label::NameLookAndFeel version_text_laf_;
+        juce::Label version_text_;
+        UISettingTabBar tab_bar_;
+        zlgui::scrolling::ScrollableViewport view_port_;
 
-        zlgui::label::NameLookAndFeel panel_name_laf_;
-        std::array<juce::Label, 4> panel_labels_;
+        zlgui::button::ClickButton save_button_, close_button_, reset_button_, folder_open_button_;
 
-        zlgui::label::NameLookAndFeel label_laf_;
-        juce::Label version_label_;
+        std::array<double, 4> view_positions_{};
 
         enum PanelIdx {
             kColourP,
@@ -61,6 +71,14 @@ namespace zlpanel {
         PanelIdx current_panel_idx_ = kColourP;
 
         void changeDisplayPanel();
+
+        void saveCurrentPanel();
+
+        void resetCurrentPanel();
+
+        void updateActionButtonStates();
+
+        void lookAndFeelChanged() override;
 
         void visibilityChanged() override;
     };

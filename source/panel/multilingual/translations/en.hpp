@@ -37,6 +37,11 @@ namespace zlpanel::multilingual::en {
         "Press: turn on magnitude analyzer.",
         "Press: swap Output 1 and Output 2",
         "Release: bypass the plugin.",
-        "Double click: open UI settings."
+        "Double click: open UI settings.",
+        "Deletes the selected preset group.",
+        "Deletes the selected preset.",
+        "Closes the preset browser.",
+        "Opens the presets folder in the system file manager.",
+        "Toggles the preset browser.",
     };
 }

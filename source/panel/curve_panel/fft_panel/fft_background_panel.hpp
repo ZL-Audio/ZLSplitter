@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../../state/ui_state.hpp"
+
 #include "../../../PluginProcessor.hpp"
 #include "../../helper/helper.hpp"
 #include "../../../gui/gui.hpp"
@@ -16,7 +18,7 @@
 namespace zlpanel {
     class FFTBackgroundPanel final : public juce::Component {
     public:
-        explicit FFTBackgroundPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit FFTBackgroundPanel(PluginProcessor &p, zlgui::UIState &base);
 
         void paint(juce::Graphics& g) override;
 
@@ -30,7 +32,7 @@ namespace zlpanel {
             10000.f, 20000.f, 50000.f, 100000.f, 200000.f
         };
 
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         std::atomic<float>& fft_min_db_;
         float c_fft_min_db_{-1.f};
         double freq_max_{0.};

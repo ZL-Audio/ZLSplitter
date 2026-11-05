@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
 #include "../helper/helper.hpp"
@@ -17,17 +19,19 @@
 namespace zlpanel {
     class LHPopPanel final : public juce::Component {
     public:
-        LHPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+        LHPopPanel(PluginProcessor& p, zlgui::UIState& base,
                    const multilingual::TooltipHelper& tooltip_helper);
 
         int getIdealHeight() const;
 
         void resized() override;
 
+        void lookAndFeelChanged() override;
+
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         zlgui::attachment::ComponentUpdater updater_{};
 
         zlgui::slider::TwoValueRotarySlider<false, false, false> mix_slider_;

@@ -10,30 +10,41 @@
 #include "lh_pop_panel.hpp"
 
 namespace zlpanel {
-    LHPopPanel::LHPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+    LHPopPanel::LHPopPanel(PluginProcessor& p, zlgui::UIState& base,
                            const multilingual::TooltipHelper& tooltip_helper) :
         base_(base), updater_(),
-        mix_slider_("", base,
+        mix_slider_("", base.gui,
                     tooltip_helper.getToolTipText(multilingual::kMix), 1.25f),
         mix_attach_(mix_slider_.getSlider1(), p.parameters_,
                     zlp::PMix::kID, updater_),
-        filter_type_box_(zlp::PLHFilterType::kChoices, base,
+        filter_type_box_(zlp::PLHFilterType::kChoices, base.gui,
                          tooltip_helper.getToolTipText(multilingual::kLHFilterType)),
         filter_type_attach_(filter_type_box_.getBox(), p.parameters_,
                             zlp::PLHFilterType::kID, updater_),
-        filter_slope_box_(zlp::PLHSlope::kChoices, base,
+        filter_slope_box_(zlp::PLHSlope::kChoices, base.gui,
                           tooltip_helper.getToolTipText(multilingual::kLHFilterSlope)),
         filter_slope_attach_(filter_slope_box_.getBox(), p.parameters_,
                              zlp::PLHSlope::kID, updater_),
-        freq_slider_("", base,
+        freq_slider_("", base.gui,
                      tooltip_helper.getToolTipText(multilingual::kLHFreq), 1.25f),
         freq_attach_(freq_slider_.getSlider1(), p.parameters_,
                      zlp::PLHFreq::kID, updater_),
-        label_laf_(base),
+        label_laf_(base.gui),
         mix_label_("", "Mix"),
         freq_label_("", "Freq") {
+        lookAndFeelChanged();
+        mix_slider_.setComponentID(zlp::PMix::kID);
+        mix_slider_.getSlider1().setComponentID(zlp::PMix::kID);
+        filter_type_box_.setComponentID(zlp::PLHFilterType::kID);
+        filter_type_box_.getBox().setComponentID(zlp::PLHFilterType::kID);
+        filter_slope_box_.setComponentID(zlp::PLHSlope::kID);
+        filter_slope_box_.getBox().setComponentID(zlp::PLHSlope::kID);
+        freq_slider_.setComponentID(zlp::PLHFreq::kID);
+        freq_slider_.getSlider1().setComponentID(zlp::PLHFreq::kID);
         addAndMakeVisible(mix_slider_);
+        filter_type_box_.setScrollEnabled(true);
         addAndMakeVisible(filter_type_box_);
+        filter_slope_box_.setScrollEnabled(true);
         addAndMakeVisible(filter_slope_box_);
         addAndMakeVisible(freq_slider_);
 
@@ -49,7 +60,7 @@ namespace zlpanel {
     }
 
     int LHPopPanel::getIdealHeight() const {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
         const auto button_size = getButtonSize(font_size);
@@ -57,7 +68,7 @@ namespace zlpanel {
     }
 
     void LHPopPanel::resized() {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
         const auto button_size = getButtonSize(font_size);
@@ -81,4 +92,11 @@ namespace zlpanel {
     void LHPopPanel::repaintCallBackSlow() {
         updater_.updateComponents();
     }
+
+    void LHPopPanel::lookAndFeelChanged() {
+        const auto alignment = combobox_helper::getAlignment(base_.gui.getComboboxAlignment());
+        filter_type_box_.getLAF().setItemAlignment(alignment);
+        filter_slope_box_.getLAF().setAlignment(zlgui::combobox::Alignment::kRight);
+    }
+
 }

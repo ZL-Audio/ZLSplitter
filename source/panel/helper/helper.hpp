@@ -13,3 +13,4 @@
 #include "atomic_bound.hpp"
 #include "panel_constants.hpp"
 #include "refresh_handler.hpp"
+#include "combobox_helper.hpp"

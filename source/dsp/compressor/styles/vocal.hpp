@@ -48,8 +48,8 @@ namespace zldsp::compressor {
                 x0_ = buffer[i] * smooth_reduction_gain;
                 buffer[i] = std::max(smooth_reduction_gain, FloatType(1e-12));
             }
-            auto vector = kfr::make_univector(buffer, num_samples);
-            vector = FloatType(20) * kfr::log10(vector);
+            auto* vector = buffer;
+            zldsp::vector::mag_to_db(vector, num_samples);
         }
 
     private:

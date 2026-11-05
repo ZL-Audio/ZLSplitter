@@ -10,7 +10,7 @@
 #include "analyzer_setting_panel.hpp"
 
 namespace zlpanel {
-    AnalyzerSettingPanel::AnalyzerSettingPanel(PluginProcessor& p, zlgui::UIBase& base) :
+    AnalyzerSettingPanel::AnalyzerSettingPanel(PluginProcessor& p, zlgui::UIState& base) :
         base_(base),
         analyzer_type_idx_(*p.na_parameters_.getRawParameterValue(zlstate::PAnalyzerShow::kID)),
         pop_panel_(p, base) {
@@ -27,15 +27,15 @@ namespace zlpanel {
     }
 
     int AnalyzerSettingPanel::getIdealWidth() const {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
 
-        return padding * 4 + slider_width * 2;
+        return padding * 3 + slider_width * 2;
     }
 
     int AnalyzerSettingPanel::getIdealHeight() const {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto button_size = getButtonSize(font_size);
 

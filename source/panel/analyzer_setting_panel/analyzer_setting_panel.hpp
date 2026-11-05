@@ -9,13 +9,15 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "analyzer_setting_pop_panel.hpp"
 
 namespace zlpanel {
     class AnalyzerSettingPanel final : public juce::Component,
                                        private juce::ValueTree::Listener {
     public:
-        explicit AnalyzerSettingPanel(PluginProcessor& p, zlgui::UIBase& base);
+        explicit AnalyzerSettingPanel(PluginProcessor& p, zlgui::UIState& base);
 
         ~AnalyzerSettingPanel() override;
 
@@ -28,7 +30,7 @@ namespace zlpanel {
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         std::atomic<float>& analyzer_type_idx_;
         size_t analyzer_type_{0};
 

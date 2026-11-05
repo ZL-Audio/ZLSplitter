@@ -47,6 +47,9 @@ namespace zldsp::filter::FilterDesign {
             const auto coeff = FirstOrderFunc(w0, g0);
             coeffs[startIdx] = {coeff[0], coeff[1], 0.0, coeff[2], coeff[3], 0.0};
             return 1;
+        } else if (n == 2) {
+            coeffs[startIdx] = Func(w0, g0, q0);
+            return 1;
         }
         const size_t number = n / 2;
         const auto _g = std::pow(g0, 1.0 / static_cast<double>(number));

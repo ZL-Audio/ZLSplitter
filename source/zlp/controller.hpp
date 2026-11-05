@@ -106,7 +106,7 @@ namespace zlp {
 
         std::atomic<int> latency_{0};
 
-        std::atomic<bool> analyzer_on_{true};
+        std::atomic<bool> analyzer_on_{false};
         zldsp::analyzer::AnalyzerSenderBase<FloatType, 2> analyzer_sender_{};
 
         zldsp::delay::IntegerDelay<FloatType> bypass_delay_;

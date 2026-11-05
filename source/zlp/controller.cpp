@@ -35,6 +35,7 @@ namespace zlp {
         const auto max_latency = std::max(lh_fir_splitter_.getMaxLatency(), ts_splitter_[0].getTSLatency());
         bypass_delay_.prepare(sample_rate, max_num_samples, 2,
                               static_cast<FloatType>(max_latency + 1) / static_cast<FloatType>(sample_rate));
+        to_update_.store(true, std::memory_order::release);
     }
 
     template <typename FloatType>
@@ -126,7 +127,7 @@ namespace zlp {
             break;
         }
         case zlp::PSplitType::kLHigh: {
-            if (use_fir_) {
+            if (c_use_fir_) {
                 lh_fir_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
             } else {
                 lh_splitter_.process(in_buffer, out_buffer1_, out_buffer2_, num_samples);
@@ -166,8 +167,11 @@ namespace zlp {
 
     template <typename FloatType>
     void Controller<FloatType>::checkUpdateLatency() {
-        bypass_delay_.reset();
-        bypass_delay_.setDelayInSamples(latency_.load(std::memory_order::relaxed));
+        const auto latency = latency_.load(std::memory_order::relaxed);
+        if (bypass_delay_.getDelayInSamples() != latency) {
+            bypass_delay_.setDelayInSamples(latency);
+            bypass_delay_.reset();
+        }
         if (latency_.load(std::memory_order::relaxed) != p_ref_.getLatencySamples()) {
             triggerAsyncUpdate();
         }

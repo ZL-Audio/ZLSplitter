@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../../gui/gui.hpp"
 #include "../../PluginProcessor.hpp"
 #include "../helper/panel_constants.hpp"
@@ -17,7 +19,9 @@ namespace zlpanel {
     class OtherUISettingPanel final : public juce::Component,
                                       private juce::ComboBox::Listener {
     public:
-        explicit OtherUISettingPanel(PluginProcessor& p, zlgui::UIBase& base);
+        explicit OtherUISettingPanel(PluginProcessor& p, zlgui::UIState& base);
+
+        ~OtherUISettingPanel() override;
 
         void loadSetting();
 
@@ -33,13 +37,17 @@ namespace zlpanel {
 
     private:
         PluginProcessor& p_ref_;
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         zlgui::label::NameLookAndFeel name_laf_;
 
         juce::Label refresh_rate_label_;
         zlgui::combobox::CompactCombobox refresh_rate_box_;
+        juce::Label fft_quality_label_;
+        zlgui::combobox::CompactCombobox fft_quality_box_;
         juce::Label fft_label_;
         zlgui::slider::CompactLinearSlider<true, true, true> fft_tilt_slider_, fft_speed_slider_;
+        juce::Label combobox_alignment_label_;
+        zlgui::combobox::CompactCombobox combobox_alignment_box_;
         juce::Label curve_thick_label_;
         zlgui::slider::CompactLinearSlider<true, true, true> mag_curve_slider_, fft_curve_slider_;
         juce::Label tooltip_label_;

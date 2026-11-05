@@ -16,6 +16,7 @@
 #pragma once
 
 #include <array>
+#include <algorithm>
 
 namespace zldsp::splitter {
     /**
@@ -61,7 +62,7 @@ namespace zldsp::splitter {
          * @param v new data
          */
         void insert(T v) {
-            data_size_ = (data_size_ + 1) % static_cast<int>(N);
+            data_size_ = std::min(data_size_ + 1, static_cast<int>(N));
             const int p = pos_[static_cast<size_t>(idx_)];
             T old = data_[static_cast<size_t>(idx_)];
             data_[static_cast<size_t>(idx_)] = v;

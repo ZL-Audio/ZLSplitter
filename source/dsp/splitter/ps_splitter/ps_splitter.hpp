@@ -30,6 +30,7 @@ namespace zldsp::splitter {
             peak_sm_buffer_.clear();
             steady_sm_buffer_.setCapacity(static_cast<size_t>(sample_rate * 1.));
             steady_sm_buffer_.clear();
+            peak_sm_ = steady_sm_ = mask_ = FloatType(0);
             to_update_.store(true, std::memory_order::release);
         }
 

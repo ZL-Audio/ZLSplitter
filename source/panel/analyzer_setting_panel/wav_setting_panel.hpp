@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
 #include "../helper/helper.hpp"
@@ -17,16 +19,20 @@
 namespace zlpanel {
     class WavSettingPanel final : public juce::Component {
     public:
-        explicit WavSettingPanel(PluginProcessor& p, zlgui::UIBase& base);
+        explicit WavSettingPanel(PluginProcessor& p, zlgui::UIState& base);
+
+        ~WavSettingPanel() override;
 
         int getIdealHeight() const;
 
         void resized() override;
 
+        void lookAndFeelChanged() override;
+
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         zlgui::attachment::ComponentUpdater updater_{};
 
         zlgui::combobox::CompactCombobox wav_max_db_box_;

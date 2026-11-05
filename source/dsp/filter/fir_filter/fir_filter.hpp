@@ -33,8 +33,7 @@ namespace zldsp::filter {
             }
             for (size_t i = 0; i < response_.size(); ++i) {
                 const auto magnitude = std::abs(response_[i]);
-                corrections_[i << 1] = static_cast<float>(magnitude);
-                corrections_[(i << 1) + 1] = static_cast<float>(magnitude);
+                corrections_[i] = static_cast<float>(magnitude);
             }
         }
 
@@ -43,23 +42,24 @@ namespace zldsp::filter {
         std::vector<size_t> &on_indices_;
 
         std::vector<std::complex<FloatType>> wis_, response_;
-        kfr::univector<float> corrections_{};
+        zldsp::vector::aligned_vector<float> corrections_{};
 
         void setOrder(const size_t num_channels, const size_t order) override {
             FIRBase<FloatType, DefaultFFTOrder>::setFFTOrder(num_channels, order);
 
             wis_.resize(FIRBase<FloatType, DefaultFFTOrder>::num_bins_);
             response_.resize(FIRBase<FloatType, DefaultFFTOrder>::num_bins_);
-            corrections_.resize(FIRBase<FloatType, DefaultFFTOrder>::num_bins_ << 1);
+            corrections_.resize(FIRBase<FloatType, DefaultFFTOrder>::num_bins_);
             FIRBase<FloatType, DefaultFFTOrder>::reset();
 
-            calculateWsForPrototype(wis_);
+            calculateWsForPrototype<FloatType>(wis_);
             update();
         }
 
         void processSpectrum() override {
-            zldsp::vector::multiply(FIRBase<FloatType, DefaultFFTOrder>::fft_data_.data(), corrections_.data(),
-                                    corrections_.size());
+            for (auto& plane : this->fft_data_) {
+                zldsp::vector::multiply(plane.data(), corrections_.data(), corrections_.size());
+            }
         }
     };
 }

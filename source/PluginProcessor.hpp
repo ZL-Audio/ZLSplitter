@@ -91,11 +91,8 @@ private:
     zlp::Controller<double> double_controller_;
     zlp::ControllerAttach<double> double_controller_attach_;
 
-    template <bool IsBypassed>
-    void processBlockInternal(juce::AudioBuffer<float>&);
-
-    template <bool IsBypassed>
-    void processBlockInternal(juce::AudioBuffer<double>&);
+    template <bool IsBypassed, typename FloatType>
+    void processBlockInternal(juce::AudioBuffer<FloatType>&);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)
 };

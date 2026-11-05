@@ -10,7 +10,7 @@
 #include "mag_background_panel.hpp"
 
 namespace zlpanel {
-    MagBackgroundPanel::MagBackgroundPanel(PluginProcessor& p, zlgui::UIBase& base) :
+    MagBackgroundPanel::MagBackgroundPanel(PluginProcessor& p, zlgui::UIState& base) :
         base_(base),
         min_db_ref_(*p.na_parameters_.getRawParameterValue(zlstate::PMagMinDB::kID)) {
         setInterceptsMouseClicks(false, false);
@@ -18,7 +18,7 @@ namespace zlpanel {
     }
 
     void MagBackgroundPanel::paint(juce::Graphics& g) {
-        g.fillAll(base_.getBackgroundColour());
+        g.fillAll(base_.gui.getBackgroundColour());
         drawDBs(g);
     }
 
@@ -33,7 +33,7 @@ namespace zlpanel {
     void MagBackgroundPanel::drawDBs(juce::Graphics& g) const {
         const auto bound = getLocalBounds().toFloat();
         // draw db grid
-        const auto thickness = base_.getFontSize() * 0.1f;
+        const auto thickness = base_.gui.getFontSize() * 0.1f;
         const auto unit_height = bound.getHeight() / 7.f;
         juce::RectangleList<float> rect_list;
         for (size_t i = 1; i < 7; ++i) {
@@ -43,22 +43,22 @@ namespace zlpanel {
         g.setColour(grid_colour_);
         g.fillRectList(rect_list);
         // draw right gradient
-        const auto shadow_rect = bound.withLeft(bound.getRight() - base_.getFontSize() * 2.f);
+        const auto shadow_rect = bound.withLeft(bound.getRight() - base_.gui.getFontSize() * 2.f);
         juce::ColourGradient gradient;
         gradient.point1 = juce::Point<float>(shadow_rect.getX(), shadow_rect.getY());
         gradient.point2 = juce::Point<float>(shadow_rect.getRight(), shadow_rect.getY());
         gradient.isRadial = false;
         gradient.clearColours();
-        gradient.addColour(0.0, base_.getBackgroundColour().withAlpha(0.f));
-        gradient.addColour(1.0, base_.getBackgroundColour().withAlpha(1.f));
+        gradient.addColour(0.0, base_.gui.getBackgroundColour().withAlpha(0.f));
+        gradient.addColour(1.0, base_.gui.getBackgroundColour().withAlpha(1.f));
         g.setGradientFill(gradient);
         g.fillRect(shadow_rect);
         // draw db values
-        g.setColour(base_.getTextColour().withAlpha(.5f));
-        g.setFont(base_.getFontSize() * 1.25f);
-        const auto label_x0 = bound.getRight() - base_.getFontSize() * 3.25f;
-        const auto label_height = base_.getFontSize() * 1.1f;
-        const auto label_width = base_.getFontSize() * 3.f;
+        g.setColour(base_.gui.getTextColour().withAlpha(.5f));
+        g.setFont(base_.gui.getFontSize() * 1.25f);
+        const auto label_x0 = bound.getRight() - base_.gui.getFontSize() * 3.25f;
+        const auto label_height = base_.gui.getFontSize() * 1.1f;
+        const auto label_width = base_.gui.getFontSize() * 3.f;
         const auto min_db_unit = zlstate::PMagMinDB::kDBs[static_cast<size_t>(c_min_db_)] / 6.f;
         for (size_t i = 1; i < 7; ++i) {
             const auto db = min_db_unit * static_cast<float>(i);
@@ -72,7 +72,7 @@ namespace zlpanel {
 
     void MagBackgroundPanel::lookAndFeelChanged() {
         const auto grid_colour = base_.getColourByIdx(zlgui::ColourIdx::kGridColour);
-        const auto background_colour = base_.getBackgroundColour();
+        const auto background_colour = base_.gui.getBackgroundColour();
         const auto alpha = grid_colour.getFloatAlpha();
         grid_colour_ = juce::Colour::fromFloatRGBA(
             grid_colour.getFloatRed() * alpha + background_colour.getFloatRed() * (1.f - alpha),

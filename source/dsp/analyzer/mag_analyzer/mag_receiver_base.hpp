@@ -9,7 +9,8 @@
 
 #pragma once
 
-#include "../../vector/kfr_import.hpp"
+#include <algorithm>
+#include "../../vector/vector.hpp"
 #include "../../container/fifo/fifo_base.hpp"
 
 namespace zldsp::analyzer {
@@ -27,8 +28,7 @@ namespace zldsp::analyzer {
             }
 
             auto sum_op = [&](const int start, const int size) {
-                return kfr::sumsqr(kfr::make_univector(
-                    fifo.data() + static_cast<size_t>(start), static_cast<size_t>(size)));
+                return vector::sum_sqr(fifo.data() + static_cast<size_t>(start), static_cast<size_t>(size));
             };
 
             double sum_sqr{0.};
@@ -52,8 +52,7 @@ namespace zldsp::analyzer {
         static float calculatePeak(const zldsp::container::FIFORange& range,
                                    const std::vector<float>& fifo) {
             auto max_op = [&](const int start, const int size) {
-                return kfr::absmaxof(kfr::make_univector(fifo.data() + static_cast<size_t>(start),
-                                                         static_cast<size_t>(size)));
+                return vector::max_abs_of(fifo.data() + static_cast<size_t>(start), static_cast<size_t>(size));
             };
 
             float peak{0.f};
@@ -76,8 +75,7 @@ namespace zldsp::analyzer {
         static float calculateMax(const zldsp::container::FIFORange& range,
                                    const std::vector<float>& fifo) {
             auto max_op = [&](const int start, const int size) {
-                return kfr::maxof(kfr::make_univector(fifo.data() + static_cast<size_t>(start),
-                                                         static_cast<size_t>(size)));
+                return vector::max_of(fifo.data() + static_cast<size_t>(start), static_cast<size_t>(size));
             };
 
             float peak{0.f};
@@ -100,8 +98,7 @@ namespace zldsp::analyzer {
         static float calculateMin(const zldsp::container::FIFORange& range,
                                    const std::vector<float>& fifo) {
             auto max_op = [&](const int start, const int size) {
-                return kfr::minof(kfr::make_univector(fifo.data() + static_cast<size_t>(start),
-                                                         static_cast<size_t>(size)));
+                return *std::min_element(fifo.data() + start, fifo.data() + start + size);
             };
 
             float peak{0.f};

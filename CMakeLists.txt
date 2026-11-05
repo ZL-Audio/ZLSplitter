@@ -1,15 +1,22 @@
 # 3.24.1 is bundled in Visual Studio 2022 v17.4
 # 3.24.1 is also bundled in CLion as of 2023
 cmake_minimum_required(VERSION 3.24.1)
-set (CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # This tells cmake we have goodies in the /cmake folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-includes")
 include(GitVersion)
 include(PamplejuceVersion)
 
-# Configures universal binaries and decides which version of macOS to support
-include(PamplejuceMacOS)
+# Keep local builds and CI on macOS 12 or newer, including reused build directories.
+if (CMAKE_HOST_APPLE)
+    if (NOT CMAKE_OSX_DEPLOYMENT_TARGET OR CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS "12.0")
+        set(CMAKE_OSX_DEPLOYMENT_TARGET "12.0" CACHE STRING "Minimum macOS version" FORCE)
+    endif ()
+    # XcodePrettify enables schemes only for the plugin targets.
+    set(CMAKE_XCODE_GENERATE_SCHEME OFF)
+endif ()
 
 # Change me!
 # This is the internal name of the project and the name of JUCE's shared code "target"
@@ -33,13 +40,13 @@ set(PLUGIN_MANUFACTURER_CODE "Zliu")
 # Change me! Used for the MacOS bundle identifier (and signing)
 set(BUNDLE_ID "com.zlaudio.plugins")
 
-set(LV2URI "https://github.com/ZL-Audio/${PROJECT_NAME}")
+set(LV2URI "https://github.com/ZL-Audio/ZLSplitter")
 
 # For simplicity, the name of the CMake project is also the name of the target
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
 if (NOT DEFINED ZL_JUCE_COPY_PLUGIN)
-    set (ZL_JUCE_COPY_PLUGIN TRUE)
+    set(ZL_JUCE_COPY_PLUGIN TRUE)
 endif ()
 
 if (DEFINED ZL_JUCE_FORMATS)
@@ -78,8 +85,15 @@ include(JUCEDefaults)
 # On Github Actions, this is done as a part of actions/checkout
 add_subdirectory(JUCE)
 
+# Add any other modules you want modules here, before the juce_add_plugin call
+# juce_add_module("${CMAKE_CURRENT_LIST_DIR}/modules/friz/Source/friz")
+
 # See `docs/CMake API.md` in the JUCE repo for all config options
 juce_add_plugin("${PROJECT_NAME}"
+        # Icons for the standalone app
+        # ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/packaging/icon.png"
+
+        # Change me!
         COMPANY_NAME "${COMPANY_NAME}"
         BUNDLE_ID "${BUNDLE_ID}"
 
@@ -97,16 +111,38 @@ juce_add_plugin("${PROJECT_NAME}"
         PLUGIN_CODE "${PLUGIN_CODE}"
         FORMATS "${FORMATS}"
         LV2URI "${LV2URI}"
+        LV2_PLUGIN_CLASS UtilityPlugin
+
+        IS_SYNTH FALSE
+        NEEDS_MIDI_INPUT FALSE
+        NEEDS_MIDI_OUTPUT FALSE
 
         AU_MAIN_TYPE kAudioUnitType_Effect
         VST3_CATEGORIES Fx
-        AAX_CATEGORY AAX_EPlugInCategory_Effect
+        AAX_CATEGORY AAX_ePlugInCategory_Effect
 
-        # The name of your final executable
-        # This is how it's listed in the DAW
-        # This can be different from PROJECT_NAME and can have spaces!
-        # You might want to use v${MAJOR_VERSION} here once you go to v2...
-        PRODUCT_NAME "${PRODUCT_NAME}")
+        MICROPHONE_PERMISSION_ENABLED TRUE
+        MICROPHONE_PERMISSION_TEXT "${PRODUCT_NAME} Standalone needs access to your audio interface"
+        HARDENED_RUNTIME_ENABLED TRUE
+        HARDENED_RUNTIME_OPTIONS com.apple.security.device.audio-input
+
+        PRODUCT_NAME "${PRODUCT_NAME}"
+)
+
+# On Linux, JUCE adds -Wl,--no-undefined by default.
+# This prevents shared libraries (like VST3) from having unresolved sanitizer symbols.
+# We must remove it if sanitizers are enabled, because the host provides the sanitizer runtime.
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND (WITH_ADDRESS_SANITIZER OR WITH_THREAD_SANITIZER))
+    foreach (target "${PROJECT_NAME}_VST3" "${PROJECT_NAME}_LV2" "${PROJECT_NAME}_Standalone" "${PROJECT_NAME}_SharedCode")
+        if (TARGET ${target})
+            get_target_property(CURRENT_OPTS ${target} LINK_OPTIONS)
+            if (CURRENT_OPTS)
+                list(REMOVE_ITEM CURRENT_OPTS "-Wl,--no-undefined")
+                set_target_properties(${target} PROPERTIES LINK_OPTIONS "${CURRENT_OPTS}")
+            endif ()
+        endif ()
+    endforeach ()
+endif ()
 
 # This lets us use our code in both the JUCE targets and our Test target
 # Without running into ODR violations
@@ -138,6 +174,13 @@ target_compile_definitions(SharedCode
         JUCE_WEB_BROWSER=0  # If you set this to 1, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
         JUCE_USE_CURL=0     # If you set this to 1, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
         JUCE_VST3_CAN_REPLACE_VST2=0
+        JUCE_USE_FLAC=0
+        JUCE_USE_OGGVORBIS=0
+        JUCE_USE_OPUS=0
+        JUCE_USE_WEBP=0
+        JUCE_USE_MP3AUDIOFORMAT=0
+        JUCE_USE_LAME_AUDIO_FORMAT=0
+        JUCE_USE_WINDOWS_MEDIA_FORMAT=0
 
         # lets the app known if we're Debug or Release
         CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
@@ -146,7 +189,7 @@ target_compile_definitions(SharedCode
         # JucePlugin_Name is for some reason doesn't use the nicer PRODUCT_NAME
         PRODUCT_NAME_WITHOUT_VERSION="${PRODUCT_NAME}"
         #        JUCE_COREGRAPHICS_RENDER_WITH_MULTIPLE_PAINT_CALLS=1
-        JUCE_SILENCE_XCODE_15_LINKER_WARNING=1}
+        JUCE_SILENCE_XCODE_15_LINKER_WARNING=1
 )
 
 # Link to any other modules you added (with juce_add_module) here!
@@ -159,7 +202,6 @@ target_link_libraries(SharedCode
         Assets
         juce_audio_utils
         juce_audio_processors
-        juce_dsp
         juce_gui_basics
         juce_gui_extra
         juce::juce_recommended_config_flags
@@ -167,19 +209,43 @@ target_link_libraries(SharedCode
         juce::juce_recommended_warning_flags
 )
 
-# add kfr
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-add_subdirectory(kfr)
-target_link_libraries(SharedCode INTERFACE kfr kfr_dsp kfr_dft)
+# add highway
+set(ZL_HWY_STATIC_TARGET "NONE" CACHE STRING "Target architecture for static dispatch")
+if (ZL_HWY_STATIC_TARGET STREQUAL "NONE")
+    message(FATAL_ERROR "ZL_HWY_STATIC_TARGET must be set: SSE2/SSE4/AVX2/NEON/LSX/LASX.")
+endif ()
+# Plugin bundles must not depend on a separately installed Highway library.
+set(HWY_FORCE_STATIC_LIBS ON CACHE BOOL "Link Highway statically" FORCE)
+set(HWY_ENABLE_CONTRIB OFF CACHE BOOL "Disable highway contrib library" FORCE)
+set(HWY_ENABLE_EXAMPLES OFF CACHE BOOL "Disable highway examples" FORCE)
+set(HWY_ENABLE_TESTS OFF CACHE BOOL "Disable highway tests" FORCE)
+set(HWY_COMPILE_ONLY_STATIC ON CACHE BOOL "Force highway static dispatch" FORCE)
+if (ZL_HWY_STATIC_TARGET STREQUAL "NEON")
+    set(ZL_HWY_ARCH_FLAGS "-march=armv8-a+simd")
+elseif (ZL_HWY_STATIC_TARGET STREQUAL "SSE2")
+    set(ZL_HWY_ARCH_FLAGS "-march=x86-64")
+elseif (ZL_HWY_STATIC_TARGET STREQUAL "SSE4")
+    set(ZL_HWY_ARCH_FLAGS "-march=x86-64-v2" "-maes" "-mpclmul")
+elseif (ZL_HWY_STATIC_TARGET STREQUAL "AVX2")
+    set(ZL_HWY_ARCH_FLAGS "-march=x86-64-v3" "-maes" "-mpclmul")
+elseif (ZL_HWY_STATIC_TARGET STREQUAL "LSX")
+    set(ZL_HWY_ARCH_FLAGS "-mlsx")
+elseif (ZL_HWY_STATIC_TARGET STREQUAL "LASX")
+    set(ZL_HWY_ARCH_FLAGS "-mlasx")
+else ()
+    message(FATAL_ERROR "Unsupported ZL_HWY_STATIC_TARGET chosen: ${ZL_HWY_STATIC_TARGET}")
+endif ()
+message(STATUS "SIMD target is ${ZL_HWY_STATIC_TARGET}")
+target_compile_definitions(SharedCode INTERFACE HWY_COMPILE_ONLY_STATIC)
+target_compile_options(SharedCode INTERFACE ${ZL_HWY_ARCH_FLAGS})
+add_compile_definitions(HWY_COMPILE_ONLY_STATIC)
+add_compile_options(${ZL_HWY_ARCH_FLAGS})
+add_subdirectory(highway)
+target_link_libraries(SharedCode INTERFACE hwy)
+target_link_options(SharedCode INTERFACE ${ZL_HWY_ARCH_FLAGS})
 
-# Link the nlopt targets our SharedCode target
+# Link our SharedCode target
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
-
-# IPP support, comment out to disable
-# include(PamplejuceIPP)
-
-# A separate target keeps the Tests target fast!
-# include(Benchmarks)
 
 # Pass some config to GA (like our PRODUCT_NAME)
 include(GitHubENV)

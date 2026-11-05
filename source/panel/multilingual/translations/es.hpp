@@ -37,6 +37,11 @@ namespace zlpanel::multilingual::es {
         "Pulsar: activar el analizador de magnitud.",
         "Pulsar: intercambiar Output 1 y Output 2.",
         "Soltar: anular el plugin.",
-        "Doble clic: abrir la configuración de la interfaz de usuario."
+        "Doble clic: abrir la configuración de la interfaz de usuario.",
+        "Elimina el grupo de preajustes seleccionado.",
+        "Elimina el preajuste seleccionado.",
+        "Cierra el explorador de preajustes.",
+        "Abre la carpeta de preajustes en el administrador de archivos del sistema.",
+        "Muestra/oculta el explorador de preajustes.",
     };
 }

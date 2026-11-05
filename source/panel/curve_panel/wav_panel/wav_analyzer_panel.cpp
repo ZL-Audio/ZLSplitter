@@ -8,9 +8,10 @@
 // You should have received a copy of the GNU Affero General Public License along with ZLSplitter. If not, see <https://www.gnu.org/licenses/>.
 
 #include "wav_analyzer_panel.hpp"
+#include "../../helper/history_timing.hpp"
 
 namespace zlpanel {
-    WavAnalyzerPanel::WavAnalyzerPanel(PluginProcessor& p, zlgui::UIBase& base) :
+    WavAnalyzerPanel::WavAnalyzerPanel(PluginProcessor& p, zlgui::UIState& base) :
         p_ref_(p), base_(base),
         split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
         swap_ref_(*p.parameters_.getRawParameterValue(zlp::PSwap::kID)),
@@ -33,7 +34,7 @@ namespace zlpanel {
         }
         if (static_cast<zlp::PSplitType::SplitType>(
             std::round(split_type_ref_.load(std::memory_order_relaxed))) == zlp::PSplitType::kNone) {
-            g.setColour(base_.getTextColour());
+            g.setColour(base_.gui.getTextColour());
             g.fillPath(path1_);
         } else {
             const auto swap = swap_ref_.load(std::memory_order::relaxed) > .5f;
@@ -54,28 +55,37 @@ namespace zlpanel {
     }
 
     void WavAnalyzerPanel::run(const double next_time_stamp) {
+        if (!isValidHistoryTimeStamp(next_time_stamp)) { return; }
         const auto bound = atomic_bound_.load();
+        if (bound.isEmpty()) { return; }
         constexpr auto stereo_type = zldsp::analyzer::StereoType::kStereo;
         const auto time_length_idx = analyzer_time_length_ref_.load(std::memory_order::relaxed);
 
         {
             auto& sender{p_ref_.getController().getAnalyzerSender()};
-            std::lock_guard lock{sender.getLock()};
+            const std::unique_lock lock{sender.getLock(), std::try_to_lock};
+            if (!lock.owns_lock()) { return; }
             const auto sample_rate = sender.getSampleRate();
             const auto max_num_samples = sender.getMaxNumSamples();
-            if (std::abs(sample_rate_ - sample_rate) > 0.1 ||
+            if (!std::isfinite(sample_rate) || sample_rate <= 0.0) { return; }
+            if (generation_ != sender.getGeneration() || std::abs(sample_rate_ - sample_rate) > 0.1 ||
                 max_num_samples_ != max_num_samples ||
                 std::abs(time_length_idx_ - time_length_idx) > 0.1) {
+                generation_ = sender.getGeneration();
                 sample_rate_ = sample_rate;
                 max_num_samples_ = max_num_samples;
                 time_length_idx_ = time_length_idx;
                 const auto time_idx = static_cast<size_t>(std::round(time_length_idx_));
-                num_points_per_second_ = kNumPointsPerSecond[time_idx];
-                num_samples_per_point_ = static_cast<int>(sample_rate_) / num_points_per_second_;
                 time_length_ = zlstate::PMagTimeLength::kLength[time_idx];
+                const auto rounded_sample_rate = static_cast<int>(std::round(sample_rate_));
+                num_points_per_second_ = chooseHistoryPointsPerSecond(
+                    rounded_sample_rate, kNumPointsPerSecond[time_idx], static_cast<int>(time_length_));
+                num_samples_per_point_ = std::max(1, rounded_sample_rate / num_points_per_second_);
                 is_first_point_ = true;
+                num_missing_points_ = 0;
+                too_much_samples_ = 0;
                 num_points_ = static_cast<size_t>(num_points_per_second_) * static_cast<size_t>(time_length_);
-                second_per_point_ = static_cast<double>(time_length_) / static_cast<double>(num_points_);
+                second_per_point_ = static_cast<double>(num_samples_per_point_) / sample_rate_;
 
                 xs_.resize(num_points_ + 2);
                 for (auto& y : {&min1s_, &max1s_, &min2s_, &max2s_}) {
@@ -83,12 +93,33 @@ namespace zlpanel {
                 }
             }
 
+            const auto max_db = zlstate::PWavMaxDB::getMaxDBFromIndex(
+                analyzer_max_db_ref_.load(std::memory_order::relaxed));
+            const auto next_scale = bound.getHeight() * .5f / zldsp::chore::decibelsToGain(max_db);
+            const auto next_bias = bound.getHeight() * .5f;
+            if (!is_first_point_ && y_scale_ != 0.f &&
+                (std::abs(next_scale - y_scale_) > 1e-6f || std::abs(next_bias - y_bias_) > 1e-6f)) {
+                const auto ratio = next_scale / y_scale_;
+                const auto bias = std::fma(-y_bias_, ratio, next_bias);
+                for (auto* values : {&min1s_, &max1s_, &min2s_, &max2s_}) {
+                    zldsp::vector::fma(values->data(), ratio, bias, values->size());
+                }
+            }
+            y_scale_ = next_scale;
+            y_bias_ = next_bias;
             auto& fifo{sender.getAbstractFIFO()};
+            const auto advance = getHistoryAdvance(next_time_stamp, start_time_, second_per_point_, num_points_);
+            if (!is_first_point_ && advance.needs_reset) {
+                is_first_point_ = true;
+                num_missing_points_ = 0;
+                too_much_samples_ = 0;
+                const auto pending = fifo.getNumReady();
+                (void)fifo.prepareToRead(pending);
+                fifo.finishRead(pending);
+            }
             if (!is_first_point_) {
                 // update ys
-                auto current_time = start_time_;
-                const auto target_time = next_time_stamp - second_per_point_;
-                while (current_time < target_time) {
+                for (size_t point = 0; point < advance.num_points; ++point) {
                     // if not enough samples
                     if (fifo.getNumReady() >= num_samples_per_point_) {
                         const auto range = fifo.prepareToRead(num_samples_per_point_);
@@ -110,12 +141,9 @@ namespace zlpanel {
                         }
                     }
                     {
-                        const auto max_db = zlstate::PWavMaxDB::getMaxDBFromIndex(
-                            analyzer_max_db_ref_.load(std::memory_order::relaxed));
-                        const auto max_gain = zldsp::chore::decibelsToGain(max_db);
                         const auto too_many_missing = num_missing_points_ >= kPausedThreshold;
-                        const auto scale = bound.getHeight() * 0.5f / max_gain;
-                        const auto bias = bound.getHeight() * 0.5f;
+                        const auto scale = y_scale_;
+                        const auto bias = y_bias_;
                         std::ranges::rotate(min1s_, min1s_.begin() + 1);
                         min1s_.back() = too_many_missing ? bias : minmax1_[0] * scale + bias;
                         std::ranges::rotate(max1s_, max1s_.begin() + 1);
@@ -125,9 +153,8 @@ namespace zlpanel {
                         std::ranges::rotate(max2s_, max2s_.begin() + 1);
                         max2s_.back() = too_many_missing ? bias : minmax2_[1] * scale + bias;
                     }
-                    current_time += second_per_point_;
                 }
-                start_time_ = current_time;
+                start_time_ = advance.time_stamp;
                 // if too much samples
                 const auto num_ready = fifo.getNumReady();
                 const auto threshold = 2 * std::max(static_cast<int>(max_num_samples_), num_samples_per_point_);
@@ -150,6 +177,12 @@ namespace zlpanel {
                     }
                 }
             }
+        }
+        if (is_first_point_) {
+            std::lock_guard lock{mutex_};
+            path1_.clear();
+            path2_.clear();
+            return;
         }
         // update xs
         if (!is_first_point_) {

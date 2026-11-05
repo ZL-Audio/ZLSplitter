@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../../state/ui_state.hpp"
+
 #include "../../../PluginProcessor.hpp"
 #include "../../../gui/gui.hpp"
 #include "../../../state/state.hpp"
@@ -17,14 +19,14 @@
 namespace zlpanel {
     class MagBackgroundPanel final : public juce::Component {
     public:
-        explicit MagBackgroundPanel(PluginProcessor& p, zlgui::UIBase& base);
+        explicit MagBackgroundPanel(PluginProcessor& p, zlgui::UIState& base);
 
         void paint(juce::Graphics& g) override;
 
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         std::atomic<float>& min_db_ref_;
 
         int c_min_db_{0};

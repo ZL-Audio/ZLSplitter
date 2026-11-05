@@ -9,6 +9,8 @@
 
 #include "compact_combobox.hpp"
 
+#include <utility>
+
 namespace zlgui::combobox {
     CompactCombobox::CompactCombobox(const juce::StringArray& choices,
                                      UIBase& base, const juce::String& tooltip_text,
@@ -26,7 +28,7 @@ namespace zlgui::combobox {
                 item.tooltipText = item_labels[static_cast<size_t>(i)];
                 item.isEnabled = true;
                 item.isTicked = false;
-                menu->addItem(item);
+                menu->addItem(std::move(item));
             }
         }
 
@@ -43,7 +45,7 @@ namespace zlgui::combobox {
         }
     }
 
-    CompactCombobox::CompactCombobox(const std::vector<std::unique_ptr<juce::Drawable>>& icons,
+    CompactCombobox::CompactCombobox(std::vector<std::unique_ptr<juce::Drawable>> icons,
                                      UIBase& base,
                                      const juce::String& tooltip_text,
                                      const std::vector<juce::String>& item_labels) :
@@ -59,11 +61,9 @@ namespace zlgui::combobox {
             }
             item.isEnabled = true;
             item.isTicked = false;
-            item.image = icons[i]->createCopy();
-            menu->addItem(item);
+            item.image = std::move(icons[i]);
+            menu->addItem(std::move(item));
         }
-
-        box_laf_.setIcons(icons);
 
         combo_box_.setScrollWheelEnabled(false);
         combo_box_.setInterceptsMouseClicks(false, false);
@@ -82,21 +82,10 @@ namespace zlgui::combobox {
         combo_box_.setLookAndFeel(nullptr);
     }
 
-    void CompactCombobox::paint(juce::Graphics& g) {
-        g.setFont(box_laf_.getFontScale() * base_.getFontSize());
-        float max_text_width = 0.f;
-        for (int i = 0; i < combo_box_.getNumItems(); ++i) {
-            const auto text = combo_box_.getItemText(i);
-            const auto text_width = juce::GlyphArrangement::getStringWidth(g.getCurrentFont(), text);
-            max_text_width = std::max(max_text_width, text_width);
-        }
-        const auto padding = (static_cast<float>(getLocalBounds().getWidth()) - max_text_width) * .5f;
-        box_laf_.setPadding(padding * .975f);
-    }
-
     void CompactCombobox::resized() {
         auto bound = getLocalBounds();
         box_laf_.setItemSize(bound.getWidth(), bound.getHeight());
+        box_laf_.updateTextWidth(combo_box_);
         combo_box_.setBounds(getLocalBounds());
     }
 
@@ -126,5 +115,36 @@ namespace zlgui::combobox {
 
     void CompactCombobox::mouseMove(const juce::MouseEvent& event) {
         combo_box_.mouseMove(event);
+    }
+
+    void CompactCombobox::mouseWheelMove(const juce::MouseEvent&, const juce::MouseWheelDetails& wheel) {
+        if (!is_scroll_enabled_) {
+            return;
+        }
+        if (wheel.deltaY * cumulative_y_ < 0.f) {
+            cumulative_y_ = 0.f;
+        }
+        cumulative_y_ += wheel.deltaY * base_.getSensitivity(kMouseWheelCombobox) * 4.f;
+        while (std::abs(cumulative_y_) > 1.f) {
+            const auto selected_index = combo_box_.getSelectedItemIndex();
+            const auto num_items = combo_box_.getNumItems();
+            if (cumulative_y_ > 0) {
+                for (int next_index = selected_index + 1; next_index < num_items; next_index++) {
+                    if (combo_box_.isItemEnabled(combo_box_.getItemId(next_index))) {
+                        combo_box_.setSelectedItemIndex(next_index, juce::sendNotificationSync);
+                        break;
+                    }
+                }
+                cumulative_y_ -= 1.f;
+            } else {
+                for (int next_index = selected_index - 1; next_index >= 0; next_index--) {
+                    if (combo_box_.isItemEnabled(combo_box_.getItemId(next_index))) {
+                        combo_box_.setSelectedItemIndex(next_index, juce::sendNotificationSync);
+                        break;
+                    }
+                }
+                cumulative_y_ += 1.f;
+            }
+        }
     }
 }

@@ -10,7 +10,7 @@
 #include "fft_panel.hpp"
 
 namespace zlpanel {
-    FFTPanel::FFTPanel(PluginProcessor& p, zlgui::UIBase& base) :
+    FFTPanel::FFTPanel(PluginProcessor& p, zlgui::UIState& base) :
         p_ref_(p),
         fft_background_panel_(p, base),
         fft_analyzer_panel_(p, base) {

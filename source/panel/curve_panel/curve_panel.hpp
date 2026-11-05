@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
 #include "../multilingual/tooltip_helper.hpp"
@@ -21,7 +23,7 @@ namespace zlpanel {
     class CurvePanel final : public juce::Component,
                              private juce::Thread {
     public:
-        explicit CurvePanel(PluginProcessor &p, zlgui::UIBase &base,
+        explicit CurvePanel(PluginProcessor &p, zlgui::UIState &base,
                             multilingual::TooltipHelper &tooltip_helper);
 
         ~CurvePanel() override;
@@ -42,10 +44,11 @@ namespace zlpanel {
 
     private:
         PluginProcessor &p_ref_;
-        zlgui::UIBase &base_;
+        zlgui::UIState &base_;
         std::atomic<float> &split_type_ref_;
         std::atomic<float> &analyzer_show_ref_;
         std::atomic<double> next_time_stamp_{0.};
+        int analyzer_type_{-1};
 
         FFTPanel fft_panel_;
         MagPanel mag_panel_;

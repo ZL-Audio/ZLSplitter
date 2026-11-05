@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../control_panel/control_background.hpp"
 #include "fft_setting_panel.hpp"
 #include "mag_setting_panel.hpp"
@@ -17,7 +19,7 @@
 namespace zlpanel {
     class AnalyzerSettingPopPanel final : public juce::Component {
     public:
-        explicit AnalyzerSettingPopPanel(PluginProcessor& p, zlgui::UIBase& base);
+        explicit AnalyzerSettingPopPanel(PluginProcessor& p, zlgui::UIState& base);
 
         int getIdealHeight() const;
 
@@ -28,7 +30,7 @@ namespace zlpanel {
         void setAnalyzerType(size_t idx);
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         size_t analyzer_type_{0};
 
         ControlBackground background_;

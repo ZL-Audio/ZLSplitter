@@ -34,6 +34,11 @@ namespace zlpanel::multilingual {
         kSwap,
         kBypass,
         kLogo,
+        kPresetGroupDelete,
+        kPresetDelete,
+        kPresetClose,
+        kPresetFolder,
+        kPresetBrowser,
         kLabelNum
     };
 }

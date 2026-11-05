@@ -47,17 +47,10 @@ namespace zldsp::splitter {
             } else {
                 const auto mix = mix_.getCurrent();
                 const auto c_mix = static_cast<FloatType>(1.0) - mix;
-                auto in_l_v = kfr::make_univector(in_l, num_samples);
-                auto in_r_v = kfr::make_univector(in_r, num_samples);
-                auto left_l_v = kfr::make_univector(left_l, num_samples);
-                auto left_r_v = kfr::make_univector(left_r, num_samples);
-                auto right_l_v = kfr::make_univector(right_l, num_samples);
-                auto right_r_v = kfr::make_univector(right_r, num_samples);
-
-                right_l_v = in_l_v * mix;
-                right_r_v = in_r_v * c_mix;
-                left_l_v = in_l_v - right_l_v;
-                left_r_v = in_r_v - right_r_v;
+                zldsp::vector::multiply(right_l, in_l, mix, num_samples);
+                zldsp::vector::multiply(right_r, in_r, c_mix, num_samples);
+                zldsp::vector::sub(left_l, in_l, right_l, num_samples);
+                zldsp::vector::sub(left_r, in_r, right_r, num_samples);
             }
         }
 

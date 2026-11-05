@@ -9,9 +9,18 @@
 
 #pragma once
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wall"
-#pragma clang diagnostic ignored "-Weverything"
-#include <kfr/kfr.h>
-#include <kfr/dsp.hpp>
-#pragma clang diagnostic pop
+#include "../../gui/interface_definitions.hpp"
+
+#include <juce_gui_basics/juce_gui_basics.h>
+
+namespace zlpanel {
+    class RoundedTextEditor final : public juce::TextEditor {
+    public:
+        explicit RoundedTextEditor(zlgui::UIBase& base);
+
+        void lookAndFeelChanged() override;
+
+    private:
+        zlgui::UIBase& base_;
+    };
+}

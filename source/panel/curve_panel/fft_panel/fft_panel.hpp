@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../../state/ui_state.hpp"
+
 #include "fft_analyzer_panel.hpp"
 #include "fft_background_panel.hpp"
 
@@ -18,11 +20,13 @@ namespace zlpanel {
     public:
         static constexpr int kHoverDurationMS = 2000;
 
-        explicit FFTPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit FFTPanel(PluginProcessor &p, zlgui::UIState &base);
 
         ~FFTPanel() override;
 
         void run();
+
+        void reset() { fft_analyzer_panel_.reset(); }
 
         void resized() override;
 

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../state/ui_state.hpp"
+
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "../PluginProcessor.hpp"
@@ -21,13 +23,13 @@
 #include "top_panel/top_panel.hpp"
 #include "analyzer_setting_panel/analyzer_setting_panel.hpp"
 #include "ui_setting_panel/ui_setting_panel.hpp"
+#include "preset_browser/preset_browser.hpp"
 
 namespace zlpanel {
     class MainPanel final : public juce::Component,
-                            private juce::ValueTree::Listener,
-                            private juce::Timer {
+                            private juce::ValueTree::Listener {
     public:
-        explicit MainPanel(PluginProcessor& p, zlgui::UIBase& base, multilingual::TooltipLanguage language);
+        explicit MainPanel(PluginProcessor& p, zlgui::UIState& base, multilingual::TooltipLanguage language);
 
         ~MainPanel() override;
 
@@ -36,7 +38,7 @@ namespace zlpanel {
         void repaintCallBack(double time_stamp);
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         multilingual::TooltipHelper tooltip_helper_;
 
         CurvePanel curve_panel_;
@@ -44,6 +46,7 @@ namespace zlpanel {
         TopPanel top_panel_;
         AnalyzerSettingPanel analyzer_setting_panel_;
         UISettingPanel ui_setting_panel_;
+        PresetBrowser preset_browser_;
 
         zlgui::tooltip::TooltipLookAndFeel tooltip_laf_;
         zlgui::tooltip::TooltipWindow tooltip_window_;
@@ -54,6 +57,5 @@ namespace zlpanel {
 
         void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier& property) override;
 
-        void timerCallback() override;
     };
 }

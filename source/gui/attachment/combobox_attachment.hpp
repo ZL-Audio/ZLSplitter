@@ -17,31 +17,15 @@ namespace zlgui::attachment {
                                      private juce::AudioProcessorValueTreeState::Listener,
                                      private juce::ComboBox::Listener {
     public:
-        /**
-         *
-         * @param box
-         * @param apvts
-         * @param parameter_ID
-         * @param updater
-         * @param forward_map map a parameter int to a box item index
-         * @param backward_map map a box item index to a parameter int
-         * @param notification_type
-         */
         ComboBoxAttachment(juce::ComboBox& box,
                            juce::AudioProcessorValueTreeState& apvts,
                            const juce::String& parameter_ID,
                            ComponentUpdater& updater,
-                           const std::vector<int> forward_map = {},
-                           const std::vector<int> backward_map = {},
                            const juce::NotificationType notification_type =
-                               juce::NotificationType::sendNotificationSync) :
-            box_(box), notification_type_(notification_type),
-            apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
-            updater_ref_(updater), forward_map_(forward_map), backward_map_(backward_map) {
-            jassert(forward_map.size() == backward_map.size());
-            if (!forward_map_.empty()) {
-                jassert(forward_map_.size() == box.getNumItems());
-            }
+                               juce::NotificationType::sendNotificationSync)
+            : box_(box), notification_type_(notification_type),
+              apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
+              updater_ref_(updater) {
             // add combobox listener
             box_.addListener(this);
             // add parameter listener
@@ -67,16 +51,13 @@ namespace zlgui::attachment {
         }
 
         void updateComponent() override {
-            auto para_index = atomic_index_.load(std::memory_order::relaxed);
-            auto box_index = box_.getSelectedItemIndex();
-            if (!backward_map_.empty() && box_index >= 0) {
-                box_index = backward_map_[static_cast<size_t>(box_index)];
+            if (!checkUpdate()) {
+                return;
             }
-            if (para_index != box_index) {
-                if (!forward_map_.empty()) {
-                    para_index = forward_map_[static_cast<size_t>(para_index)];
-                }
-                box_.setSelectedItemIndex(para_index, notification_type_);
+            const auto current_index = atomic_index_.load(std::memory_order::relaxed);
+            if (current_index != box_.getSelectedItemIndex()) {
+                const auto parameter_update = beginParameterUpdate();
+                box_.setSelectedItemIndex(current_index, notification_type_);
             }
         }
 
@@ -87,22 +68,23 @@ namespace zlgui::attachment {
         juce::RangedAudioParameter& parameter_ref_;
         ComponentUpdater& updater_ref_;
         std::atomic<int> atomic_index_{0};
-        std::vector<int> forward_map_{};
-        std::vector<int> backward_map_{};
 
         void parameterChanged(const juce::String&, const float new_value) override {
             atomic_index_.store(static_cast<int>(new_value), std::memory_order::relaxed);
-            updater_ref_.getFlag().store(true, std::memory_order::release);
+            signalUpdate(updater_ref_.getFlag());
         }
 
         void comboBoxChanged(juce::ComboBox*) override {
-            parameter_ref_.beginChangeGesture();
-            auto box_index = box_.getSelectedItemIndex();
-            if (!backward_map_.empty() && box_index >= 0) {
-                box_index = backward_map_[static_cast<size_t>(box_index)];
+            if (isUpdatingFromParameter()) {
+                return;
             }
-            parameter_ref_.setValueNotifyingHost(
-                parameter_ref_.convertTo0to1(static_cast<float>(box_index)));
+            const auto normalized_value = parameter_ref_.convertTo0to1(
+                static_cast<float>(box_.getSelectedItemIndex()));
+            if (std::abs(normalized_value - parameter_ref_.getValue()) <= 1e-6f) {
+                return;
+            }
+            parameter_ref_.beginChangeGesture();
+            parameter_ref_.setValueNotifyingHost(normalized_value);
             parameter_ref_.endChangeGesture();
         }
     };

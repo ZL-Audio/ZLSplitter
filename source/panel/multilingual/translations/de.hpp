@@ -37,6 +37,11 @@ namespace zlpanel::multilingual::de {
         "Drücken: Amplitudenanalysator einschalten.",
         "Drücken: tausche Output 1 und Output 2.",
         "Loslassen: Plugin umgehen.",
-        "Doppelklick: Öffnet die Benutzeroberflächen-Einstellungen."
+        "Doppelklick: Öffnet die Benutzeroberflächen-Einstellungen.",
+        "Löscht die ausgewählte Preset-Gruppe.",
+        "Löscht das ausgewählte Preset.",
+        "Schließt den Preset-Browser.",
+        "Öffnet den Preset-Ordner im Dateimanager des Systems.",
+        "Blendet den Preset-Browser ein/aus.",
     };
 }

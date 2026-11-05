@@ -12,6 +12,10 @@
 #include <vector>
 #include <array>
 #include <span>
+#include <algorithm>
+#include <cmath>
+#include <mutex>
+#include <cstdint>
 
 #include "../../container/fifo/abstract_fifo.hpp"
 #include "../../lock/spin_lock.hpp"
@@ -32,15 +36,15 @@ namespace zldsp::analyzer {
                      const size_t max_num_samples,
                      const std::array<size_t, kNum> num_channels,
                      const double fifo_size_second) {
-            lock_.lock();
+            const std::lock_guard guard(lock_);
             sample_rate_ = sample_rate;
             max_num_samples_ = max_num_samples;
             num_channels_ = num_channels;
 
             setFIFOSize(std::max(max_num_samples,
-                                 static_cast<size_t>(std::round(sample_rate * fifo_size_second))),
+                                 static_cast<size_t>(std::ceil(sample_rate * fifo_size_second))) + 1,
                         num_channels);
-            lock_.unlock();
+            ++generation_;
         }
 
         /**
@@ -51,7 +55,7 @@ namespace zldsp::analyzer {
         void process(std::array<std::span<FloatType*>, kNum> buffers, const size_t num_samples) {
             // calculate free space
             const int free_space = std::min(static_cast<int>(num_samples), abstract_fifo_.getNumFree());
-            if (free_space == 0) { return; }
+            if (free_space <= 0) { return; }
             // push samples
             const auto range = abstract_fifo_.prepareToWrite(free_space);
             for (size_t i = 0; i < kNum; ++i) {
@@ -103,12 +107,18 @@ namespace zldsp::analyzer {
             return max_num_samples_;
         }
 
+        /** Read under getLock(), together with the sample rate and FIFO state. */
+        [[nodiscard]] uint64_t getGeneration() const {
+            return generation_;
+        }
+
     protected:
         zldsp::lock::SpinLock lock_;
 
-        double sample_rate_{48000};
-        std::array<size_t, kNum> num_channels_;
-        size_t max_num_samples_{1};
+        double sample_rate_{0};
+        std::array<size_t, kNum> num_channels_{};
+        size_t max_num_samples_{0};
+        uint64_t generation_{0};
 
         std::array<std::vector<std::vector<float>>, kNum> sample_fifos_;
         zldsp::container::AbstractFIFO abstract_fifo_{0};

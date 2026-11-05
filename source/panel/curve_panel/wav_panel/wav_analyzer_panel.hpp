@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../../state/ui_state.hpp"
+
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "../../../PluginProcessor.hpp"
@@ -21,13 +23,15 @@
 namespace zlpanel {
     class WavAnalyzerPanel final : public juce::Component {
     public:
-        explicit WavAnalyzerPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit WavAnalyzerPanel(PluginProcessor &p, zlgui::UIState &base);
 
         ~WavAnalyzerPanel() override;
 
         void paint(juce::Graphics &g) override;
 
         void run(double next_time_stamp);
+
+        void reset() { sample_rate_ = 0.0; }
 
         void resized() override;
 
@@ -36,21 +40,23 @@ namespace zlpanel {
         static constexpr int kPausedThreshold = 6;
         static constexpr int kTooMuchResetThreshold = 64;
         PluginProcessor &p_ref_;
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
 
         std::atomic<float> &split_type_ref_, &swap_ref_;
         std::atomic<float>& analyzer_max_db_ref_;
         std::atomic<float>& analyzer_time_length_ref_;
 
         AtomicBound<float> atomic_bound_;
+        uint64_t generation_{};
 
         std::array<float, 2> minmax1_{0.f, 0.f}, minmax2_{0.f, 0.f};
-        kfr::univector<float> xs_{}, min1s_{}, max1s_{}, min2s_{}, max2s_{};
+        zldsp::vector::aligned_vector<float> xs_{}, min1s_{}, max1s_{}, min2s_{}, max2s_{};
         juce::Path path1_, path2_;
         juce::Path next_path1_, next_path2_;
         zldsp::lock::SpinLock mutex_;
 
         double start_time_{0.0};
+        float y_scale_{0.f}, y_bias_{0.f};
 
         bool is_first_point_{true};
         int too_much_samples_{0};

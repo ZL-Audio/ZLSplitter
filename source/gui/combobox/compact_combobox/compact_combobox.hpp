@@ -19,13 +19,11 @@ namespace zlgui::combobox {
                         const juce::String& tooltip_text = "",
                         const std::vector<juce::String>& item_labels = {});
 
-        CompactCombobox(const std::vector<std::unique_ptr<juce::Drawable>>& icons, UIBase& base,
+        CompactCombobox(std::vector<std::unique_ptr<juce::Drawable>> icons, UIBase& base,
                         const juce::String& tooltip_text = "",
                         const std::vector<juce::String>& item_labels = {});
 
         ~CompactCombobox() override;
-
-        void paint(juce::Graphics& g) override;
 
         void resized() override;
 
@@ -41,18 +39,35 @@ namespace zlgui::combobox {
 
         void mouseMove(const juce::MouseEvent& event) override;
 
+        void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override;
+
         inline void setEditable(const bool x) {
             setAlpha(x ? 1.f : .25f);
             setInterceptsMouseClicks(x, false);
         }
 
-        inline juce::ComboBox& getBox() { return combo_box_; }
+        inline juce::ComboBox& getBox() {
+            return combo_box_;
+        }
 
-        inline CompactComboboxLookAndFeel& getLAF() { return box_laf_; }
+        inline CompactComboboxLookAndFeel& getLAF() {
+            return box_laf_;
+        }
+
+        [[nodiscard]] float getMaxTextWidth() const noexcept {
+            return box_laf_.getMaxTextWidth();
+        }
+
+        void setScrollEnabled(const bool is_scroll_enabled) {
+            is_scroll_enabled_ = is_scroll_enabled;
+        }
 
     private:
         zlgui::UIBase& base_;
         CompactComboboxLookAndFeel box_laf_;
         juce::ComboBox combo_box_;
+
+        bool is_scroll_enabled_{false};
+        float cumulative_y_{0.f};
     };
 }

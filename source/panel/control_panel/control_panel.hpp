@@ -9,12 +9,14 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "control_pop_panel.hpp"
 
 namespace zlpanel {
     class ControlPanel final : public juce::Component {
     public:
-        explicit ControlPanel(PluginProcessor& p, zlgui::UIBase& base,
+        explicit ControlPanel(PluginProcessor& p, zlgui::UIState& base,
                               multilingual::TooltipHelper& tooltip_helper);
 
         int getIdealWidth() const;
@@ -24,7 +26,7 @@ namespace zlpanel {
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         std::atomic<float>& split_type_idx_;
         zlp::PSplitType::SplitType split_type_{zlp::PSplitType::SplitType::kNone};
 

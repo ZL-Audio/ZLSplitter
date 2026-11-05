@@ -10,7 +10,7 @@
 #include "control_panel.hpp"
 
 namespace zlpanel {
-    ControlPanel::ControlPanel(PluginProcessor& p, zlgui::UIBase& base, multilingual::TooltipHelper& tooltip_helper) :
+    ControlPanel::ControlPanel(PluginProcessor& p, zlgui::UIState& base, multilingual::TooltipHelper& tooltip_helper) :
         base_(base),
         split_type_idx_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
         control_pop_panel_(p, base, tooltip_helper) {
@@ -21,7 +21,7 @@ namespace zlpanel {
     }
 
     int ControlPanel::getIdealWidth() const {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto button_size = getButtonSize(font_size);
 

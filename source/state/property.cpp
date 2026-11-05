@@ -21,7 +21,10 @@ namespace zlstate {
         std::lock_guard<std::mutex> lock_guard{mutex_};
         if (checkCreateDirectory()) {
             if (const auto xml = juce::XmlDocument::parse(kUIPath); xml) {
-                apvts.replaceState(juce::ValueTree::fromXml(*xml));
+                const auto loaded_state = juce::ValueTree::fromXml(*xml);
+                if (loaded_state.hasType(apvts.state.getType())) {
+                    apvts.replaceState(loaded_state);
+                }
             }
         }
     }
@@ -30,8 +33,9 @@ namespace zlstate {
         std::lock_guard<std::mutex> lock{mutex_};
         if (checkCreateDirectory()) {
             if (const auto xml = apvts.copyState().createXml(); xml) {
-                if (!xml->writeTo(kUIPath)) {
-                    return;
+                juce::TemporaryFile temporary(kUIPath);
+                if (xml->writeTo(temporary.getFile())) {
+                    (void)temporary.overwriteTargetFileWithTemporary();
                 }
             }
         }
@@ -52,9 +56,7 @@ namespace zlstate {
         // yes -> copy old UI preset to UI preset
         if (kOldUIPath.existsAsFile()) {
             if (const auto c_res = kOldUIPath.copyFileTo(kUIPath); c_res) {
-                if (const auto d_res = kOldUIPath.deleteFile(); d_res) {
-                    return true;
-                }
+                return true;
             }
         }
         // no -> create a blank UI preset

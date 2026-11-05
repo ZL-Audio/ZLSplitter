@@ -10,15 +10,17 @@
 #include "lr_pop_panel.hpp"
 
 namespace zlpanel {
-    LRPopPanel::LRPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+    LRPopPanel::LRPopPanel(PluginProcessor& p, zlgui::UIState& base,
                            const multilingual::TooltipHelper& tooltip_helper) :
         base_(base), updater_(),
-        mix_slider_("", base,
+        mix_slider_("", base.gui,
                     tooltip_helper.getToolTipText(multilingual::kMix), 1.25f),
         mix_attach_(mix_slider_.getSlider1(), p.parameters_,
                     zlp::PMix::kID, updater_),
-        label_laf_(base),
+        label_laf_(base.gui),
         mix_label_("", "Mix") {
+        mix_slider_.setComponentID(zlp::PMix::kID);
+        mix_slider_.getSlider1().setComponentID(zlp::PMix::kID);
         label_laf_.setFontScale(1.5f);
         mix_label_.setLookAndFeel(&label_laf_);
         mix_label_.setJustificationType(juce::Justification::centred);
@@ -29,7 +31,7 @@ namespace zlpanel {
     }
 
     int LRPopPanel::getIdealHeight() const {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
         const auto button_size = getButtonSize(font_size);
@@ -37,7 +39,7 @@ namespace zlpanel {
     }
 
     void LRPopPanel::resized() {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
         const auto button_size = getButtonSize(font_size);

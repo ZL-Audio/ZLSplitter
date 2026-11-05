@@ -10,7 +10,7 @@
 #include "curve_panel.hpp"
 
 namespace zlpanel {
-    CurvePanel::CurvePanel(PluginProcessor& p, zlgui::UIBase& base,
+    CurvePanel::CurvePanel(PluginProcessor& p, zlgui::UIState& base,
                            multilingual::TooltipHelper& tooltip_helper) :
         Thread("curve_panel"), p_ref_(p), base_(base),
         split_type_ref_(*p.parameters_.getRawParameterValue(zlp::PSplitType::kID)),
@@ -19,7 +19,6 @@ namespace zlpanel {
         mag_panel_(p, base),
         wav_panel_(p, base) {
         juce::ignoreUnused(p_ref_, base_, tooltip_helper);
-        p_ref_.getController().setAnalyzerOn(true);
         addChildComponent(fft_panel_);
         addChildComponent(mag_panel_);
         addChildComponent(wav_panel_);
@@ -38,7 +37,7 @@ namespace zlpanel {
     }
 
     void CurvePanel::paint(juce::Graphics& g) {
-        g.fillRect(getLocalBounds());
+        g.fillAll(base_.gui.getBackgroundColour());
     }
 
     void CurvePanel::paintOverChildren(juce::Graphics& g) {
@@ -58,7 +57,15 @@ namespace zlpanel {
         while (!threadShouldExit()) {
             const auto flag = wait(-1);
             juce::ignoreUnused(flag);
+            if (threadShouldExit()) { return; }
             const auto c_analyzer_show = analyzer_show_ref_.load(std::memory_order::relaxed);
+            const auto analyzer_type = static_cast<int>(std::round(c_analyzer_show));
+            if (analyzer_type != analyzer_type_) {
+                analyzer_type_ = analyzer_type;
+                fft_panel_.reset();
+                mag_panel_.reset();
+                wav_panel_.reset();
+            }
             if (c_analyzer_show < .5f) {
                 fft_panel_.run();
             } else if (c_analyzer_show < 1.5f) {

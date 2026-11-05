@@ -18,7 +18,7 @@ namespace zldsp::container {
      * @tparam FindMin
      * @tparam FindMax
      */
-    enum MinMaxBufferType {
+    enum class MinMaxBufferType {
         kFindMin, kFindMax
     };
 
@@ -31,21 +31,25 @@ namespace zldsp::container {
 
         void setCapacity(const size_t capacity) {
             minmax_buffer_.setCapacity(capacity);
+            capacity_ = static_cast<unsigned long long>(capacity);
+            size_ = std::min(size_, capacity_);
+            clear();
         }
 
         void setSize(const size_t x) {
-            size_ = static_cast<unsigned long long>(x);
-            if (static_cast<unsigned long long>(x) < count_) {
-                while (!minmax_buffer_.isEmpty() && minmax_buffer_.getFront().second <= head_ - count_) {
-                    minmax_buffer_.popFront();
-                }
+            size_ = std::min(static_cast<unsigned long long>(x), capacity_);
+            count_ = std::min(count_, size_);
+            while (!minmax_buffer_.isEmpty() && minmax_buffer_.getFront().second <= head_ - count_) {
+                minmax_buffer_.popFront();
             }
         }
 
         [[nodiscard]] size_t getSize() const { return size_; }
 
         void clear() {
+            head_ = 0;
             count_ = 0;
+            minmax_buffer_.clear();
         }
 
         T push(T x) {
@@ -58,7 +62,7 @@ namespace zldsp::container {
                 for (size_t i = 0; i < minmax_buffer_.size(); ++i) {
                     auto front = minmax_buffer_.popFront();
                     front.second -= shift;
-                    minmax_buffer_.pushBack(front);
+                    minmax_buffer_.template pushBack<false>(front);
                 }
                 head_ -= shift;
             }
@@ -67,24 +71,24 @@ namespace zldsp::container {
                 minmax_buffer_.popFront();
             }
             // maintain monotonicity
-            if constexpr (BufferType == kFindMin) {
+            if constexpr (BufferType == MinMaxBufferType::kFindMin) {
                 while (!minmax_buffer_.isEmpty() && minmax_buffer_.getBack().first >= x) {
                     minmax_buffer_.popBack();
                 }
             }
-            if constexpr (BufferType == kFindMax) {
+            if constexpr (BufferType == MinMaxBufferType::kFindMax) {
                 while (!minmax_buffer_.isEmpty() && minmax_buffer_.getBack().first <= x) {
                     minmax_buffer_.popBack();
                 }
             }
             // push the new sample
-            minmax_buffer_.pushBack({x, head_});
+            minmax_buffer_.template pushBack<false>({x, head_});
 
             return minmax_buffer_.getFront().first;
         }
 
     private:
-        unsigned long long head_{0}, count_{0}, size_{0};
+        unsigned long long head_{0}, count_{0}, size_{0}, capacity_{0};
         CircularBuffer<std::pair<T, unsigned long long>> minmax_buffer_{1};
     };
 }

@@ -12,6 +12,7 @@
 #include <array>
 #include <vector>
 #include <cstring>
+#include <cmath>
 #include <algorithm>
 #include "../../container/fifo/abstract_fifo.hpp"
 #include "../../container/fifo/single_thread_multicast_fifo.hpp"
@@ -38,7 +39,8 @@ namespace zldsp::analyzer {
                      const double fifo_size_second) {
             sample_rate_ = sample_rate;
             max_num_samples_ = max_num_samples;
-            const auto fifo_size = static_cast<size_t>(std::round(sample_rate * fifo_size_second));
+            const auto fifo_size = std::max(max_num_samples,
+                static_cast<size_t>(std::ceil(sample_rate * fifo_size_second))) + 1;
             for (size_t i = 0; i < kNum; ++i) {
                 sample_fifos_[i].resize(num_channels[i]);
                 for (size_t chan = 0; chan < num_channels[i]; ++chan) {

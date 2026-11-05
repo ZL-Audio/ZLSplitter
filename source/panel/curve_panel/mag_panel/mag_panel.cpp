@@ -10,7 +10,7 @@
 #include "mag_panel.hpp"
 
 namespace zlpanel {
-    MagPanel::MagPanel(PluginProcessor& p, zlgui::UIBase& base) :
+    MagPanel::MagPanel(PluginProcessor& p, zlgui::UIState& base) :
         mag_background_panel_(p, base),
         mag_analyzer_panel_(p, base) {
         mag_background_panel_.setBufferedToImage(true);

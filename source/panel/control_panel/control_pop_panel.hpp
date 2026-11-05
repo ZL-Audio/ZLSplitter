@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "lr_pop_panel.hpp"
 #include "lh_pop_panel.hpp"
 #include "ts_pop_panel.hpp"
@@ -18,7 +20,7 @@
 namespace zlpanel {
     class ControlPopPanel final : public juce::Component {
     public:
-        explicit ControlPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+        explicit ControlPopPanel(PluginProcessor& p, zlgui::UIState& base,
                                  const multilingual::TooltipHelper& tooltip_helper);
 
         int getIdealHeight() const;
@@ -30,7 +32,7 @@ namespace zlpanel {
         void setSplitType(zlp::PSplitType::SplitType split_type);
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         zlp::PSplitType::SplitType split_type_{zlp::PSplitType::SplitType::kNone};
 
         ControlBackground background_;

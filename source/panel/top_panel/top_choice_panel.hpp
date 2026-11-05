@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
 #include "../multilingual/tooltip_helper.hpp"
@@ -17,7 +19,7 @@
 namespace zlpanel {
     class TopChoicePanel final : public juce::Component {
     public:
-        explicit TopChoicePanel(PluginProcessor &p, zlgui::UIBase &base,
+        explicit TopChoicePanel(PluginProcessor &p, zlgui::UIState &base,
                                 const multilingual::TooltipHelper &tooltip_helper);
 
         int getIdealWidth() const;
@@ -28,7 +30,7 @@ namespace zlpanel {
 
     private:
         PluginProcessor &p_ref_;
-        zlgui::UIBase &base_;
+        zlgui::UIState &base_;
 
         std::atomic<float> &analyzer_type_ref_;
         float c_analyzer_type_{-1.f};

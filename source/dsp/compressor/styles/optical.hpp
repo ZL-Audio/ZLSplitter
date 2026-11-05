@@ -29,7 +29,7 @@ namespace zldsp::compressor {
 
         template<bool UseRMS = false>
         void process(FloatType *buffer, const size_t num_samples) {
-            auto vector = kfr::make_univector(buffer, num_samples);
+            auto* vector = buffer;
             if constexpr (UseRMS) {
                 // pass through the tracker
                 for (size_t i = 0; i < num_samples; ++i) {
@@ -37,16 +37,20 @@ namespace zldsp::compressor {
                     vector[i] = base::tracker_.getMomentarySquare();
                 }
                 const auto mean_scale = FloatType(1) / static_cast<FloatType>(base::tracker_.getCurrentBufferSize());
-                vector = kfr::sqrt(vector * mean_scale);
+                for (size_t i = 0; i < num_samples; ++i) {
+                    vector[i] = std::sqrt(vector[i] * mean_scale);
+                }
             } else {
-                vector = kfr::abs(vector);
+                for (size_t i = 0; i < num_samples; ++i) {
+                    vector[i] = std::abs(vector[i]);
+                }
             }
             // pass through the follower
             for (size_t i = 0; i < num_samples; ++i) {
                 vector[i] = base::follower_.processSample(vector[i]);
             }
             // transfer to db
-            vector = FloatType(20) * kfr::log10(kfr::max(vector, FloatType(1e-12)));
+            zldsp::vector::mag_to_db(vector, num_samples);
             // pass through the computer
             for (size_t i = 0; i < num_samples; ++i) {
                 vector[i] = base::computer_.eval(vector[i]);

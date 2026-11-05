@@ -10,10 +10,10 @@
 #include "control_pop_panel.hpp"
 
 namespace zlpanel {
-    ControlPopPanel::ControlPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+    ControlPopPanel::ControlPopPanel(PluginProcessor& p, zlgui::UIState& base,
                                      const multilingual::TooltipHelper& tooltip_helper) :
         base_{base},
-        background_(base),
+        background_(base.gui),
         lr_pop_panel_(p, base, tooltip_helper),
         lh_pop_panel_(p, base, tooltip_helper),
         ts_pop_panel_(p, base, tooltip_helper),
@@ -29,7 +29,7 @@ namespace zlpanel {
     }
 
     int ControlPopPanel::getIdealHeight() const {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         auto height = 2 * padding;
         switch (split_type_) {
@@ -62,7 +62,7 @@ namespace zlpanel {
         auto bound = getLocalBounds();
         background_.setBounds(bound);
 
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         bound.reduce(padding, padding);
         switch (split_type_) {

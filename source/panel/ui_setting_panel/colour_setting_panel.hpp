@@ -9,6 +9,10 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
+#include "../../gui/interface_definitions.hpp"
+
 #include "../../gui/gui.hpp"
 #include "../../PluginProcessor.hpp"
 #include "../helper/panel_constants.hpp"
@@ -18,7 +22,7 @@ namespace zlpanel {
     public:
         static constexpr float kHeightP = 56.f;
 
-        explicit ColourSettingPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit ColourSettingPanel(PluginProcessor& p, zlgui::UIState& base);
 
         ~ColourSettingPanel() override;
 
@@ -32,11 +36,9 @@ namespace zlpanel {
 
         void resized() override;
 
-        void mouseDown(const juce::MouseEvent &event) override;
-
     private:
-        PluginProcessor &pRef;
-        zlgui::UIBase &base_;
+        PluginProcessor& pRef;
+        zlgui::UIState& base_;
         zlgui::label::NameLookAndFeel name_laf_;
 
         static constexpr size_t kNumSelectors = static_cast<size_t>(zlgui::ColourIdx::kColourNum);
@@ -46,14 +48,5 @@ namespace zlpanel {
         juce::Label c_map1_label_, c_map2_label_;
         zlgui::colour_selector::ColourMapSelector c_map1_selector_, c_map2_selector_;
 
-        juce::Label import_label_, export_label_;
-
-        std::unique_ptr<juce::FileChooser> chooser_;
-        inline auto static const kSettingDirectory =
-                juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                .getChildFile("Audio")
-                .getChildFile("Presets")
-                .getChildFile(JucePlugin_Manufacturer)
-                .getChildFile("Shared Settings");
     };
 }

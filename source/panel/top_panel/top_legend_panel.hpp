@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
 #include "../helper/helper.hpp"
@@ -16,7 +18,7 @@
 namespace zlpanel {
     class TopLegendPanel final : public juce::Component {
     public:
-        explicit TopLegendPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit TopLegendPanel(PluginProcessor &p, zlgui::UIState &base);
 
         int getIdealWidth() const;
 
@@ -25,7 +27,7 @@ namespace zlpanel {
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase &base_;
+        zlgui::UIState &base_;
         std::atomic<float> &split_type_ref_, &swap_ref_;
         float c_split_type_{static_cast<float>(zlp::PSplitType::kDefaultI)};
         bool c_swap_{zlp::PSwap::kDefaultV};

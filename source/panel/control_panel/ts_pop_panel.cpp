@@ -10,30 +10,38 @@
 #include "ts_pop_panel.hpp"
 
 namespace zlpanel {
-    TSPopPanel::TSPopPanel(PluginProcessor& p, zlgui::UIBase& base,
+    TSPopPanel::TSPopPanel(PluginProcessor& p, zlgui::UIState& base,
                            const multilingual::TooltipHelper& tooltip_helper) :
         base_(base), updater_(),
-        balance_slider_("", base,
+        balance_slider_("", base.gui,
                         tooltip_helper.getToolTipText(multilingual::kTSBalance), 1.25f),
         balance_attach_(balance_slider_.getSlider1(), p.parameters_,
                         zlp::PTSBalance::kID, updater_),
-        strength_slider_("", base,
+        strength_slider_("", base.gui,
                          tooltip_helper.getToolTipText(multilingual::kTSStrength)),
         strength_attach_(strength_slider_.getSlider(), p.parameters_,
                          zlp::PTSStrength::kID, updater_),
-        hold_slider_("", base,
+        hold_slider_("", base.gui,
                      tooltip_helper.getToolTipText(multilingual::kTSHold)),
         hold_attach_(hold_slider_.getSlider(), p.parameters_,
                      zlp::PTSHold::kID, updater_),
-        smooth_slider_("", base,
+        smooth_slider_("", base.gui,
                        tooltip_helper.getToolTipText(multilingual::kTSSmooth)),
         smooth_attach_(smooth_slider_.getSlider(), p.parameters_,
                        zlp::PTSSmooth::kID, updater_),
-        label_laf_(base),
+        label_laf_(base.gui),
         balance_label_("", "Balance"),
         strength_label_("", "Strength"),
         hold_label_("", "Hold"),
         smooth_label_("", "Smooth") {
+        balance_slider_.setComponentID(zlp::PTSBalance::kID);
+        balance_slider_.getSlider1().setComponentID(zlp::PTSBalance::kID);
+        strength_slider_.setComponentID(zlp::PTSStrength::kID);
+        strength_slider_.getSlider().setComponentID(zlp::PTSStrength::kID);
+        hold_slider_.setComponentID(zlp::PTSHold::kID);
+        hold_slider_.getSlider().setComponentID(zlp::PTSHold::kID);
+        smooth_slider_.setComponentID(zlp::PTSSmooth::kID);
+        smooth_slider_.getSlider().setComponentID(zlp::PTSSmooth::kID);
         addAndMakeVisible(balance_slider_);
         addAndMakeVisible(strength_slider_);
         addAndMakeVisible(hold_slider_);
@@ -53,7 +61,7 @@ namespace zlpanel {
     }
 
     int TSPopPanel::getIdealHeight() const {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
         const auto button_size = getButtonSize(font_size);
@@ -61,7 +69,7 @@ namespace zlpanel {
     }
 
     void TSPopPanel::resized() {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         const auto slider_width = getSliderWidth(font_size);
         const auto button_size = getButtonSize(font_size);

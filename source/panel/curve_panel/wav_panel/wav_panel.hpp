@@ -9,15 +9,19 @@
 
 #pragma once
 
+#include "../../../state/ui_state.hpp"
+
 #include "wav_analyzer_panel.hpp"
 #include "wav_background_panel.hpp"
 
 namespace zlpanel {
     class WavPanel final : public juce::Component {
     public:
-        explicit WavPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit WavPanel(PluginProcessor &p, zlgui::UIState &base);
 
         void run(double next_time_stamp);
+
+        void reset() { wav_analyzer_panel_.reset(); }
 
         void resized() override;
 

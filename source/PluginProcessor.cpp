@@ -9,6 +9,8 @@
 
 #include "PluginProcessor.hpp"
 #include "PluginEditor.hpp"
+#include "state/state_schema.hpp"
+#include <type_traits>
 
 //==============================================================================
 PluginProcessor::PluginProcessor() :
@@ -17,10 +19,10 @@ PluginProcessor::PluginProcessor() :
         .withOutput("Output 1", juce::AudioChannelSet::stereo(), true)
         .withOutput("Output 2", juce::AudioChannelSet::stereo(), true)),
     parameters_(*this, nullptr,
-                juce::Identifier("ZLSplitParameters"),
+                juce::Identifier(zlstate::schema::kParameterState),
                 zlp::getParameterLayout()),
     na_parameters_(dummy_processor_, nullptr,
-                   juce::Identifier("ZLSplitNAParameters"),
+                   juce::Identifier(zlstate::schema::kNonAutomatableState),
                    zlstate::getNAParameterLayout()),
     swap_ref_(*parameters_.getRawParameterValue(zlp::PSwap::kID)),
     bypass_ref_(*parameters_.getRawParameterValue(zlp::PBypass::kID)),
@@ -86,7 +88,7 @@ void PluginProcessor::changeProgramName(int, const juce::String&) {
 
 //==============================================================================
 void PluginProcessor::prepareToPlay(const double sample_rate, const int samples_per_block) {
-    const auto max_num_samples = static_cast<size_t>(samples_per_block);
+    const auto max_num_samples = static_cast<size_t>(std::max(1, samples_per_block));
     sample_rate_.store(sample_rate, std::memory_order::relaxed);
 
     for (size_t chan = 0; chan < 2; ++chan) {
@@ -145,68 +147,39 @@ void PluginProcessor::processBlockBypassed(juce::AudioBuffer<double>& buffer, ju
     processBlockInternal<true>(buffer);
 }
 
-template <bool IsBypassed>
-void PluginProcessor::processBlockInternal(juce::AudioBuffer<float>& buffer) {
+template <bool IsBypassed, typename FloatType>
+void PluginProcessor::processBlockInternal(juce::AudioBuffer<FloatType>& buffer) {
     juce::ScopedNoDenormals no_denormals;
-    double_in_pointers[0] = double_in_buffer[0].data();
-    double_in_pointers[1] = double_in_buffer[1].data();
-    zldsp::vector::copy(double_in_pointers[0], buffer.getWritePointer(0),
-                        static_cast<size_t>(buffer.getNumSamples()));
-    zldsp::vector::copy(double_in_pointers[1], buffer.getWritePointer(1),
-                        static_cast<size_t>(buffer.getNumSamples()));
-
-    if (swap_ref_.load(std::memory_order::relaxed) < .5f) {
-        double_controller_.process(double_in_pointers, double_out_pointers1,
-                                   static_cast<size_t>(buffer.getNumSamples()));
-    } else {
-        double_controller_.process(double_in_pointers, double_out_pointers2,
-                                   static_cast<size_t>(buffer.getNumSamples()));
+    const auto count = static_cast<size_t>(buffer.getNumSamples());
+    if (count == 0) {
+        return;
     }
-
+    for (size_t chan = 0; chan < 2; ++chan) {
+        if constexpr (std::is_same_v<FloatType, double>) {
+            double_in_pointers[chan] = buffer.getWritePointer(static_cast<int>(chan));
+        } else {
+            double_in_pointers[chan] = double_in_buffer[chan].data();
+            zldsp::vector::copy(double_in_pointers[chan], buffer.getReadPointer(static_cast<int>(chan)), count);
+        }
+    }
+    auto& outputs = swap_ref_.load(std::memory_order::relaxed) < .5f
+        ? double_out_pointers1 : double_out_pointers2;
+    double_controller_.process(double_in_pointers, outputs, count);
+    // update the dry delay after processing for continuous bypass
+    double_controller_.processBypassDelay(double_in_pointers, count);
     if constexpr (!IsBypassed) {
-        for (size_t chan = 0; chan < static_cast<size_t>(std::min(4, buffer.getNumChannels())); ++chan) {
-            zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
-                                double_out_pointers1[chan], static_cast<size_t>(buffer.getNumSamples()));
+        for (int chan = 0; chan < std::min(4, buffer.getNumChannels()); ++chan) {
+            zldsp::vector::copy(buffer.getWritePointer(chan),
+                               double_out_pointers1[static_cast<size_t>(chan)], count);
         }
     } else {
-        double_controller_.processBypassDelay(double_in_pointers, static_cast<size_t>(buffer.getNumSamples()));
-        for (size_t chan = 0; chan < 2; ++chan) {
-            zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
-                                double_in_pointers[chan], static_cast<size_t>(buffer.getNumSamples()));
-        }
-        for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i) {
-            if (buffer.getNumChannels() > i) {
-                buffer.clear(i, 0, buffer.getNumSamples());
+        if constexpr (!std::is_same_v<FloatType, double>) {
+            for (size_t chan = 0; chan < 2; ++chan) {
+                zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)), double_in_pointers[chan], count);
             }
         }
-    }
-}
-
-template <bool IsBypassed>
-void PluginProcessor::processBlockInternal(juce::AudioBuffer<double>& buffer) {
-    juce::ScopedNoDenormals no_denormals;
-    double_in_pointers[0] = buffer.getWritePointer(0);
-    double_in_pointers[1] = buffer.getWritePointer(1);
-
-    if (swap_ref_.load(std::memory_order::relaxed) < .5f) {
-        double_controller_.process(double_in_pointers, double_out_pointers1,
-                                   static_cast<size_t>(buffer.getNumSamples()));
-    } else {
-        double_controller_.process(double_in_pointers, double_out_pointers2,
-                                   static_cast<size_t>(buffer.getNumSamples()));
-    }
-
-    if constexpr (!IsBypassed) {
-        for (size_t chan = 0; chan < static_cast<size_t>(std::min(4, buffer.getNumChannels())); ++chan) {
-            zldsp::vector::copy(buffer.getWritePointer(static_cast<int>(chan)),
-                                double_out_pointers1[chan], static_cast<size_t>(buffer.getNumSamples()));
-        }
-    } else {
-        double_controller_.processBypassDelay(double_in_pointers, static_cast<size_t>(buffer.getNumSamples()));
-        for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i) {
-            if (buffer.getNumChannels() > i) {
-                buffer.clear(i, 0, buffer.getNumSamples());
-            }
+        for (int chan = 2; chan < buffer.getNumChannels(); ++chan) {
+            buffer.clear(chan, 0, buffer.getNumSamples());
         }
     }
 }
@@ -222,7 +195,7 @@ juce::AudioProcessorEditor* PluginProcessor::createEditor() {
 
 //==============================================================================
 void PluginProcessor::getStateInformation(juce::MemoryBlock& dest_data) {
-    auto temp_tree = juce::ValueTree("ZLSplitterParaState");
+    auto temp_tree = juce::ValueTree(zlstate::schema::kProcessorState);
     temp_tree.appendChild(parameters_.copyState(), nullptr);
     temp_tree.appendChild(na_parameters_.copyState(), nullptr);
     const std::unique_ptr<juce::XmlElement> xml(temp_tree.createXml());
@@ -231,10 +204,15 @@ void PluginProcessor::getStateInformation(juce::MemoryBlock& dest_data) {
 
 void PluginProcessor::setStateInformation(const void* data, const int size_in_bytes) {
     std::unique_ptr<juce::XmlElement> xml_state(getXmlFromBinary(data, size_in_bytes));
-    if (xml_state != nullptr && xml_state->hasTagName("ZLSplitterParaState")) {
+    if (xml_state != nullptr && xml_state->hasTagName(zlstate::schema::kProcessorState)) {
         const auto temp_tree = juce::ValueTree::fromXml(*xml_state);
-        parameters_.replaceState(temp_tree.getChildWithName(parameters_.state.getType()));
-        na_parameters_.replaceState(temp_tree.getChildWithName(na_parameters_.state.getType()));
+        const auto parameter_state = temp_tree.getChildWithName(parameters_.state.getType());
+        const auto non_automatable_state = temp_tree.getChildWithName(na_parameters_.state.getType());
+        if (!parameter_state.isValid() || !non_automatable_state.isValid()) {
+            return;
+        }
+        parameters_.replaceState(parameter_state);
+        na_parameters_.replaceState(non_automatable_state);
     }
 }
 

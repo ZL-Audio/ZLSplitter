@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "logo_panel.hpp"
 #include "top_legend_panel.hpp"
 #include "top_choice_panel.hpp"
@@ -16,7 +18,7 @@
 namespace zlpanel {
     class TopPanel final : public juce::Component {
     public:
-        explicit TopPanel(PluginProcessor &p, zlgui::UIBase &base,
+        explicit TopPanel(PluginProcessor &p, zlgui::UIState &base,
                           multilingual::TooltipHelper &tooltip_helper);
 
         void paint(juce::Graphics &g) override;
@@ -25,10 +27,14 @@ namespace zlpanel {
 
         void resized() override;
 
+        void lookAndFeelChanged() override;
+
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase &base_;
+        PluginProcessor& p_ref_;
+        zlgui::UIState &base_;
+        std::atomic<float>& split_type_ref_;
         zlgui::attachment::ComponentUpdater updater_;
 
         LogoPanel logo_panel_;
@@ -36,17 +42,13 @@ namespace zlpanel {
         TopChoicePanel top_choice_panel_;
 
         zlgui::combobox::CompactCombobox split_type_box_;
-        zlgui::attachment::ComboBoxAttachment<true> split_type_attachment_;
-
-        std::unique_ptr<juce::Drawable> swap_drawable_;
         zlgui::button::ClickButton swap_button_;
         zlgui::attachment::ButtonAttachment<true> swap_attach_;
 
-        std::unique_ptr<juce::Drawable> bypass_drawable_;
         zlgui::button::ClickButton bypass_button_;
         zlgui::attachment::ButtonAttachment<true> bypass_attach_;
 
-        std::unique_ptr<juce::Drawable> analyzer_setting_drawable_;
         zlgui::button::ClickButton analyzer_setting_button_;
+        zlgui::button::ClickButton preset_button_;
     };
 }

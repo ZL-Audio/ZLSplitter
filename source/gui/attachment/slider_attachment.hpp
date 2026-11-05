@@ -23,11 +23,10 @@ namespace zlgui::attachment {
                          juce::AudioProcessorValueTreeState& apvts,
                          const juce::String& parameter_ID,
                          ComponentUpdater& updater,
-                         const juce::NotificationType notification_type =
-                             juce::NotificationType::sendNotificationSync) :
-            slider_(slider), notification_type_(notification_type),
-            apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
-            updater_ref_(updater) {
+                         const juce::NotificationType notification_type = juce::NotificationType::sendNotificationSync)
+            : slider_(slider), notification_type_(notification_type),
+              apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
+              updater_ref_(updater) {
             // setup slider values
             const auto& para_ref(parameter_ref_);
             slider_.valueFromTextFunction = [&para_ref](const juce::String& text) {
@@ -81,11 +80,10 @@ namespace zlgui::attachment {
                          const juce::String& parameter_ID,
                          const juce::NormalisableRange<double>& range,
                          ComponentUpdater& updater,
-                         const juce::NotificationType notification_type =
-                             juce::NotificationType::sendNotificationSync) :
-            slider_(slider), notification_type_(notification_type),
-            apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
-            updater_ref_(updater) {
+                         const juce::NotificationType notification_type = juce::NotificationType::sendNotificationSync)
+            : slider_(slider), notification_type_(notification_type),
+              apvts_(apvts), parameter_ref_(*apvts_.getParameter(parameter_ID)),
+              updater_ref_(updater) {
             // setup slider values
             const auto& para_ref(parameter_ref_);
             slider_.valueFromTextFunction = [&para_ref](const juce::String& text) {
@@ -123,8 +121,12 @@ namespace zlgui::attachment {
         }
 
         void updateComponent() override {
+            if (!checkUpdate()) {
+                return;
+            }
             const auto current_value = atomic_value_.load(std::memory_order::relaxed);
             if (std::abs(current_value - slider_.getValue()) > 1e-6f) {
+                const auto parameter_update = beginParameterUpdate();
                 slider_.setValue(current_value, notification_type_);
             }
         }
@@ -139,10 +141,13 @@ namespace zlgui::attachment {
 
         void parameterChanged(const juce::String&, const float new_value) override {
             atomic_value_.store(new_value, std::memory_order::relaxed);
-            updater_ref_.getFlag().store(true, std::memory_order::release);
+            signalUpdate(updater_ref_.getFlag());
         }
 
         void sliderValueChanged(juce::Slider*) override {
+            if (isUpdatingFromParameter()) {
+                return;
+            }
             const auto normalized_value = parameter_ref_.convertTo0to1(static_cast<float>(slider_.getValue()));
             if (std::abs(normalized_value - parameter_ref_.getValue()) > 1e-6) {
                 parameter_ref_.setValueNotifyingHost(normalized_value);

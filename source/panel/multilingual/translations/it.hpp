@@ -37,6 +37,11 @@ namespace zlpanel::multilingual::it {
         "Pressione: attiva l'analizzatore di magnitudine.",
         "Pressione: scambia Output 1 e Output 2.",
         "Rilascio: bypassa il plugin.",
-        "Doppio clic: apri le impostazioni dell'interfaccia utente."
+        "Doppio clic: apri le impostazioni dell'interfaccia utente.",
+        "Elimina il gruppo di preset selezionato.",
+        "Elimina il preset selezionato.",
+        "Chiude il browser dei preset.",
+        "Apre la cartella dei preset nel gestore file di sistema.",
+        "Mostra/nasconde il browser dei preset.",
     };
 }

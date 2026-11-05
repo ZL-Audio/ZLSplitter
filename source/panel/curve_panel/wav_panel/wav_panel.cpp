@@ -10,7 +10,7 @@
 #include "wav_panel.hpp"
 
 namespace zlpanel {
-    WavPanel::WavPanel(PluginProcessor& p, zlgui::UIBase& base) :
+    WavPanel::WavPanel(PluginProcessor& p, zlgui::UIState& base) :
         wav_analyzer_panel_(p, base),
         wav_background_panel_(p, base) {
         wav_background_panel_.setBufferedToImage(true);

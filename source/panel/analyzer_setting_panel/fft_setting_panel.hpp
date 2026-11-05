@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
 #include "../helper/helper.hpp"
@@ -17,23 +19,33 @@
 namespace zlpanel {
     class FFTSettingPanel final : public juce::Component {
     public:
-        explicit FFTSettingPanel(PluginProcessor& p, zlgui::UIBase& base);
+        explicit FFTSettingPanel(PluginProcessor& p, zlgui::UIState& base);
+
+        ~FFTSettingPanel() override;
 
         int getIdealHeight() const;
 
         void resized() override;
 
+        void lookAndFeelChanged() override;
+
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         zlgui::attachment::ComponentUpdater updater_{};
 
         zlgui::combobox::CompactCombobox fft_min_db_box_;
         zlgui::attachment::ComboBoxAttachment<true> fft_min_db_attach_;
 
-        zlgui::combobox::CompactCombobox fft_smooth_box_;
-        zlgui::attachment::ComboBoxAttachment<true> fft_smooth_attach_;
+        zlgui::combobox::CompactCombobox fft_smooth_oct_value_box_;
+        zlgui::attachment::ComboBoxAttachment<true> fft_smooth_oct_value_attach_;
+
+        zlgui::combobox::CompactCombobox fft_smooth_erb_value_box_;
+        zlgui::attachment::ComboBoxAttachment<true> fft_smooth_erb_value_attach_;
+
+        zlgui::combobox::CompactCombobox fft_smooth_type_box_;
+        zlgui::attachment::ComboBoxAttachment<true> fft_smooth_type_attach_;
 
         zlgui::combobox::CompactCombobox fft_speed_box_;
         zlgui::attachment::ComboBoxAttachment<true> fft_speed_attach_;
@@ -41,10 +53,7 @@ namespace zlpanel {
         zlgui::combobox::CompactCombobox fft_tilt_box_;
         zlgui::attachment::ComboBoxAttachment<true> fft_tilt_attach_;
 
-        zlgui::combobox::CompactCombobox fft_order_box_;
-        zlgui::attachment::ComboBoxAttachment<true> fft_order_attach_;
-
         zlgui::label::NameLookAndFeel label_laf_;
-        std::array<juce::Label, 5> labels;
+        std::array<juce::Label, 4> labels;
     };
 }

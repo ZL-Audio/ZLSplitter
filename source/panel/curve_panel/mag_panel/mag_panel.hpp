@@ -9,15 +9,19 @@
 
 #pragma once
 
+#include "../../../state/ui_state.hpp"
+
 #include "mag_analyzer_panel.hpp"
 #include "mag_background_panel.hpp"
 
 namespace zlpanel {
     class MagPanel final : public juce::Component {
     public:
-        explicit MagPanel(PluginProcessor &p, zlgui::UIBase &base);
+        explicit MagPanel(PluginProcessor &p, zlgui::UIState &base);
 
         void run(double next_time_stamp);
+
+        void reset() { mag_analyzer_panel_.reset(); }
 
         void resized() override;
 

@@ -66,7 +66,8 @@ namespace zldsp::splitter {
             const auto max_delay = static_cast<FloatType>((1 << (kSecondOrderNumStage + extra_stage_ + 2)) + 2);
 
             delay_.prepare(sample_rate, max_num_samples, num_channels, max_delay / static_cast<FloatType>(sample_rate));
-
+            // update delay and filter order after prepare
+            c_order_ = 0;
             to_update_.store(true, std::memory_order::release);
         }
 
@@ -112,9 +113,7 @@ namespace zldsp::splitter {
 
             delay_.process(high_buffer, num_samples);
             for (size_t chan = 0; chan < in_buffer.size(); ++chan) {
-                auto low_v = kfr::make_univector(low_buffer[chan], num_samples);
-                auto high_v = kfr::make_univector(high_buffer[chan], num_samples);
-                high_v = high_v - low_v;
+                zldsp::vector::sub(high_buffer[chan], low_buffer[chan], num_samples);
             }
 
             if (mix_.isSmoothing()) {

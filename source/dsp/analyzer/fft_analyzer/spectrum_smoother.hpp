@@ -12,6 +12,8 @@
 #include <span>
 #include <vector>
 #include <cassert>
+#include <algorithm>
+#include <cmath>
 
 namespace zldsp::analyzer {
     class SpectrumSmoother {
@@ -27,17 +29,49 @@ namespace zldsp::analyzer {
         }
 
         void setSmooth(const double smooth_oct) {
+            setSmoothOCT(smooth_oct);
+        }
+
+        void setSmoothOCT(const double smooth_oct) {
             assert(low_idx_.size() != 0);
-            const double factor = std::pow(2.0, smooth_oct / 2.0);
+            const double factor = std::pow(2.0, smooth_oct * 0.5);
             const double factor_rep = 1.0 / factor;
-            const size_t max_idx = low_idx_.size() - 1;
+            const size_t max_idx = low_idx_.size();
 
             for (size_t i = 0; i < low_idx_.size(); ++i) {
                 const double lower = static_cast<double>(i) * factor_rep;
                 const double upper = static_cast<double>(i) * factor;
+
                 low_idx_[i] = static_cast<size_t>(std::round(lower));
                 high_idx_[i] = std::min(max_idx, static_cast<size_t>(std::round(upper) + 1.0));
-                count_req_[i] = 1.f / static_cast<float>(high_idx_[i] - low_idx_[i]);
+
+                const size_t bin_count = high_idx_[i] - low_idx_[i];
+                count_req_[i] = 1.0f / static_cast<float>(std::max<size_t>(1, bin_count));
+            }
+        }
+
+        void setSmoothERB(const double sample_rate, const double smooth_erb = 1.0) {
+            assert(low_idx_.size() != 0);
+            assert(sample_rate > 0.0);
+
+            const auto factor = smooth_erb * 0.5;
+            const auto num_bins = low_idx_.size();
+            const auto fft_size = (num_bins - 1) * 2;
+            const auto delta_f = sample_rate / static_cast<double>(fft_size);
+            const auto const_term = 24.7 / delta_f;
+            const auto max_idx_dbl = static_cast<double>(num_bins - 1);
+
+            for (size_t i = 0; i < num_bins; ++i) {
+                const double erb_bins = 0.107939 * static_cast<double>(i) + const_term;
+                const double half_width = erb_bins * factor;
+                const double lower = std::max(0.0, static_cast<double>(i) - half_width);
+                const double upper = std::min(max_idx_dbl, static_cast<double>(i) + half_width);
+
+                low_idx_[i] = static_cast<size_t>(std::round(lower));
+                high_idx_[i] = std::min(num_bins, static_cast<size_t>(std::round(upper) + 1.0));
+
+                const size_t bin_count = high_idx_[i] - low_idx_[i];
+                count_req_[i] = 1.0f / static_cast<float>(std::max<size_t>(1, bin_count));
             }
         }
 
@@ -50,15 +84,15 @@ namespace zldsp::analyzer {
     private:
         std::vector<size_t> low_idx_, high_idx_;
         std::vector<float> count_req_;
-        std::vector<float> temp_cum_sum_;
+        std::vector<double> temp_cum_sum_;
 
         void applyBoxcarAverage(const std::span<float> data) {
-            temp_cum_sum_[0] = 0.0f;
+            temp_cum_sum_[0] = 0.0;
             for (size_t i = 0; i < data.size(); ++i) {
-                temp_cum_sum_[i + 1] = temp_cum_sum_[i] + data[i];
+                temp_cum_sum_[i + 1] = temp_cum_sum_[i] + static_cast<double>(data[i]);
             }
             for (size_t i = 0; i < data.size(); ++i) {
-                data[i] = (temp_cum_sum_[high_idx_[i]] - temp_cum_sum_[low_idx_[i]]) * count_req_[i];
+                data[i] = static_cast<float>(temp_cum_sum_[high_idx_[i]] - temp_cum_sum_[low_idx_[i]]) * count_req_[i];
             }
         }
     };

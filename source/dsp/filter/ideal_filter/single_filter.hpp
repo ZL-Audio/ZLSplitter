@@ -15,7 +15,7 @@
 #include "coeff/ideal_coeff.hpp"
 #include "../filter_design/filter_design.hpp"
 #include "../../chore/decibels.hpp"
-#include "../../vector/kfr_import.hpp"
+#include "../../vector/vector.hpp"
 
 namespace zldsp::filter {
     /**

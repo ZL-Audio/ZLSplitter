@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "state/ui_state.hpp"
+
 #include "PluginProcessor.hpp"
 #include "BinaryData.h"
 
@@ -18,14 +20,15 @@
 
 //==============================================================================
 class PluginEditor final : public juce::AudioProcessorEditor,
-                           private juce::Timer,
-                           private juce::ValueTree::Listener,
-                           private juce::AsyncUpdater {
+                     private juce::MultiTimer,
+                     private juce::ValueTree::Listener,
+                     private juce::AsyncUpdater {
 public:
     explicit PluginEditor(PluginProcessor&);
 
     ~PluginEditor() override;
 
+    //==============================================================================
     void paint(juce::Graphics&) override;
 
     void resized() override;
@@ -36,24 +39,38 @@ public:
 
     void minimisationStateChanged(bool isNowMinimised) override;
 
+    int getControlParameterIndex(Component& c) override;
+
+    void mouseDown(const juce::MouseEvent& event) override;
+
 private:
+    PluginProcessor& p_ref_;
     zlstate::DummyProcessor dummy_processor_;
     juce::AudioProcessorValueTreeState state_;
     zlstate::Property property_;
     juce::Value last_ui_width_, last_ui_height_;
 
-    zlgui::UIBase base_;
+    zlgui::UIState base_;
     zlpanel::MainPanel main_panel_;
 
     std::unique_ptr<juce::VBlankAttachment> vblank_;
 
-    void timerCallback() override;
+    static constexpr int kVisibilityTimer = 0;
+    static constexpr int kPropertySaveTimer = 1;
+    static constexpr int kPropertySaveDelayMS = 1000;
+
+    void timerCallback(int timer_id) override;
 
     void valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier& property) override;
 
     void handleAsyncUpdate() override;
 
     void updateIsShowing();
+
+    void schedulePropertySave();
+
+    void flushPendingPropertySave();
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginEditor)
 };

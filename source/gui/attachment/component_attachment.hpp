@@ -12,11 +12,56 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include "../../chore/thread/notifier.hpp"
+
 namespace zlgui::attachment {
     class ComponentAttachment {
     public:
         virtual ~ComponentAttachment() = default;
 
         virtual void updateComponent() = 0;
+
+    protected:
+        void signalUpdate(zlchore::thread::Notifier& updater_flag) {
+            update_flag_.signal();
+            updater_flag.signal();
+        }
+
+        bool checkUpdate() {
+            return update_flag_.check();
+        }
+
+        class ParameterUpdateGuard {
+        public:
+            explicit ParameterUpdateGuard(bool& flag) noexcept
+                : flag_(flag), previous_value_(flag) {
+                flag_ = true;
+            }
+
+            ~ParameterUpdateGuard() {
+                flag_ = previous_value_;
+            }
+
+            ParameterUpdateGuard(const ParameterUpdateGuard&) = delete;
+            ParameterUpdateGuard& operator=(const ParameterUpdateGuard&) = delete;
+            ParameterUpdateGuard(ParameterUpdateGuard&&) = delete;
+            ParameterUpdateGuard& operator=(ParameterUpdateGuard&&) = delete;
+
+        private:
+            bool& flag_;
+            bool previous_value_;
+        };
+
+        [[nodiscard]] ParameterUpdateGuard beginParameterUpdate() noexcept {
+            return ParameterUpdateGuard{updating_from_parameter_};
+        }
+
+        bool isUpdatingFromParameter() const noexcept {
+            return updating_from_parameter_;
+        }
+
+    private:
+        zlchore::thread::Notifier update_flag_;
+        bool updating_from_parameter_{false};
     };
 }

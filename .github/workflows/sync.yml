@@ -4,13 +4,32 @@ on:
   schedule:
     - cron: "0 0 * * 0"
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Sync to Gitee
-        uses: abersheeran/sync-gitee-mirror@v1-beta
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v7
         with:
-          repository: ${{ github.repository }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITEE_PAT }}
+          fetch-depth: 0
+
+      - name: Sync to Gitee
+        env:
+          GITEE_USERNAME: ${{ github.actor }}
+          GITEE_PASSWORD: ${{ secrets.GITEE_PAT }}
+          GITEE_REPOSITORY: ${{ github.repository }}
+        run: |
+          for branch in $(git branch -a | grep remotes/origin | grep -v HEAD); do
+            local_branch_name=$(echo $branch | sed 's/remotes\/origin\///')
+            git branch --track "$local_branch_name" "$branch" 2>/dev/null || true
+          done
+
+          remote_repo="https://${GITEE_USERNAME}:${GITEE_PASSWORD}@gitee.com/${GITEE_REPOSITORY}.git"
+          git remote add gitee "${remote_repo}"
+
+          git show-ref
+          git push --all --prune --force gitee
+          git push --tags --force gitee

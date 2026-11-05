@@ -35,18 +35,13 @@ namespace zldsp::splitter {
                      FloatType *transient_buffer,
                      FloatType *steady_buffer,
                      const size_t num_samples) {
-            // copy in buffer to steady buffer and delay it
-            zldsp::vector::copy(steady_buffer, in_buffer, num_samples);
+            const std::array<FloatType*, 1> input{in_buffer};
             delay_span_[0] = steady_buffer;
-            delay_.process(delay_span_, num_samples);
-            // transient split
-            zldsp::vector::copy(transient_buffer, in_buffer, num_samples);
+            delay_.process(input, delay_span_, num_samples);
             fft_span_[0] = transient_buffer;
-            zldsp::filter::FIRBase<FloatType, 10>::process(fft_span_, num_samples);
+            zldsp::filter::FIRBase<FloatType, 10>::process(input, fft_span_, num_samples);
             // subtract transient buffer from steady buffer
-            auto transient_v = kfr::make_univector(transient_buffer, num_samples);
-            auto steady_v = kfr::make_univector(steady_buffer, num_samples);
-            steady_v = steady_v - transient_v;
+            zldsp::vector::sub(steady_buffer, transient_buffer, num_samples);
         }
 
         int getTSLatency() const { return delay_.getDelayInSamples(); }
@@ -78,13 +73,13 @@ namespace zldsp::splitter {
         // extra fft working space
         std::array<FloatType *, 1> fft_span_;
         size_t fft_line_pos_ = 0;
-        std::array<std::vector<float>, kTimeHalfMedianWindowsSize + 1> fft_lines_;
-        kfr::univector<float> magnitude_;
+        std::array<typename zldsp::filter::FIRBase<FloatType, 10>::Spectrum, kTimeHalfMedianWindowsSize> fft_lines_;
+        zldsp::vector::aligned_vector<float> magnitude_;
         // median calculators
         std::vector<HeapFilter<float, kTimeMedianWindowsSize>> time_median_{};
         HeapFilter<float, kFreqMedianWindowsSize> freq_median_{};
         // portion holders
-        kfr::univector<float> mask_;
+        zldsp::vector::aligned_vector<float> mask_;
         // separation factor
         std::atomic<float> balance_{5.f}, separation_{1.f}, hold_{0.9f}, smooth_{.5f};
         float c_balance_{0.f}, c_separation_{0.f}, c_hold_{0.f}, c_smooth_{0.f};
@@ -94,20 +89,32 @@ namespace zldsp::splitter {
             // set fft data lines
             fft_line_pos_ = 0;
             for (auto &line: fft_lines_) {
-                line.resize(this->fft_data_.size());
-                std::fill(line.begin(), line.end(), 0.f);
+                for (auto& plane : line) {
+                    plane.assign(this->num_bins_, 0.f);
+                }
             }
             magnitude_.resize(this->num_bins_);
             time_median_.resize(this->num_bins_);
-            mask_.resize(this->num_bins_);
+            for (auto& median : time_median_) { median.clear(); }
+            freq_median_.clear();
+            mask_.assign(this->num_bins_, 0.f);
         }
 
         void processSpectrum() override {
-            // calculate magnitude
-            for (size_t i = 0; i < this->num_bins_; ++i) {
-                const auto re = this->fft_data_[2 * i];
-                const auto im = this->fft_data_[2 * i + 1];
-                magnitude_[i] = std::sqrt(re * re + im * im);
+            // get real/imaginary output planes
+            namespace hn = hwy::HWY_NAMESPACE;
+            const hn::ScalableTag<float> d;
+            const auto lanes = hn::Lanes(d);
+            size_t bin = 0;
+            for (; bin + lanes <= this->num_bins_; bin += lanes) {
+                const auto re = hn::LoadU(d, this->fft_data_[0].data() + bin);
+                const auto im = hn::LoadU(d, this->fft_data_[1].data() + bin);
+                hn::StoreU(hn::Sqrt(hn::Add(hn::Mul(re, re), hn::Mul(im, im))), d, magnitude_.data() + bin);
+            }
+            for (; bin < this->num_bins_; ++bin) {
+                const auto re = this->fft_data_[0][bin];
+                const auto im = this->fft_data_[1][bin];
+                magnitude_[bin] = std::sqrt(re * re + im * im);
             }
             // calculate median and masks
             freq_median_.clear();
@@ -123,25 +130,29 @@ namespace zldsp::splitter {
             c_hold_ = hold_.load(std::memory_order::relaxed);
             c_smooth_ = smooth_.load(std::memory_order::relaxed);
             // calculate mask
-            for (size_t i = 0; i < this->num_bins_ - kFreqHalfMedianWindowsSize; ++i) {
-                freq_median_.insert(magnitude_[i + kFreqHalfMedianWindowsSize]);
+            const auto update_mask = [this](const size_t i, const float next_magnitude) {
+                freq_median_.insert(next_magnitude);
                 time_median_[i].insert(magnitude_[i]);
                 const auto c_mask = calculatePortion(freq_median_.getMedian(), time_median_[i].getMedian());
                 mask_[i] = std::max(mask_[i] * c_hold_, c_mask);
+            };
+            const auto interior_end = this->num_bins_ - kFreqHalfMedianWindowsSize;
+            for (size_t i = 0; i < interior_end; ++i) {
+                update_mask(i, magnitude_[i + kFreqHalfMedianWindowsSize]);
             }
-            // retrieve fft data
-            zldsp::vector::copy(fft_lines_[fft_line_pos_].data(), this->fft_data_.data(), this->fft_data_.size());
-            fft_line_pos_ = (fft_line_pos_ + 1) % (kTimeHalfMedianWindowsSize + 1);
-            zldsp::vector::copy(this->fft_data_.data(), fft_lines_[fft_line_pos_].data(), this->fft_data_.size());
-            // apply mask
-            auto mask_mean = kfr::mean(mask_);
+            // extend Nyquist for median calculation
+            for (size_t i = interior_end; i < this->num_bins_; ++i) {
+                update_mask(i, magnitude_.back());
+            }
+            // swap with the frame from two hops ago
+            this->fft_data_.swap(fft_lines_[fft_line_pos_]);
+            fft_line_pos_ = (fft_line_pos_ + 1) % kTimeHalfMedianWindowsSize;
+            auto mask_mean = zldsp::vector::sum(mask_.data(), mask_.size()) / static_cast<float>(mask_.size());
             mask_mean = std::clamp((mask_mean - 0.5f) * std::sqrt(c_separation_), -.5f, .5f) + .5f;
-            for (size_t i = 0; i < this->num_bins_; ++i) {
-                const auto i1 = i * 2;
-                const auto i2 = i1 + 1;
-                const auto bin_mask = (mask_mean - mask_[i]) * c_smooth_ + mask_[i];
-                this->fft_data_[i1] *= bin_mask;
-                this->fft_data_[i2] *= bin_mask;
+            // smooth the mask using magnitude scratch
+            zldsp::vector::fma(magnitude_.data(), mask_.data(), 1.f - c_smooth_, mask_mean * c_smooth_, this->num_bins_);
+            for (auto& plane : this->fft_data_) {
+                zldsp::vector::multiply(plane.data(), magnitude_.data(), this->num_bins_);
             }
         }
 
@@ -151,7 +162,7 @@ namespace zldsp::splitter {
             const auto tt = t * t;
             const auto ss = s * s;
             const auto p = tt / std::max(tt + ss, 0.00000001f);
-            return std::clamp((p - 0.5f) * c_separation_, -5.f, .5f) + .5f;
+            return std::clamp((p - 0.5f) * c_separation_, -.5f, .5f) + .5f;
         }
     };
 }

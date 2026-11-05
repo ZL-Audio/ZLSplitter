@@ -10,9 +10,9 @@
 #include "analyzer_setting_pop_panel.hpp"
 
 namespace zlpanel {
-    AnalyzerSettingPopPanel::AnalyzerSettingPopPanel(PluginProcessor& p, zlgui::UIBase& base) :
+    AnalyzerSettingPopPanel::AnalyzerSettingPopPanel(PluginProcessor& p, zlgui::UIState& base) :
         base_(base),
-        background_(base),
+        background_(base.gui),
         fft_setting_panel_(p, base),
         mag_setting_panel_(p, base),
         wav_setting_panel_(p, base) {
@@ -25,7 +25,7 @@ namespace zlpanel {
     }
 
     int AnalyzerSettingPopPanel::getIdealHeight() const {
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         auto height = 2 * padding;
         if (analyzer_type_ == 0) {
@@ -42,7 +42,7 @@ namespace zlpanel {
         auto bound = getLocalBounds();
         background_.setBounds(bound);
 
-        const auto font_size = base_.getFontSize();
+        const auto font_size = base_.gui.getFontSize();
         const auto padding = getPaddingSize(font_size);
         bound.reduce(padding, padding);
         if (analyzer_type_ == 0) {

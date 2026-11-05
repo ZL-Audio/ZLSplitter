@@ -10,7 +10,7 @@
 #include "main_panel.hpp"
 
 namespace zlpanel {
-    MainPanel::MainPanel(PluginProcessor& p, zlgui::UIBase& base,
+    MainPanel::MainPanel(PluginProcessor& p, zlgui::UIState& base,
                          const multilingual::TooltipLanguage language) :
         base_(base),
         tooltip_helper_(language),
@@ -19,7 +19,8 @@ namespace zlpanel {
         top_panel_(p, base_, tooltip_helper_),
         analyzer_setting_panel_(p, base),
         ui_setting_panel_(p, base_),
-        tooltip_laf_(base_), tooltip_window_(&curve_panel_),
+        preset_browser_(p, base_, tooltip_helper_),
+        tooltip_laf_(base_.gui), tooltip_window_(base_.gui, this),
         refresh_handler_(zlstate::PTargetRefreshSpeed::kRates[base_.getRefreshRateID()]) {
         juce::ignoreUnused(base_);
         addAndMakeVisible(curve_panel_);
@@ -27,42 +28,38 @@ namespace zlpanel {
         addAndMakeVisible(top_panel_);
         addChildComponent(analyzer_setting_panel_);
         addChildComponent(ui_setting_panel_);
+        addChildComponent(preset_browser_);
 
         tooltip_window_.setLookAndFeel(&tooltip_laf_);
         tooltip_window_.setOpaque(false);
         tooltip_window_.setBufferedToImage(true);
 
         base_.getPanelValueTree().addListener(this);
-
-        startTimerHz(10);
     }
 
     MainPanel::~MainPanel() {
+        tooltip_window_.setLookAndFeel(nullptr);
         base_.getPanelValueTree().removeListener(this);
-        stopTimer();
     }
 
     void MainPanel::resized() {
         auto bound = getLocalBounds();
 
-        {
-            const auto height = static_cast<float>(bound.getHeight());
-            const auto width = static_cast<float>(bound.getWidth());
-            if (height < width * 0.575f) {
-                bound.setHeight(static_cast<int>(std::ceil(width * .575f)));
-            } else if (height > width * 1.f) {
-                bound.setWidth(static_cast<int>(std::ceil(height * 1.f)));
-            }
-        }
-
-        const auto max_font_size = static_cast<float>(bound.getWidth()) * kFontSizeOverWidth;
+        const auto max_font_size = std::min(static_cast<float>(bound.getWidth()) * kFontSizeOverWidth,
+                                            static_cast<float>(bound.getHeight()) / 26.f);
         const auto min_font_size = max_font_size * .25f;
-        const auto font_size = base_.getFontMode() == 0
-            ? max_font_size * base_.getFontScale()
-            : std::clamp(base_.getStaticFontSize(), min_font_size, max_font_size);
-        base_.setFontSize(font_size);
+        const auto font_size = base_.gui.getFontMode() == 0
+            ? max_font_size * std::clamp(base_.gui.getFontScale(), .25f, 1.f)
+            : std::clamp(base_.gui.getStaticFontSize(), min_font_size, max_font_size);
+        base_.gui.setFontSize(font_size);
 
-        ui_setting_panel_.setBounds(bound);
+        const auto overlay_bound = getLocalBounds().reduced(2 * getPaddingSize(font_size));
+        ui_setting_panel_.setBounds(overlay_bound.withSizeKeepingCentre(
+            std::max(0, std::min(overlay_bound.getWidth(), ui_setting_panel_.getIdealWidth())),
+            std::max(0, std::min(overlay_bound.getHeight(), ui_setting_panel_.getIdealHeight()))));
+        preset_browser_.setBounds(overlay_bound.withSizeKeepingCentre(
+            std::max(0, std::min(overlay_bound.getWidth(), preset_browser_.getIdealWidth())),
+            std::max(0, std::min(overlay_bound.getHeight(), preset_browser_.getIdealHeight()))));
 
         top_panel_.setBounds(bound.removeFromTop(top_panel_.getIdealHeight()));
         curve_panel_.setBounds(bound);
@@ -71,8 +68,10 @@ namespace zlpanel {
     }
 
     void MainPanel::repaintCallBack(const double time_stamp) {
+        if (ui_setting_panel_.isVisible()) { ui_setting_panel_.flushPendingScroll(); }
+        if (preset_browser_.isVisible()) { preset_browser_.flushPendingScroll(); }
         if (refresh_handler_.tick(time_stamp)) {
-            if (time_stamp - previous_time_stamp_ > 0.1) {
+            if (time_stamp < previous_time_stamp_ || time_stamp - previous_time_stamp_ > 0.1) {
                 previous_time_stamp_ = time_stamp;
                 curve_panel_.repaintCallBackSlow();
                 control_panel_.repaintCallBackSlow();
@@ -91,20 +90,20 @@ namespace zlpanel {
     }
 
     void MainPanel::valueTreePropertyChanged(juce::ValueTree&, const juce::Identifier& property) {
-        if (base_.isPanelIdentifier(zlgui::PanelSettingIdx::kUISettingPanel, property)) {
+        if (base_.isPanelIdentifier(zlgui::kUISettingChanged, property)) {
+            refresh_handler_.setTargetRefreshRate(zlstate::PTargetRefreshSpeed::kRates[base_.getRefreshRateID()]);
+        } else if (base_.isPanelIdentifier(zlgui::PanelSettingIdx::kUISettingPanel, property)) {
             const auto ui_setting_visibility = static_cast<bool>(base_.getPanelProperty(
                 zlgui::PanelSettingIdx::kUISettingPanel));
-            curve_panel_.setVisible(!ui_setting_visibility);
+            if (ui_setting_visibility) { base_.setPanelProperty(zlgui::kPresetBrowser, false); }
             ui_setting_panel_.setVisible(ui_setting_visibility);
+            if (ui_setting_visibility) { ui_setting_panel_.toFront(false); }
+        } else if (base_.isPanelIdentifier(zlgui::kPresetBrowser, property)) {
+            if (static_cast<bool>(base_.getPanelProperty(zlgui::kPresetBrowser))) {
+                base_.setPanelProperty(zlgui::kUISettingPanel, false);
+                preset_browser_.toFront(false);
+            }
         }
     }
 
-    void MainPanel::timerCallback() {
-        if (juce::Process::isForegroundProcess()) {
-            if (getCurrentlyFocusedComponent() != this) {
-                grabKeyboardFocus();
-            }
-            stopTimer();
-        }
-    }
 }

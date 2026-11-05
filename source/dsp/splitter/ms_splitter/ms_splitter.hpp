@@ -48,17 +48,13 @@ namespace zldsp::splitter {
             } else {
                 const auto c_mix = c_mix_.getCurrent();
 
-                auto in_l_v = kfr::make_univector(in_l, num_samples);
-                auto in_r_v = kfr::make_univector(in_r, num_samples);
-                auto mid_l_v = kfr::make_univector(mid_l, num_samples);
-                auto mid_r_v = kfr::make_univector(mid_r, num_samples);
-                auto side_l_v = kfr::make_univector(side_l, num_samples);
-                auto side_r_v = kfr::make_univector(side_r, num_samples);
-
-                side_l_v = static_cast<FloatType>(0.5) * in_l_v - c_mix * in_r_v;
-                side_r_v = static_cast<FloatType>(0.5) * in_r_v - c_mix * in_l_v;
-                mid_l_v = in_l_v - side_l_v;
-                mid_r_v = in_r_v - side_r_v;
+                for (size_t i = 0; i < num_samples; ++i) {
+                    const auto l = in_l[i], r = in_r[i];
+                    side_l[i] = static_cast<FloatType>(0.5) * l - c_mix * r;
+                    side_r[i] = static_cast<FloatType>(0.5) * r - c_mix * l;
+                    mid_l[i] = l - side_l[i];
+                    mid_r[i] = r - side_r[i];
+                }
             }
         }
 

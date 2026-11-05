@@ -5,6 +5,7 @@ if (GIT_EXECUTABLE)
     # Generate a git-describe version string from Git repository tags
     execute_process(
             COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
             OUTPUT_VARIABLE GIT_DESCRIBE_VERSION
             RESULT_VARIABLE GIT_DESCRIBE_ERROR_CODE
             OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -15,6 +16,7 @@ if (GIT_EXECUTABLE)
     endif ()
     execute_process(
             COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
             OUTPUT_VARIABLE GIT_CURRENT_HASH
             RESULT_VARIABLE GIT_HASH_ERROR_CODE
             OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -29,8 +31,8 @@ if (NOT DEFINED FOOBAR_VERSION)
     message(STATUS "Failed to determine VERSION from Git tags. Using default version \"${FOOBAR_VERSION}\".")
 endif ()
 if (NOT DEFINED FOOBAR_HASH)
-    set(FOOBAR_HASH "0000000")
-    message(STATUS "Failed to determine HASH from Git logs. Using default hash \"${FOOBAR_HASH}\".")
+  set(FOOBAR_HASH "0000000")
+  message(STATUS "Failed to determine HASH from Git logs. Using default hash \"${FOOBAR_HASH}\".")
 endif ()
 
 string(REPLACE "v" "" FOOBAR_VERSION_WITHOUT_V "${FOOBAR_VERSION}")

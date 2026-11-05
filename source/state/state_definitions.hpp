@@ -137,15 +137,38 @@ namespace zlstate {
         static constexpr int kDefaultI = 3;
     };
 
-    class PFFTSmooth : public ChoiceParameters<PFFTSmooth> {
+    class PFFTSmoothOCTValue : public ChoiceParameters<PFFTSmoothOCTValue> {
     public:
-        auto static constexpr kID = "fft_smooth";
-        auto static constexpr kName = "";
-        inline auto static const kChoices = juce::StringArray{
-            "Raw", "1/16 oct", "1/8 oct", "1/4 oct", "1/2 oct", "1 oct"
+        static constexpr auto kID = "fft_smooth_oct_value";
+        static constexpr auto kName = "";
+        inline static const auto kChoices = juce::StringArray{
+            "1/24", "1/12", "1/6", "1/3", "1"
         };
-        static constexpr std::array kFFTOct = {0.01, 1.0 / 16.0, 1.0 / 8.0, 1.0 / 4.0, 1.0 / 2.0, 1.0};
-        int static constexpr kDefaultI = 2;
+        static constexpr std::array<double, 5> kValues{
+            1. / 24., 1. / 12., 1. / 6., 1. / 3., 1.};
+        static constexpr int kDefaultI = 1;
+    };
+
+    class PFFTSmoothERBValue : public ChoiceParameters<PFFTSmoothERBValue> {
+    public:
+        static constexpr auto kID = "fft_smooth_erb_value";
+        static constexpr auto kName = "";
+        inline static const auto kChoices = juce::StringArray{
+            "1/4", "1/2", "1", "2", "4"
+        };
+        static constexpr std::array<double, 5> kValues{
+            1. / 4., 1. / 2., 1., 2., 4.};
+        static constexpr int kDefaultI = 1;
+    };
+
+    class PFFTSmoothType : public ChoiceParameters<PFFTSmoothType> {
+    public:
+        static constexpr auto kID = "fft_smooth_type";
+        static constexpr auto kName = "";
+        inline static const auto kChoices = juce::StringArray{
+            "OCT", "ERB"
+        };
+        static constexpr int kDefaultI = 1;
     };
 
     class PFFTSpeed : public ChoiceParameters<PFFTSpeed> {
@@ -155,18 +178,7 @@ namespace zlstate {
         inline auto static const kChoices = juce::StringArray{
             "Very Fast", "Fast", "Medium", "Slow", "Very Slow"
         };
-        static constexpr std::array kFFTSpeed = {2.0, 1.0, 0.5, 0.25, 0.125};
-        int static constexpr kDefaultI = 2;
-    };
-
-    class PFFTOrder : public ChoiceParameters<PFFTOrder> {
-    public:
-        auto static constexpr kID = "fft_order";
-        auto static constexpr kName = "";
-        inline auto static const kChoices = juce::StringArray{
-            "Very Low", "Low", "Medium", "High", "Very High"
-        };
-        static constexpr std::array kOrderShift = {-2, -1, 0, 1, 2};
+        static constexpr std::array kFFTSpeed = {4.0, 2.0, 1.0, 0.5, 0.25};
         int static constexpr kDefaultI = 2;
     };
 
@@ -178,6 +190,16 @@ namespace zlstate {
             "Peak", "RMS"
         };
         int static constexpr kDefaultI = 0;
+    };
+
+    class PMagMoveType : public ChoiceParameters<PMagMoveType> {
+    public:
+        static constexpr auto kID = "mag_move_type";
+        static constexpr auto kName = "";
+        inline static const auto kChoices = juce::StringArray{
+            "Sync", "Slow", "Roll"
+        };
+        static constexpr int kDefaultI = 0;
     };
 
     class PMagMinDB : public ChoiceParameters<PMagMinDB> {
@@ -228,8 +250,9 @@ namespace zlstate {
     inline juce::AudioProcessorValueTreeState::ParameterLayout getNAParameterLayout() {
         juce::AudioProcessorValueTreeState::ParameterLayout layout;
         layout.add(PAnalyzerShow::get(),
-                   PFFTMinDB::get(), PFFTSmooth::get(), PFFTSpeed::get(), PFFTTilt::get(), PFFTOrder::get(),
-                   PMagType::get(), PMagMinDB::get(), PMagTimeLength::get(),
+                   PFFTMinDB::get(), PFFTSmoothType::get(), PFFTSmoothOCTValue::get(),
+                   PFFTSmoothERBValue::get(), PFFTSpeed::get(), PFFTTilt::get(),
+                   PMagType::get(), PMagMoveType::get(), PMagMinDB::get(), PMagTimeLength::get(),
                    PWavMaxDB::get());
         return layout;
     }
@@ -322,7 +345,7 @@ namespace zlstate {
     public:
         auto static constexpr kID = "drag_sensitivity";
         auto static constexpr kName = "";
-        inline auto static const kRange = juce::NormalisableRange<float>(0.f, 1.f, 0.01f);
+        inline auto static const kRange = juce::NormalisableRange<float>(0.01f, 1.f, 0.01f);
         auto static constexpr kDefaultV = 1.f;
     };
 
@@ -332,6 +355,36 @@ namespace zlstate {
         auto static constexpr kName = "";
         inline auto static const kRange = juce::NormalisableRange<float>(0.01f, 1.f, 0.01f);
         auto static constexpr kDefaultV = .25f;
+    };
+
+    class PDraggerSensitivity : public FloatParameters<PDraggerSensitivity> {
+    public:
+        static constexpr auto kID = "dragger_sensitivity";
+        static constexpr auto kName = "";
+        inline static const auto kRange = juce::NormalisableRange<float>(0.01f, 1.f, 0.01f);
+        static constexpr auto kDefaultV = 1.f;
+    };
+    class PDraggerFineSensitivity : public FloatParameters<PDraggerFineSensitivity> {
+    public:
+        static constexpr auto kID = "dragger_fine_sensitivity";
+        static constexpr auto kName = "";
+        inline static const auto kRange = juce::NormalisableRange<float>(0.01f, 1.f, 0.01f);
+        static constexpr auto kDefaultV = .25f;
+    };
+    class PWheelComboboxSensitivity : public FloatParameters<PWheelComboboxSensitivity> {
+    public:
+        static constexpr auto kID = "wheel_combobox_sensitivity";
+        static constexpr auto kName = "";
+        inline static const auto kRange = juce::NormalisableRange<float>(0.01f, 1.f, 0.01f);
+        static constexpr auto kDefaultV = .5f;
+    };
+    class PComboboxAlignment : public ChoiceParameters<PComboboxAlignment> {
+    public:
+        static constexpr auto kID = "combobox_alignment";
+        static constexpr auto kName = "";
+        inline static const auto kChoices = juce::StringArray{"Left", "Center", "Right"};
+        enum { kLeft, kCenter, kRight };
+        static constexpr int kDefaultI = kCenter;
     };
 
     class PRotaryStyle : public ChoiceParameters<PRotaryStyle> {
@@ -348,14 +401,6 @@ namespace zlstate {
             juce::Slider::RotaryVerticalDrag,
             juce::Slider::RotaryHorizontalVerticalDrag
         };
-    };
-
-    class PRotaryDragSensitivity : public FloatParameters<PRotaryDragSensitivity> {
-    public:
-        auto static constexpr kID = "rotary_drag_sensitivity";
-        auto static constexpr kName = "";
-        inline auto static const kRange = juce::NormalisableRange<float>(2.f, 32.f, 0.01f);
-        auto static constexpr kDefaultV = 10.f;
     };
 
     class PSliderDoubleClickFunc : public ChoiceParameters<PSliderDoubleClickFunc> {
@@ -377,6 +422,15 @@ namespace zlstate {
         };
         static constexpr std::array<double, 5> kRates{120.0, 90.0, 60.0, 30.0, 15.0};
         int static constexpr kDefaultI = 3;
+    };
+
+    class PFFTQuality : public ChoiceParameters<PFFTQuality> {
+    public:
+        static constexpr auto kID = "fft_quality";
+        static constexpr auto kName = "";
+        inline static const auto kChoices = juce::StringArray{"Normal", "High"};
+        enum { kNormal, kHigh };
+        static constexpr int kDefaultI = kNormal;
     };
 
     class PFFTExtraTilt : public FloatParameters<PFFTExtraTilt> {
@@ -516,10 +570,12 @@ namespace zlstate {
                    PFontMode::get(), PFontScale::get(), PStaticFontSize::get(),
                    PWheelSensitivity::get(), PWheelFineSensitivity::get(), PWheelShiftReverse::get(),
                    PDragSensitivity::get(), PDragFineSensitivity::get(),
-                   PRotaryStyle::get(), PRotaryDragSensitivity::get(),
+                   PDraggerSensitivity::get(), PDraggerFineSensitivity::get(),
+                   PWheelComboboxSensitivity::get(), PComboboxAlignment::get(),
+                   PRotaryStyle::get(),
                    PSliderDoubleClickFunc::get(),
                    PTargetRefreshSpeed::get(),
-                   PFFTExtraTilt::get(), PFFTExtraSpeed::get(),
+                   PFFTQuality::get(), PFFTExtraTilt::get(), PFFTExtraSpeed::get(),
                    PMagCurveThickness::get(), PFFTCurveThickness::get(),
                    PTooltipLang::get());
 

@@ -17,6 +17,14 @@ namespace zlgui::slider {
         explicit SnappingSlider(UIBase& base, const juce::String& name = "") : juce::Slider(name), base_(base) {
         }
 
+        void setValueWithGesture(const double value) {
+            const auto new_value = getNormalisableRange().snapToLegalValue(value);
+            if (!juce::approximatelyEqual(new_value, getValue())) {
+                juce::Slider::ScopedDragNotification drag_notification{*this};
+                setValue(new_value, juce::sendNotificationSync);
+            }
+        }
+
         void mouseDrag(const juce::MouseEvent& event) override {
             if (is_dragging_enabled_) {
                 juce::Slider::mouseDrag(event);
@@ -24,8 +32,8 @@ namespace zlgui::slider {
         }
 
         void mouseWheelMove(const juce::MouseEvent& event, const juce::MouseWheelDetails& w) override {
+            if (!isScrollWheelEnabled() || event.mods.isAnyMouseButtonDown()) { return; }
             // avoid duplicate mousewheel events
-            if (!isScrollWheelEnabled()) { return; }
             if (event.eventTime == last_wheel_time_) { return; }
             last_wheel_time_ = event.eventTime;
             // apply shift reverse

@@ -9,7 +9,8 @@
 
 #pragma once
 
-#include "../../fft/kfr_engine.hpp"
+#include "../../fft/zldsp_fft_include.hpp"
+#include "../../fft/zldsp_fft_window.hpp"
 #include "../../vector/vector.hpp"
 
 namespace zldsp::filter {
@@ -47,10 +48,15 @@ namespace zldsp::filter {
 
         template<bool isBypassed = false>
         void process(std::span<FloatType *> buffer, const size_t num_samples) {
+            process<isBypassed>(buffer, buffer, num_samples);
+        }
+
+        template<bool isBypassed = false>
+        void process(std::span<FloatType* const> input, std::span<FloatType*> output, const size_t num_samples) {
             for (size_t i = 0; i < num_samples; ++i) {
-                for (size_t chan = 0; chan < buffer.size(); ++chan) {
-                    input_fifo_[chan][pos_] = static_cast<float>(buffer[chan][i]);
-                    buffer[chan][i] = static_cast<FloatType>(output_fifo_[chan][pos_]);
+                for (size_t chan = 0; chan < input.size(); ++chan) {
+                    input_fifo_[chan][pos_] = static_cast<float>(input[chan][i]);
+                    output[chan][i] = static_cast<FloatType>(output_fifo_[chan][pos_]);
                     output_fifo_[chan][pos_] = FloatType(0);
                 }
 
@@ -69,8 +75,8 @@ namespace zldsp::filter {
         int getLatency() const { return latency_; }
 
     protected:
-        zldsp::fft::KFREngine<float> fft_;
-        kfr::univector<float> window1_, window2_;
+        std::unique_ptr<zldsp::fft::RFFT<float>> fft_;
+        zldsp::vector::aligned_vector<float> window1_, window2_;
 
         size_t fft_order_ = DefaultFFTOrder;
         size_t fft_size_ = static_cast<size_t>(1) << fft_order_;
@@ -84,11 +90,16 @@ namespace zldsp::filter {
         // write position in input FIFO and read position in output FIFO.
         size_t pos_ = 0;
         // circular buffers for incoming and outgoing audio data.
-        std::vector<kfr::univector<float>> input_fifo_, output_fifo_;
-        // circular FFT working space which contains interleaved complex numbers.
-        kfr::univector<float> fft_in_, fft_data_;
+        std::vector<zldsp::vector::aligned_vector<float>> input_fifo_, output_fifo_;
+        // real/imaginary planes including DC and Nyquist
+        using Spectrum = std::array<zldsp::vector::aligned_vector<float>, 2>;
+        zldsp::vector::aligned_vector<float> fft_in_;
+        Spectrum fft_data_;
 
-        size_t fft_data_pos_ = 0;
+        std::array<float*, 2> spectrumPointers() {
+            return {fft_data_[0].data(), fft_data_[1].data()};
+        }
+
         int latency_{0};
 
         void setFFTOrder(const size_t num_channels, const size_t order) {
@@ -98,50 +109,50 @@ namespace zldsp::filter {
             hop_size_ = fft_size_ / overlap_;
             latency_ = static_cast<int>(fft_size_);
 
-            fft_.setOrder(fft_order_);
+            if (fft_ == nullptr || fft_->get_order() != fft_order_) {
+                fft_ = std::make_unique<zldsp::fft::RFFT<float>>(fft_order_);
+            }
 
             window1_.resize(static_cast<size_t>(fft_size_));
-            zldsp::fft::fillCycleHanningWindow(window1_, static_cast<size_t>(fft_size_));
-            const auto scale = 1.f / static_cast<float>(fft_size_);
-            window1_ = window1_ * scale;
+            zldsp::fft::createPeriodicHanning<float>(window1_, 1.f / static_cast<float>(fft_size_));
 
             window2_.resize(static_cast<size_t>(fft_size_));
-            zldsp::fft::fillCycleHanningWindow(window2_, static_cast<size_t>(fft_size_));
-            window2_ = window2_ * kWindowCorrection;
+            // normalize the N/2 round-trip gain on synthesis
+            zldsp::fft::createPeriodicHanning<float>(window2_, 2.f * kWindowCorrection);
 
             input_fifo_.resize(num_channels);
             output_fifo_.resize(num_channels);
             fft_in_.resize(fft_size_);
-            fft_data_.resize(fft_size_ * 2);
+            for (auto& plane : fft_data_) {
+                plane.resize(num_bins_);
+            }
         }
 
         template<bool isBypassed = false>
         void processFrame() {
             for (size_t idx = 0; idx < input_fifo_.size(); ++idx) {
-                // Copy the input FIFO into the FFT working space in two parts.
-                zldsp::vector::copy(fft_in_.data(), input_fifo_[idx].data() + pos_, fft_size_ - pos_);
-                if (pos_ > 0) {
-                    zldsp::vector::copy(fft_in_.data() + fft_size_ - pos_, input_fifo_[idx].data(), pos_);
-                }
-
-                if (!isBypassed) {
-                    fft_in_ = fft_in_ * window1_;
-
-                    fft_.forward(fft_in_.data(), fft_data_.data());
+                if constexpr (!isBypassed) {
+                    // copy circular buffer with analysis window
+                    zldsp::vector::multiply(fft_in_.data(), input_fifo_[idx].data() + pos_,
+                                           window1_.data(), fft_size_ - pos_);
+                    if (pos_ > 0) {
+                        zldsp::vector::multiply(fft_in_.data() + fft_size_ - pos_, input_fifo_[idx].data(),
+                                               window1_.data() + fft_size_ - pos_, pos_);
+                    }
+                    fft_->forward(fft_in_.data(), spectrumPointers());
                     processSpectrum();
-                    fft_.backward(fft_data_.data(), fft_in_.data());
-
-                    fft_in_ = fft_in_ * window2_;
+                    fft_->backward(spectrumPointers(), fft_in_.data());
+                    zldsp::vector::multiply(fft_in_.data(), window2_.data(), fft_size_);
                 } else {
-                    fft_in_ = fft_in_ * kBypassCorrection;
+                    zldsp::vector::multiply(fft_in_.data(), input_fifo_[idx].data() + pos_,
+                                           kBypassCorrection, fft_size_ - pos_);
+                    if (pos_ > 0) {
+                        zldsp::vector::multiply(fft_in_.data() + fft_size_ - pos_, input_fifo_[idx].data(),
+                                               kBypassCorrection, pos_);
+                    }
                 }
-
-                for (size_t i = 0; i < pos_; ++i) {
-                    output_fifo_[idx][i] += fft_in_[i + fft_size_ - pos_];
-                }
-                for (size_t i = 0; i < fft_size_ - pos_; ++i) {
-                    output_fifo_[idx][i + pos_] += fft_in_[i];
-                }
+                zldsp::vector::add(output_fifo_[idx].data(), fft_in_.data() + fft_size_ - pos_, pos_);
+                zldsp::vector::add(output_fifo_[idx].data() + pos_, fft_in_.data(), fft_size_ - pos_);
             }
         }
 

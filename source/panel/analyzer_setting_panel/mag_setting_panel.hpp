@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "../../state/ui_state.hpp"
+
 #include "../../PluginProcessor.hpp"
 #include "../../gui/gui.hpp"
 #include "../helper/helper.hpp"
@@ -17,16 +19,20 @@
 namespace zlpanel {
     class MagSettingPanel final : public juce::Component {
     public:
-        explicit MagSettingPanel(PluginProcessor& p, zlgui::UIBase& base);
+        explicit MagSettingPanel(PluginProcessor& p, zlgui::UIState& base);
+
+        ~MagSettingPanel() override;
 
         int getIdealHeight() const;
 
         void resized() override;
 
+        void lookAndFeelChanged() override;
+
         void repaintCallBackSlow();
 
     private:
-        zlgui::UIBase& base_;
+        zlgui::UIState& base_;
         zlgui::attachment::ComponentUpdater updater_{};
 
         zlgui::combobox::CompactCombobox mag_min_db_box_;
@@ -38,7 +44,10 @@ namespace zlpanel {
         zlgui::combobox::CompactCombobox mag_type_box_;
         zlgui::attachment::ComboBoxAttachment<true> mag_type_attach_;
 
+        zlgui::combobox::CompactCombobox mag_move_box_;
+        zlgui::attachment::ComboBoxAttachment<true> mag_move_attach_;
+
         zlgui::label::NameLookAndFeel label_laf_;
-        std::array<juce::Label, 3> labels;
+        std::array<juce::Label, 4> labels;
     };
 }
