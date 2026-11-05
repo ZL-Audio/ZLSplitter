@@ -53,18 +53,27 @@ namespace zldsp::filter {
 
         template<bool isBypassed = false>
         void process(std::span<FloatType* const> input, std::span<FloatType*> output, const size_t num_samples) {
-            for (size_t i = 0; i < num_samples; ++i) {
+            size_t offset = 0;
+            while (offset < num_samples) {
+                const auto chunk = std::min({num_samples - offset, hop_size_ - count_, fft_size_ - pos_});
                 for (size_t chan = 0; chan < input.size(); ++chan) {
-                    input_fifo_[chan][pos_] = static_cast<float>(input[chan][i]);
-                    output[chan][i] = static_cast<FloatType>(output_fifo_[chan][pos_]);
-                    output_fifo_[chan][pos_] = FloatType(0);
+                    const auto* in = input[chan] + offset;
+                    auto* out = output[chan] + offset;
+                    auto* in_fifo = input_fifo_[chan].data() + pos_;
+                    auto* out_fifo = output_fifo_[chan].data() + pos_;
+                    for (size_t i = 0; i < chunk; ++i) {
+                        in_fifo[i] = static_cast<float>(in[i]);
+                        out[i] = static_cast<FloatType>(out_fifo[i]);
+                        out_fifo[i] = 0.f;
+                    }
                 }
 
-                pos_ += 1;
+                pos_ += chunk;
                 if (pos_ == fft_size_) {
                     pos_ = 0;
                 }
-                count_ += 1;
+                count_ += chunk;
+                offset += chunk;
                 if (count_ == hop_size_) {
                     count_ = 0;
                     processFrame<isBypassed>();
