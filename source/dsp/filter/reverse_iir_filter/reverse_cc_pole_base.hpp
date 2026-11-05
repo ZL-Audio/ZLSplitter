@@ -33,14 +33,6 @@ namespace zldsp::filter {
         }
 
         void reset() {
-            for (auto &buffer: u_state_) {
-                std::fill(buffer.begin(), buffer.end(), FloatType(0));
-            }
-
-            for (auto &buffer: v_state_) {
-                std::fill(buffer.begin(), buffer.end(), FloatType(0));
-            }
-
             for (auto &delay: u_delays_) {
                 for (auto &d: delay) {
                     d.reset();
@@ -54,19 +46,9 @@ namespace zldsp::filter {
             }
         }
 
-        void prepare(const size_t max_num_samples, const size_t num_channels) {
-            u_state_.resize(num_channels);
-            v_state_.resize(num_channels);
+        void prepare(const size_t /*max_num_samples*/, const size_t num_channels) {
             u_delays_.resize(num_channels);
             v_delays_.resize(num_channels);
-
-            for (auto &buffer: u_state_) {
-                buffer.resize(max_num_samples);
-            }
-
-            for (auto &buffer: v_state_) {
-                buffer.resize(max_num_samples);
-            }
 
             for (auto &delay: u_delays_) {
                 int num_delay = 1;
@@ -120,33 +102,26 @@ namespace zldsp::filter {
         std::vector<std::vector<zldsp::delay::FIFODelay<FloatType>>> u_delays_, v_delays_;
         std::vector<FloatType> a_state_, b_state_;
         FloatType aB_;
-        std::vector<std::vector<FloatType>> u_state_, v_state_;
 
         bool is_complex_{false};
 
         void processComplex(std::span<FloatType *> buffer, const size_t num_samples) {
             for (size_t chan = 0; chan < buffer.size(); ++chan) {
-                std::vector<FloatType> &u(u_state_[chan]), &v(v_state_[chan]);
-
                 auto &u_delay(u_delays_[chan]);
                 auto &v_delay(v_delays_[chan]);
 
                 auto chan_buffer = buffer[chan];
                 for (size_t index = 0; index < num_samples; ++index) {
-                    {
-                        const auto current = chan_buffer[index];
-                        u[index] = a_state_[0] * current + u_delay[0].push(current);
-                        v[index] = b_state_[0] * current;
-                    }
+                    const auto current = chan_buffer[index];
+                    auto u = a_state_[0] * current + u_delay[0].push(current);
+                    auto v = b_state_[0] * current;
                     for (size_t stage = 1; stage <= num_stage_; ++stage) {
-                        const auto u_current = u[index];
-                        const auto v_current = v[index];
-                        u[index] = a_state_[stage] * u_current - b_state_[stage] * v_current + u_delay[stage].push(
-                                       u_current);
-                        v[index] = b_state_[stage] * u_current + a_state_[stage] * v_current + v_delay[stage].push(
-                                       v_current);
+                        const auto u_current = u;
+                        const auto v_current = v;
+                        u = a_state_[stage] * u_current - b_state_[stage] * v_current + u_delay[stage].push(u_current);
+                        v = b_state_[stage] * u_current + a_state_[stage] * v_current + v_delay[stage].push(v_current);
                     }
-                    chan_buffer[index] = u[index] + aB_ * v[index];
+                    chan_buffer[index] = u + aB_ * v;
                 }
             }
         }

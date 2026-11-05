@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <array>
 #include <span>
 #include <atomic>
 
@@ -75,6 +76,9 @@ namespace zldsp::splitter {
                      std::span<FloatType *> low_buffer,
                      std::span<FloatType *> high_buffer,
                      const size_t num_samples) {
+            if (num_samples == 0) {
+                return;
+            }
             if (c_order_ == 1) {
                 processOrder1(in_buffer, low_buffer, high_buffer, num_samples);
             } else if (c_order_ == 2) {
@@ -171,8 +175,8 @@ namespace zldsp::splitter {
                 for (size_t i = 0; i < num_samples; ++i) {
                     const auto next_freq = c_freq_.getNext();
                     low1[0].setFreq(next_freq);
-                    low1[1].setFreq(next_freq);
-                    high1[1].setFreq(next_freq);
+                    low1[1].copyCoefficientsFrom(low1[0]);
+                    high1[1].copyCoefficientsFrom(low1[0]);
                     for (size_t chan = 0; chan < in_buffer.size(); ++chan) {
                         FloatType low_x, high_x;
                         low1[0].processSampleLowHigh(chan, in_buffer[chan][i], low_x, high_x);
@@ -184,17 +188,23 @@ namespace zldsp::splitter {
                 }
             } else {
                 for (size_t chan = 0; chan < in_buffer.size(); ++chan) {
+                    auto first = low1[0].getLocalState(chan);
+                    auto low = low1[1].getLocalState(chan);
+                    auto high = high1[1].getLocalState(chan);
                     const auto in_chan = in_buffer[chan];
                     const auto low_chan = low_buffer[chan];
                     const auto high_chan = high_buffer[chan];
                     for (size_t i = 0; i < num_samples; ++i) {
                         FloatType low_x, high_x;
-                        low1[0].processSampleLowHigh(chan, in_chan[i], low_x, high_x);
-                        low_chan[i] = low1[1].template processSample<
-                            FirstOrderTPTFilter<FloatType>::TPTFilterType::kLowPass>(chan, low_x);
-                        high_chan[i] = high1[1].template processSample<
-                            FirstOrderTPTFilter<FloatType>::TPTFilterType::kHighPass>(chan, high_x);
+                        first.processSampleLowHigh(in_chan[i], low_x, high_x);
+                        low_chan[i] = low.template processSample<
+                            FirstOrderTPTFilter<FloatType>::TPTFilterType::kLowPass>(low_x);
+                        high_chan[i] = high.template processSample<
+                            FirstOrderTPTFilter<FloatType>::TPTFilterType::kHighPass>(high_x);
                     }
+                    low1[0].saveLocalState(chan, first);
+                    low1[1].saveLocalState(chan, low);
+                    high1[1].saveLocalState(chan, high);
                 }
             }
         }
@@ -207,8 +217,8 @@ namespace zldsp::splitter {
                 for (size_t i = 0; i < num_samples; ++i) {
                     const auto next_freq = c_freq_.getNext();
                     low2[0].setFreq(next_freq);
-                    low2[1].setFreq(next_freq);
-                    high2[1].setFreq(next_freq);
+                    low2[1].copyCoefficientsFrom(low2[0]);
+                    high2[1].copyCoefficientsFrom(low2[0]);
                     for (size_t chan = 0; chan < in_buffer.size(); ++chan) {
                         FloatType low_x, high_x;
                         low2[0].processSampleLowHigh(chan, in_buffer[chan][i], low_x, high_x);
@@ -220,17 +230,23 @@ namespace zldsp::splitter {
                 }
             } else {
                 for (size_t chan = 0; chan < in_buffer.size(); ++chan) {
+                    auto first = low2[0].getLocalState(chan);
+                    auto low = low2[1].getLocalState(chan);
+                    auto high = high2[1].getLocalState(chan);
                     const auto in_chan = in_buffer[chan];
                     const auto low_chan = low_buffer[chan];
                     const auto high_chan = high_buffer[chan];
                     for (size_t i = 0; i < num_samples; ++i) {
                         FloatType low_x, high_x;
-                        low2[0].processSampleLowHigh(chan, in_chan[i], low_x, high_x);
-                        low_chan[i] = low2[1].template processSample<
-                            TPTFilter<FloatType>::TPTFilterType::kLowPass>(chan, low_x);
-                        high_chan[i] = high2[1].template processSample<
-                            TPTFilter<FloatType>::TPTFilterType::kHighPass>(chan, high_x);
+                        first.processSampleLowHigh(in_chan[i], low_x, high_x);
+                        low_chan[i] = low.template processSample<
+                            TPTFilter<FloatType>::TPTFilterType::kLowPass>(low_x);
+                        high_chan[i] = high.template processSample<
+                            TPTFilter<FloatType>::TPTFilterType::kHighPass>(high_x);
                     }
+                    low2[0].saveLocalState(chan, first);
+                    low2[1].saveLocalState(chan, low);
+                    high2[1].saveLocalState(chan, high);
                 }
             }
         }
@@ -242,12 +258,13 @@ namespace zldsp::splitter {
             if (c_freq_.isSmoothing()) {
                 for (size_t i = 0; i < num_samples; ++i) {
                     const auto next_freq = c_freq_.getNext();
-                    for (size_t f_idx = 0; f_idx < 4; ++f_idx) {
-                        low2[f_idx].setFreq(next_freq);
-                    }
-                    for (size_t f_idx = 1; f_idx < 4; ++f_idx) {
-                        high2[f_idx].setFreq(next_freq);
-                    }
+                    low2[0].setFreq(next_freq);
+                    low2[1].copyCoefficientsFrom(low2[0]);
+                    high2[1].copyCoefficientsFrom(low2[0]);
+                    low2[2].setWarpedFreq(next_freq, low2[0].getWarpedFreq());
+                    low2[3].copyCoefficientsFrom(low2[2]);
+                    high2[2].copyCoefficientsFrom(low2[2]);
+                    high2[3].copyCoefficientsFrom(low2[2]);
                     for (size_t chan = 0; chan < in_buffer.size(); ++chan) {
                         FloatType low_x, high_x;
                         low2[0].processSampleLowHigh(chan, in_buffer[chan][i], low_x, high_x);
@@ -263,20 +280,33 @@ namespace zldsp::splitter {
                 }
             } else {
                 for (size_t chan = 0; chan < in_buffer.size(); ++chan) {
+                    std::array<typename TPTFilter<FloatType>::LocalState, 4> low{}, high{};
+                    for (size_t f_idx = 0; f_idx < 4; ++f_idx) {
+                        low[f_idx] = low2[f_idx].getLocalState(chan);
+                    }
+                    for (size_t f_idx = 1; f_idx < 4; ++f_idx) {
+                        high[f_idx] = high2[f_idx].getLocalState(chan);
+                    }
                     const auto in_chan = in_buffer[chan];
                     const auto low_chan = low_buffer[chan];
                     const auto high_chan = high_buffer[chan];
                     for (size_t i = 0; i < num_samples; ++i) {
                         FloatType low_x, high_x;
-                        low2[0].processSampleLowHigh(chan, in_chan[i], low_x, high_x);
+                        low[0].processSampleLowHigh(in_chan[i], low_x, high_x);
                         for (size_t f_idx = 1; f_idx < 4; ++f_idx) {
-                            low_x = low2[f_idx].template processSample<
-                                TPTFilter<FloatType>::TPTFilterType::kLowPass>(chan, low_x);
-                            high_x = high2[f_idx].template processSample<
-                                TPTFilter<FloatType>::TPTFilterType::kHighPass>(chan, high_x);
+                            low_x = low[f_idx].template processSample<
+                                TPTFilter<FloatType>::TPTFilterType::kLowPass>(low_x);
+                            high_x = high[f_idx].template processSample<
+                                TPTFilter<FloatType>::TPTFilterType::kHighPass>(high_x);
                         }
                         low_chan[i] = low_x;
                         high_chan[i] = high_x;
+                    }
+                    for (size_t f_idx = 0; f_idx < 4; ++f_idx) {
+                        low2[f_idx].saveLocalState(chan, low[f_idx]);
+                    }
+                    for (size_t f_idx = 1; f_idx < 4; ++f_idx) {
+                        high2[f_idx].saveLocalState(chan, high[f_idx]);
                     }
                 }
             }

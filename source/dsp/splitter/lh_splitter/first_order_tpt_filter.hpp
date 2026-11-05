@@ -9,13 +9,14 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
-#include <span>
 #include <numbers>
+#include <vector>
 
 namespace zldsp::splitter {
     /**
-     * A second order TPT Filter which simultaneously produces lowpass, bandpass, highpass.
+     * A first order TPT Filter which simultaneously produces lowpass and highpass.
      * It is suitable for fast parameter modulation.
      * @tparam FloatType
      */
@@ -24,6 +25,35 @@ namespace zldsp::splitter {
     public:
         enum TPTFilterType {
             kLowPass, kHighPass, kAllPass
+        };
+
+        struct LocalState {
+            double g{}, s{};
+
+            template<TPTFilterType FilterType>
+            FloatType processSample(FloatType x) {
+                const auto v = (static_cast<double>(x) - s) * g;
+                const auto y_lp = v + s;
+                s = y_lp + v;
+                if constexpr (FilterType == kLowPass) {
+                    return static_cast<FloatType>(y_lp);
+                }
+                if constexpr (FilterType == kHighPass) {
+                    return static_cast<FloatType>(y_lp) - x;
+                }
+                if constexpr (FilterType == kAllPass) {
+                    return static_cast<FloatType>(y_lp + y_lp) - x;
+                }
+                return static_cast<FloatType>(0);
+            }
+
+            void processSampleLowHigh(FloatType x, FloatType &low, FloatType &high) {
+                const auto v = (static_cast<double>(x) - s) * g;
+                const auto y_lp = v + s;
+                s = y_lp + v;
+                low = static_cast<FloatType>(y_lp);
+                high = x - low;
+            }
         };
 
         FirstOrderTPTFilter() = default;
@@ -45,6 +75,15 @@ namespace zldsp::splitter {
             g_ = t / (1.0 + t);
         }
 
+        /**
+         * copy coefficients from a filter prepared at the same sample rate
+         * @param source
+         */
+        void copyCoefficientsFrom(const FirstOrderTPTFilter &source) {
+            freq_ = source.freq_;
+            g_ = source.g_;
+        }
+
         void prepare(const double sample_rate, const size_t num_channels) {
             sample_rate_scale_ = std::numbers::pi / sample_rate;
             s_.resize(num_channels);
@@ -54,28 +93,25 @@ namespace zldsp::splitter {
 
         template<TPTFilterType FilterType>
         FloatType processSample(const size_t chan, FloatType x) {
-            const auto v = (static_cast<double>(x) - s_[chan]) * g_;
-            const auto y_lp = v + s_[chan];
-            s_[chan] = y_lp + v;
-            if constexpr (FilterType == kLowPass) {
-                return static_cast<FloatType>(y_lp);
-            }
-            if constexpr (FilterType == kHighPass) {
-                return static_cast<FloatType>(y_lp) - x;
-            }
-            if constexpr (FilterType == kAllPass) {
-                return static_cast<FloatType>(y_lp + y_lp) - x;
-            }
-            return static_cast<FloatType>(0);
+            auto state = getLocalState(chan);
+            const auto y = state.template processSample<FilterType>(x);
+            saveLocalState(chan, state);
+            return y;
         }
 
         void processSampleLowHigh(const size_t chan, FloatType x,
                                   FloatType &low, FloatType &high) {
-            const auto v = (static_cast<double>(x) - s_[chan]) * g_;
-            const auto y_lp = v + s_[chan];
-            s_[chan] = y_lp + v;
-            low = static_cast<FloatType>(y_lp);
-            high = x - low;
+            auto state = getLocalState(chan);
+            state.processSampleLowHigh(x, low, high);
+            saveLocalState(chan, state);
+        }
+
+        LocalState getLocalState(const size_t chan) const {
+            return {g_, s_[chan]};
+        }
+
+        void saveLocalState(const size_t chan, const LocalState &state) {
+            s_[chan] = state.s;
         }
 
     private:

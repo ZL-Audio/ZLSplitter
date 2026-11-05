@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <algorithm>
+#include <array>
 #include <numbers>
 #include <vector>
 #include <complex>
@@ -55,23 +57,26 @@ namespace zldsp::filter {
 
         template<bool isBypass = false>
         void process(std::span<FloatType *> buffer, const size_t num_samples) noexcept {
+            if (num_samples == 0) {
+                return;
+            }
+            const auto coeff = coeff_;
             for (size_t channel = 0; channel < buffer.size(); ++channel) {
                 auto *samples = buffer[channel];
+                auto s1 = s1_[channel], s2 = s2_[channel];
                 for (size_t i = 0; i < num_samples; ++i) {
-                    if constexpr (isBypass) {
-                        processSample(channel, samples[i]);
-                    } else {
-                        samples[i] = processSample(channel, samples[i]);
+                    const auto output = processSample(coeff, s1, s2, samples[i]);
+                    if constexpr (!isBypass) {
+                        samples[i] = output;
                     }
                 }
+                s1_[channel] = s1;
+                s2_[channel] = s2;
             }
         }
 
         FloatType processSample(const size_t channel, FloatType inputValue) {
-            const auto outputValue = inputValue * coeff_[0] + s1_[channel];
-            s1_[channel] = (inputValue * coeff_[1]) - (outputValue * coeff_[3]) + s2_[channel];
-            s2_[channel] = (inputValue * coeff_[2]) - (outputValue * coeff_[4]);
-            return outputValue;
+            return processSample(coeff_, s1_[channel], s2_[channel], inputValue);
         }
 
         void updateFromBiquad(const std::array<double, 6> &coeff) {
@@ -86,5 +91,13 @@ namespace zldsp::filter {
     private:
         std::array<FloatType, 5> coeff_{0, 0, 0, 0, 0};
         std::vector<FloatType> s1_, s2_;
+
+        static FloatType processSample(const std::array<FloatType, 5> &coeff,
+                                       FloatType &s1, FloatType &s2, FloatType inputValue) {
+            const auto outputValue = inputValue * coeff[0] + s1;
+            s1 = (inputValue * coeff[1]) - (outputValue * coeff[3]) + s2;
+            s2 = (inputValue * coeff[2]) - (outputValue * coeff[4]);
+            return outputValue;
+        }
     };
 }
