@@ -124,7 +124,7 @@ namespace zlpanel {
         preset_button_.getButton().setEdgeIndent(icon_inset);
 
         const auto control_width = button_size * 5 + padding * 2 + button_size / 2 + padding / 2;
-        bound.setX(control_width - button_size - padding);
+        bound.setLeft(control_width - button_size - padding);
         split_type_box_.setBounds(bound.removeFromLeft(button_size));
         split_type_box_.getLAF().setIconSize(static_cast<float>(std::max(0, button_size - 2 * icon_inset)));
         bound.removeFromLeft(padding);
