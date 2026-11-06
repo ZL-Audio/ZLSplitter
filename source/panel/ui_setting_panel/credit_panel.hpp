@@ -29,12 +29,15 @@ namespace zlpanel {
             "Copyright (c) 2024 - [zsliu98](https://github.com/zsliu98)\n\n"
             "JUCE framework from [JUCE](https://github.com/juce-framework/JUCE)\n\n"
             "JUCE template from [pamplejuce](https://github.com/sudara/pamplejuce)\n\n"
-            "[zldsp_fft](https://github.com/ZL-Audio/zldsp_fft) by ZL Audio\n\nHighway by Google\n\n"
+            "[Highway](https://github.com/google/highway) by [Google](https://github.com/google)\n\n"
+            "[zldsp_fft](https://github.com/ZL-Audio/zldsp_fft) by [ZL Audio](https://github.com/ZL-Audio)\n\n"
             "[Material Symbols](https://github.com/google/material-design-icons) by [Google](https://github.com/google)\n\n"
             "[inter](https://github.com/rsms/inter) by [The Inter Project Authors](https://github.com/rsms/inter)\n\n"
-            "Vicanek, Martin. A New Reverse IIR Filtering Algorithm. (2022).\n\n"
-            "Redmon, Nigel. Cascading filters. (2016).\n\n"
-            "Fitzgerald, Derry. Harmonic/percussive separation using median filtering. (2010).";
+            "Yuriy Ivantsov. On the Ideal Bilinear and Biquadratic Digital Filter. (2025).\n\n"
+            "Martin Vicanek. A New Reverse IIR Filtering Algorithm. (2022).\n\n"
+            "Nigel Redmon. Cascading filters. (2016).\n\n"
+            "Derry Fitzgerald. Harmonic/percussive separation using median filtering. (2010).\n\n"
+            "Cleve Moler. Makima Piecewise Cubic Interpolation. MathWorks Blogs. (2019).";
 
         [[nodiscard]] juce::TextLayout getTipTextLayout(const juce::String& text,
                                                         const float w, const float h) const {

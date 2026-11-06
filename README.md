@@ -10,21 +10,7 @@
 
 ZL Splitter is a splitter plugin.
 
-A short intro video is available at [here](https://www.youtube.com/watch?v=-RVm9mbbQtA).
-
 <img src="https://drive.google.com/uc?export=view&id=1agmMFD5BVylbJOr5ZJmP8dof7LkCXlhx" style="width:750px; max-width: 100%; height: auto" />
-
-## Usage
-
-See the [manual](https://zl-audio.github.io/plugins/zlsplitter/) for details.
-
-## Download
-
-See the releases for the latest version. 
-
-**Please NOTICE**:
-- the installer has **NOT** been notarized/EV certificated on macOS/Windows
-- the plugin has **NOT** been fully tested on DAWs
 
 ## Build from Source
 
@@ -40,7 +26,19 @@ sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxcomposite-
 
 ### Clone and Build
 
-Once you have set up the environment, you can clone the ZL Splitter code, populate all submodules, then configure & build the code. Set `ZL_JUCE_FORMATS` to the desired formats, e.g., `"VST3;LV2"` on Linux/Windows or `"VST3;AU"` on macOS. Set `ZL_HWY_STATIC_TARGET` to `SSE2` for baseline x86-64, `SSE4` or `AVX2` for compatible x86-64 processors, or `NEON` for ARM64. Build each architecture separately; the example below targets x86-64.
+Once you have set up the environment, you can clone the ZL Splitter code, populate all submodules, then configure & build the code. populate all submodules, then configure & build the code. Please set:
+
+- the variable `ZL_JUCE_FORMATS` as a list of plugin formats that you want, e.g., `"VST3;LV2"`
+    - AAX plug-ins need to be digitally signed using PACE Anti-Piracy's signing tools before they will run in commercially available versions of Pro Tools.
+- the variable `ZL_HWY_STATIC_TARGET` as the SIMD target
+    - If you are on x86-64 and your CPU supports SSE2, set `ZL_HWY_STATIC_TARGET=SSE2`.
+    - If you are on x86-64 and your CPU supports SSE2/SSE4, set `ZL_HWY_STATIC_TARGET=SSE4`.
+    - If you are on x86-64 and your CPU supports SSE2/SSE4/AVX2, set `ZL_HWY_STATIC_TARGET=AVX2`.
+    - If you are on arm64, set `ZL_HWY_STATIC_TARGET=NEON`.
+- If there are multiple compilers on your OS, you may need to pass extra flags to maker sure that cmake uses `LLVM/Clang`.
+    - On Linux, you may pass `-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++`.
+    - On Windows, you may pass `-DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl`.
+
 ```console
 git clone https://github.com/ZL-Audio/ZLSplitter
 cd ZLSplitter
@@ -48,11 +46,12 @@ git submodule update --init --recursive
 cmake -B Builds -G Ninja -DCMAKE_BUILD_TYPE=Release -DZL_JUCE_FORMATS="VST3;LV2" -DZL_HWY_STATIC_TARGET="NEON" .
 cmake --build Builds --config Release
 ```
-> After building, the plugins should have been copied to the corresponding folders. If you want to disable the copy process, you can pass `-DZL_JUCE_COPY_PLUGIN=FALSE`, find the binary folders under `Builds/ZLSplitter_artefacts/Release` and copy them manually.
 
-> If there are multiple compilers on your OS, you may need to pass extra flags to make sure that cmake uses `LLVM/Clang`. On Linux, you may pass `-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++`. On Windows, you may pass `-DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl`.
+After building, the plugins should have been copied to the corresponding folders. If you want to disable the copy process, you can pass `-DZL_JUCE_COPY_PLUGIN=FALSE`, find the binary folders under `Builds/ZLSplitter_artefacts/Release` and copy them manually.
 
-> AAX plug-ins need to be digitally signed using PACE Anti-Piracy's signing tools before they will run in commercially available versions of Pro Tools.
+## AI Transparency
+
+Since November 2026, LLMs have assisted across various stages of this project's development. All code, documentation, and design choices are either authored or reviewed by the maintainer, who takes full responsibility for the quality, safety, and licensing of the final output.
 
 ## License
 
@@ -68,16 +67,18 @@ JUCE template from [pamplejuce](https://github.com/sudara/pamplejuce)
 
 [zldsp_fft](https://github.com/ZL-Audio/zldsp_fft) by [ZL Audio](https://github.com/ZL-Audio)
 
-[median-filter](https://github.com/suomela/median-filter) by [suomela](https://github.com/suomela)
-
 [Material Symbols](https://github.com/google/material-design-icons) by [Google](https://github.com/google)
 
-Font from CMU Open Sans, Font Awesome and MiSans.
+[inter](https://github.com/rsms/inter) by [The Inter Project Authors](https://github.com/rsms/inter)
 
 ## References
+
+Yuriy Ivantsov. *On the Ideal Bilinear and Biquadratic Digital Filter*. (2025).
 
 Vicanek, Martin. *A New Reverse IIR Filtering Algorithm*. (2022).
 
 Redmon, Nigel. *Cascading filters*. (2016).
 
 Fitzgerald, Derry. *Harmonic/percussive separation using median filtering*. (2010).
+
+Cleve Moler. [*Makima Piecewise Cubic Interpolation*](https://blogs.mathworks.com/cleve/2019/04/29/makima-piecewise-cubic-interpolation/). MathWorks Blogs. (2019).
