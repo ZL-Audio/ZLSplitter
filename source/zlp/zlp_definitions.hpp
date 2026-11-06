@@ -246,13 +246,13 @@ namespace zlp {
         auto static constexpr kID = "lh_filter_type";
         auto static constexpr kName = "LH Filter Type";
         inline auto static const kChoices = juce::StringArray{
-            "SVF", "FIR"
+            "IIR", "FIR"
         };
 
         int static constexpr kDefaultI = 0;
 
         enum FilterType {
-            kSVF, kFIR
+            kIIR, kFIR
         };
     };
 

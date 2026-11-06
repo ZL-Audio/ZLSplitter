@@ -18,6 +18,15 @@ namespace zldsp::filter {
     template<typename FloatType>
     class IIRBase {
     public:
+        struct LocalState {
+            std::array<FloatType, 5> coeff{};
+            FloatType s1{}, s2{};
+
+            FloatType processSample(const FloatType input) {
+                return IIRBase::processSample(coeff, s1, s2, input);
+            }
+        };
+
         IIRBase() = default;
 
         void prepare(const size_t num_channels) {
@@ -53,6 +62,15 @@ namespace zldsp::filter {
 
         FloatType processSample(const size_t channel, FloatType inputValue) {
             return processSample(coeff_, s1_[channel], s2_[channel], inputValue);
+        }
+
+        LocalState getLocalState(const size_t channel) const {
+            return {coeff_, s1_[channel], s2_[channel]};
+        }
+
+        void saveLocalState(const size_t channel, const LocalState &state) {
+            s1_[channel] = state.s1;
+            s2_[channel] = state.s2;
         }
 
         // Normalized ZLEQ layout: {a1, a2, b0, b1, b2}, with a0 = 1.
