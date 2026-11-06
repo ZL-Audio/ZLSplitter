@@ -11,11 +11,14 @@
 
 #include <span>
 #include <atomic>
-#include <numbers>
 
 #include "../../chore/smoothed_value.hpp"
 #include "../../delay/integer_delay.hpp"
-#include "../../filter/filter.hpp"
+#include "../../filter/filter_design/filter_design.hpp"
+#include "../../filter/iir_filter/coeff/ivantsov_coeff.hpp"
+#include "../../filter/iir_filter/iir_base.hpp"
+#include "../../filter/reverse_iir_filter/reverse_first_order_iir_base.hpp"
+#include "../../filter/reverse_iir_filter/reverse_iir_base.hpp"
 
 namespace zldsp::splitter {
     template<typename FloatType>
@@ -183,8 +186,6 @@ namespace zldsp::splitter {
         std::atomic<bool> to_update_{true};
 
         static constexpr double order2q = 0.7071067811865476; // np.sqrt(2) / 2
-        static constexpr double order4q1 = 0.541196100146197; // 1 / (2 * np.cos(np.pi / 8))
-        static constexpr double order4q2 = 1.3065629648763764; // 1 / (2 * np.cos(np.pi / 8 * 3))
 
         void updateOrder(const size_t order) {
             delay_.setDelayInSamples(getLatency());
@@ -213,38 +214,22 @@ namespace zldsp::splitter {
         }
 
         void updateFreq(const double freq) {
-            switch (c_order_) {
-                case 1: {
-                    const auto coeff = zldsp::filter::MartinCoeff::get1LowPass(
-                        2 * std::numbers::pi * freq / sample_rate_);
-                    first_order_filter_.updateFromBiquad(coeff);
-                    forward_filter_[0].updateFromBiquad({coeff[0], coeff[1], 0.0, coeff[2], coeff[3], 0.0});
-                    break;
-                }
-                case 2: {
-                    const auto coeff = zldsp::filter::MartinCoeff::get2LowPass(
-                        2 * std::numbers::pi * freq / sample_rate_, order2q);
-                    filter_[0].updateFromBiquad(coeff);
-                    forward_filter_[0].updateFromBiquad(coeff);
-                    break;
-                }
-                case 4: {
-                    {
-                        const auto coeff = zldsp::filter::MartinCoeff::get2LowPass(
-                            2 * std::numbers::pi * freq / sample_rate_, order4q1);
-                        filter_[0].updateFromBiquad(coeff);
-                        forward_filter_[0].updateFromBiquad(coeff);
-                    }
-                    {
-                        const auto coeff = zldsp::filter::MartinCoeff::get2LowPass(
-                            2 * std::numbers::pi * freq / sample_rate_, order4q2);
-                        filter_[1].updateFromBiquad(coeff);
-                        forward_filter_[1].updateFromBiquad(coeff);
-                    }
-                    break;
-                }
-                default: {
-                    break;
+            if (c_order_ != 1 && c_order_ != 2 && c_order_ != 4) {
+                return;
+            }
+
+            std::array<std::array<double, 5>, 2> coeffs{};
+            const auto num_filters = zldsp::filter::FilterDesign::updateCoeffs<zldsp::filter::IvantsovCoeff>(
+                zldsp::filter::kLowPass, c_order_, freq, sample_rate_, 0.0, order2q, coeffs);
+            for (size_t i = 0; i < num_filters; ++i) {
+                forward_filter_[i].updateFromBiquad(coeffs[i]);
+            }
+            if (c_order_ == 1) {
+                const auto& coeff = coeffs[0];
+                first_order_filter_.updateFromBiquad({coeff[0], coeff[2], coeff[3]});
+            } else {
+                for (size_t i = 0; i < num_filters; ++i) {
+                    filter_[i].updateFromBiquad(coeffs[i]);
                 }
             }
         }

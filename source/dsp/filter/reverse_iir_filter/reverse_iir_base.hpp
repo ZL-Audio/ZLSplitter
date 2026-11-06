@@ -53,12 +53,12 @@ namespace zldsp::filter {
             }
         }
 
-        void updateFromBiquad(const std::array<double, 6> &coeff) {
-            const auto a0_inv = 1.0 / coeff[0];
-            reverse_pole_.updateFromBiquad({1.0, coeff[1] * a0_inv, coeff[2] * a0_inv});
-            zeros_[0] = static_cast<FloatType>(coeff[3] * a0_inv);
-            zeros_[1] = static_cast<FloatType>(coeff[4] * a0_inv);
-            zeros_[2] = static_cast<FloatType>(coeff[5] * a0_inv);
+        // Normalized ZLEQ layout: {a1, a2, b0, b1, b2}, with a0 = 1.
+        void updateFromBiquad(const std::array<double, 5> &coeff) {
+            reverse_pole_.updateFromBiquad({1.0, coeff[0], coeff[1]});
+            zeros_[0] = static_cast<FloatType>(coeff[2]);
+            zeros_[1] = static_cast<FloatType>(coeff[3]);
+            zeros_[2] = static_cast<FloatType>(coeff[4]);
         }
 
         [[nodiscard]] inline int getLatency() const {

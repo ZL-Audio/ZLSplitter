@@ -11,37 +11,13 @@
 
 #include <algorithm>
 #include <array>
-#include <numbers>
 #include <vector>
-#include <complex>
 #include <span>
 
 namespace zldsp::filter {
     template<typename FloatType>
     class IIRBase {
     public:
-        // w should be an array of std::exp(-2pi * f / samplerate * i)
-        static void updateResponse(
-            const std::array<double, 6> &coeff,
-            const std::vector<std::complex<FloatType>> &wis, std::vector<std::complex<FloatType>> &response) {
-            for (size_t idx = 0; idx < wis.size(); ++idx) {
-                response[idx] *= getResponse(coeff, wis[idx]);
-            }
-        }
-
-        // w should be std::exp(-2pi * f / samplerate * i)
-        // const auto wi = std::exp(std::complex<FloatType>(FloatType(0), w))
-        static std::complex<FloatType> getResponse(const std::array<double, 6> &coeff,
-                                                   const std::complex<FloatType> &wi) {
-            const auto wi2 = wi * wi;
-            return (static_cast<FloatType>(coeff[3]) +
-                    static_cast<FloatType>(coeff[4]) * wi +
-                    static_cast<FloatType>(coeff[5]) * wi2) / (
-                       static_cast<FloatType>(coeff[0]) +
-                       static_cast<FloatType>(coeff[1]) * wi +
-                       static_cast<FloatType>(coeff[2]) * wi2);
-        }
-
         IIRBase() = default;
 
         void prepare(const size_t num_channels) {
@@ -79,13 +55,9 @@ namespace zldsp::filter {
             return processSample(coeff_, s1_[channel], s2_[channel], inputValue);
         }
 
-        void updateFromBiquad(const std::array<double, 6> &coeff) {
-            const auto a0_inv = 1.0 / coeff[0];
-            coeff_[0] = static_cast<FloatType>(coeff[3] * a0_inv);
-            coeff_[1] = static_cast<FloatType>(coeff[4] * a0_inv);
-            coeff_[2] = static_cast<FloatType>(coeff[5] * a0_inv);
-            coeff_[3] = static_cast<FloatType>(coeff[1] * a0_inv);
-            coeff_[4] = static_cast<FloatType>(coeff[2] * a0_inv);
+        // Normalized ZLEQ layout: {a1, a2, b0, b1, b2}, with a0 = 1.
+        void updateFromBiquad(const std::array<double, 5> &coeff) {
+            std::copy(coeff.begin(), coeff.end(), coeff_.begin());
         }
 
     private:
@@ -94,9 +66,9 @@ namespace zldsp::filter {
 
         static FloatType processSample(const std::array<FloatType, 5> &coeff,
                                        FloatType &s1, FloatType &s2, FloatType inputValue) {
-            const auto outputValue = inputValue * coeff[0] + s1;
-            s1 = (inputValue * coeff[1]) - (outputValue * coeff[3]) + s2;
-            s2 = (inputValue * coeff[2]) - (outputValue * coeff[4]);
+            const auto outputValue = inputValue * coeff[2] + s1;
+            s1 = (inputValue * coeff[3]) - (outputValue * coeff[0]) + s2;
+            s2 = (inputValue * coeff[4]) - (outputValue * coeff[1]);
             return outputValue;
         }
     };
