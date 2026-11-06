@@ -211,9 +211,12 @@ namespace zldsp::splitter {
             c_separation_ = separation_.load(std::memory_order::relaxed);
             c_hold_ = hold_.load(std::memory_order::relaxed);
             c_smooth_ = smooth_.load(std::memory_order::relaxed);
-            // calculate mask
+            // align the frequency median with the spectrum from two hops ago;
+            // zero-initialized history matches the delayed frames during startup
             magnitude_count_ = std::min(magnitude_count_ + 1, kTimeMedianWindowsSize);
-            updateMask(magnitude);
+            const auto center_pos = (magnitude_pos_ + kTimeMedianWindowsSize - kTimeHalfMedianWindowsSize)
+                % kTimeMedianWindowsSize;
+            updateMask(magnitude_history_[center_pos].data());
             magnitude_pos_ = (magnitude_pos_ + 1) % kTimeMedianWindowsSize;
             // swap with the frame from two hops ago
             fft_data_.swap(fft_lines_[fft_line_pos_]);
