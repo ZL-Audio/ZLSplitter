@@ -29,7 +29,7 @@ namespace zldsp::splitter {
                      [[maybe_unused]] const size_t num_channels,
                      const size_t max_num_samples) {
             prepareFFT(sample_rate);
-            const auto delay_num = static_cast<int>(fft_size_ + hop_size_ * kTimeHalfMedianWindowsSize);
+            const auto delay_num = static_cast<int>(fft_size_ + hop_size_ * kDetectorLookaheadHops);
             delay_.prepare(sample_rate, max_num_samples, 1,
                            static_cast<FloatType>(delay_num + 2) / static_cast<FloatType>(sample_rate));
             delay_.setDelayInSamples(delay_num);
@@ -72,7 +72,7 @@ namespace zldsp::splitter {
         static constexpr size_t kFreqMedianWindowsSize = 5;
         static constexpr size_t kFreqHalfMedianWindowsSize = kFreqMedianWindowsSize / 2;
         static constexpr size_t kTimeMedianWindowsSize = 5;
-        static constexpr size_t kTimeHalfMedianWindowsSize = kTimeMedianWindowsSize / 2;
+        static constexpr size_t kDetectorLookaheadHops = kTimeMedianWindowsSize / 2;
         static_assert(kFreqMedianWindowsSize == 5 && kTimeMedianWindowsSize == 5);
 
         zldsp::delay::IntegerDelay<FloatType> delay_;
@@ -90,7 +90,7 @@ namespace zldsp::splitter {
         using Spectrum = std::array<zldsp::vector::aligned_vector<float>, 2>;
         Spectrum fft_data_;
         size_t fft_line_pos_ = 0;
-        std::array<Spectrum, kTimeHalfMedianWindowsSize> fft_lines_;
+        std::array<Spectrum, kDetectorLookaheadHops> fft_lines_;
         // magnitude history
         std::array<zldsp::vector::aligned_vector<float>, kTimeMedianWindowsSize> magnitude_history_;
         size_t magnitude_pos_{0}, magnitude_count_{0};
@@ -211,16 +211,13 @@ namespace zldsp::splitter {
             c_separation_ = separation_.load(std::memory_order::relaxed);
             c_hold_ = hold_.load(std::memory_order::relaxed);
             c_smooth_ = smooth_.load(std::memory_order::relaxed);
-            // align the frequency median with the spectrum from two hops ago;
-            // zero-initialized history matches the delayed frames during startup
+            // use the newest frame for lookahead detection
             magnitude_count_ = std::min(magnitude_count_ + 1, kTimeMedianWindowsSize);
-            const auto center_pos = (magnitude_pos_ + kTimeMedianWindowsSize - kTimeHalfMedianWindowsSize)
-                % kTimeMedianWindowsSize;
-            updateMask(magnitude_history_[center_pos].data());
+            updateMask(magnitude);
             magnitude_pos_ = (magnitude_pos_ + 1) % kTimeMedianWindowsSize;
             // swap with the frame from two hops ago
             fft_data_.swap(fft_lines_[fft_line_pos_]);
-            fft_line_pos_ = (fft_line_pos_ + 1) % kTimeHalfMedianWindowsSize;
+            fft_line_pos_ = (fft_line_pos_ + 1) % kDetectorLookaheadHops;
             auto mask_mean = zldsp::vector::sum(mask_.data(), mask_.size()) / static_cast<float>(mask_.size());
             mask_mean = std::clamp((mask_mean - 0.5f) * std::sqrt(c_separation_), -.5f, .5f) + .5f;
             // smooth the mask
