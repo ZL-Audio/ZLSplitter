@@ -26,43 +26,43 @@ jobs:
         include:
           - name: Linux-x86-64
             os: ubuntu-24.04
-            formats: VST3;LV2;Standalone
+            formats: VST3;LV2
             simd: SSE2
           - name: Linux-x86-64-AVX2
             os: ubuntu-24.04
-            formats: VST3;LV2;Standalone
+            formats: VST3;LV2
             simd: AVX2
           - name: Linux-arm64
             os: ubuntu-24.04-arm
-            formats: VST3;LV2;Standalone
+            formats: VST3;LV2
             simd: NEON
           - name: macOS-x86-64
             os: xcode-27
             architecture: x86_64
-            formats: VST3;AU;Standalone
+            formats: VST3;AU
             simd: SSE4
           - name: macOS-arm64
             os: xcode-27
             architecture: arm64
-            formats: VST3;AU;Standalone
+            formats: VST3;AU
             simd: NEON
           - name: Windows-x86-64
             os: windows-2025
             wix_arch: x64
             vcvars_script: vcvars64.bat
-            formats: VST3;LV2;Standalone
+            formats: VST3;LV2
             simd: SSE2
           - name: Windows-x86-64-AVX2
             os: windows-2025
             wix_arch: x64
             vcvars_script: vcvars64.bat
-            formats: VST3;LV2;Standalone
+            formats: VST3;LV2
             simd: AVX2
           - name: Windows-arm64
             os: windows-11-vs2026-arm
             wix_arch: arm64
             vcvars_script: vcvarsarm64.bat
-            formats: VST3;LV2;Standalone
+            formats: VST3;LV2
             simd: NEON
 
     steps:
