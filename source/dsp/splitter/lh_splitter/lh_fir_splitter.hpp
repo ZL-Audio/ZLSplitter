@@ -10,7 +10,7 @@
 #pragma once
 
 #include <span>
-#include <atomic>
+#include <utility>
 
 #include "../../chore/smoothed_value.hpp"
 #include "../../delay/integer_delay.hpp"
@@ -32,13 +32,13 @@ namespace zldsp::splitter {
         }
 
         void setFreq(const double freq) {
-            freq_.store(freq, std::memory_order::relaxed);
-            to_update_.store(true, std::memory_order::release);
+            freq_ = freq;
+            to_update_ = true;
         }
 
         void setOrder(const size_t order) {
-            order_.store(order, std::memory_order::relaxed);
-            to_update_.store(true, std::memory_order::release);
+            order_ = order;
+            to_update_ = true;
         }
 
         void prepare(const double sample_rate,
@@ -71,17 +71,27 @@ namespace zldsp::splitter {
             delay_.prepare(sample_rate, max_num_samples, num_channels, max_delay / static_cast<FloatType>(sample_rate));
             // update delay and filter order after prepare
             c_order_ = 0;
-            to_update_.store(true, std::memory_order::release);
+            to_update_ = true;
+        }
+
+        void reset() {
+            delay_.reset();
+            first_order_filter_.reset();
+            for (auto& filter : filter_) {
+                filter.reset();
+            }
+            for (auto& filter : forward_filter_) {
+                filter.reset();
+            }
         }
 
         void prepareBuffer() {
-            if (to_update_.exchange(false, std::memory_order::acquire)) {
-                const auto new_order = order_.load(std::memory_order::relaxed);
-                if (c_order_ != new_order) {
-                    c_order_ = new_order;
+            if (std::exchange(to_update_, false)) {
+                if (c_order_ != order_) {
+                    c_order_ = order_;
                     updateOrder(c_order_);
                 }
-                updateFreq(freq_.load(std::memory_order::relaxed));
+                updateFreq(freq_);
             }
         }
 
@@ -179,11 +189,11 @@ namespace zldsp::splitter {
 
         zldsp::chore::SmoothedValue<FloatType, chore::SmoothedTypes::kLin> mix_{static_cast<FloatType>(0)};
 
-        std::atomic<double> freq_{1000.0};
+        double freq_{1000.0};
 
-        std::atomic<size_t> order_{2};
+        size_t order_{2};
         size_t c_order_{0};
-        std::atomic<bool> to_update_{true};
+        bool to_update_{true};
 
         static constexpr double order2q = 0.7071067811865476; // np.sqrt(2) / 2
 

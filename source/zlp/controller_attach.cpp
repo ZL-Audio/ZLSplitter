@@ -15,9 +15,7 @@ namespace zlp {
                                                   juce::AudioProcessorValueTreeState& parameters,
                                                   Controller<FloatType>& controller) :
         p_ref_(processor), parameters_ref_(parameters),
-        controller_ref_(controller),
-        ts_splitter_(controller_ref_.getTSSplitter()),
-        ps_splitter_(controller_ref_.getPSSplitter()) {
+        controller_ref_(controller) {
         for (size_t i = 0; i < kDefaultVs.size(); ++i) {
             parameters_ref_.addParameterListener(kIDs[i], this);
             parameterChanged(kIDs[i], kDefaultVs[i]);
@@ -38,44 +36,27 @@ namespace zlp {
         } else if (parameter_ID == zlp::PMix::kID) {
             controller_ref_.setMix(static_cast<FloatType>(new_value * 0.005f));
         } else if (parameter_ID == zlp::PLHFreq::kID) {
-            controller_ref_.getLHSplitter().setFreq(static_cast<double>(new_value));
-            controller_ref_.getLHFIRSplitter().setFreq(static_cast<double>(new_value));
+            controller_ref_.setLHFreq(static_cast<double>(new_value));
         } else if (parameter_ID == zlp::PLHSlope::kID) {
             controller_ref_.setLHOrder(zlp::PLHSlope::kOrders[static_cast<size_t>(std::round(new_value))]);
         } else if (parameter_ID == zlp::PLHFilterType::kID) {
             controller_ref_.setUseFIR(new_value > .5f);
         } else if (parameter_ID == zlp::PTSBalance::kID) {
-            const auto x = new_value / 100.f + .5f;
-            ts_splitter_[0].setBalance(x);
-            ts_splitter_[1].setBalance(x);
+            controller_ref_.setTSBalance(new_value * 0.01f + .5f);
         } else if (parameter_ID == zlp::PTSSmooth::kID) {
-            const auto x = new_value / 100.f;
-            ts_splitter_[0].setSmooth(x);
-            ts_splitter_[1].setSmooth(x);
+            controller_ref_.setTSSmooth(new_value * 0.01f);
         } else if (parameter_ID == zlp::PTSHold::kID) {
-            const auto x = new_value / 100.f;
-            ts_splitter_[0].setHold(x);
-            ts_splitter_[1].setHold(x);
+            controller_ref_.setTSHold(new_value * 0.01f);
         } else if (parameter_ID == zlp::PTSStrength::kID) {
-            const auto x = new_value / 100.f;
-            ts_splitter_[0].setSeparation(x);
-            ts_splitter_[1].setSeparation(x);
+            controller_ref_.setTSSeparation(new_value * 0.01f);
         } else if (parameter_ID == zlp::PPSAttack::kID) {
-            const auto x = new_value / 100.f;
-            ps_splitter_[0].setAttack(x);
-            ps_splitter_[1].setAttack(x);
+            controller_ref_.setPSAttack(static_cast<FloatType>(new_value * 0.01f));
         } else if (parameter_ID == zlp::PPSBalance::kID) {
-            const auto x = new_value / 100.f + .5f;
-            ps_splitter_[0].setBalance(x);
-            ps_splitter_[1].setBalance(x);
+            controller_ref_.setPSBalance(static_cast<FloatType>(new_value * 0.01f + .5f));
         } else if (parameter_ID == zlp::PPSHold::kID) {
-            const auto x = new_value / 100.f;
-            ps_splitter_[0].setHold(x);
-            ps_splitter_[1].setHold(x);
+            controller_ref_.setPSHold(static_cast<FloatType>(new_value * 0.01f));
         } else if (parameter_ID == zlp::PPSSmooth::kID) {
-            const auto x = new_value / 100.f;
-            ps_splitter_[0].setSmooth(x);
-            ps_splitter_[1].setSmooth(x);
+            controller_ref_.setPSSmooth(static_cast<FloatType>(new_value * 0.01f));
         }
     }
 

@@ -10,7 +10,7 @@
 #pragma once
 
 #include <cmath>
-#include <atomic>
+#include <utility>
 
 #include "../../container/circular_buffer.hpp"
 
@@ -27,15 +27,19 @@ namespace zldsp::splitter {
         void prepare(const double sample_rate) {
             sample_rate_ = static_cast<FloatType>(sample_rate);
             peak_sm_buffer_.setCapacity(static_cast<size_t>(sample_rate * .01));
-            peak_sm_buffer_.clear();
             steady_sm_buffer_.setCapacity(static_cast<size_t>(sample_rate * 1.));
+            reset();
+            to_update_ = true;
+        }
+
+        void reset() {
+            peak_sm_buffer_.clear();
             steady_sm_buffer_.clear();
             peak_sm_ = steady_sm_ = mask_ = FloatType(0);
-            to_update_.store(true, std::memory_order::release);
         }
 
         void prepareBuffer() {
-            if (to_update_.exchange(false, std::memory_order::acquire)) {
+            if (std::exchange(to_update_, false)) {
                 updatePara();
             }
         }
@@ -78,31 +82,29 @@ namespace zldsp::splitter {
         }
 
         void setBalance(const FloatType x) {
-            balance_.store(x, std::memory_order::relaxed);
-            to_update_.store(true, std::memory_order::release);
+            balance_ = x;
+            to_update_ = true;
         }
 
         void setAttack(const FloatType x) {
-            attack_.store(x, std::memory_order::relaxed);
-            to_update_.store(true, std::memory_order::release);
+            attack_ = x;
+            to_update_ = true;
         }
 
         void setHold(const FloatType x) {
-            hold_.store(x, std::memory_order::relaxed);
-            to_update_.store(true, std::memory_order::release);
+            hold_ = x;
+            to_update_ = true;
         }
 
         void setSmooth(const FloatType x) {
-            smooth_.store(x, std::memory_order::relaxed);
-            to_update_.store(true, std::memory_order::release);
+            smooth_ = x;
+            to_update_ = true;
         }
 
     private:
-        std::atomic<FloatType> attack_{FloatType(0.5)}, balance_{FloatType(0.5)}, hold_{FloatType(0.5)}, smooth_{
-                    FloatType(0.5)
-                };
+        FloatType attack_{FloatType(0.5)}, balance_{FloatType(0.5)}, hold_{FloatType(0.5)}, smooth_{FloatType(0.5)};
         FloatType sample_rate_{FloatType(48000)};
-        std::atomic<bool> to_update_{true};
+        bool to_update_{true};
         FloatType c_balance_{}, c_release_{}, c_attack_{}, c_attack_c_{};
         FloatType peak_buffer_size_inverse_{1}, steady_buffer_size_inverse_{1};
         size_t peak_buffer_size_{1}, steady_buffer_size_{1};
@@ -110,12 +112,12 @@ namespace zldsp::splitter {
         zldsp::container::CircularBuffer<FloatType> peak_sm_buffer_{1}, steady_sm_buffer_{1};
 
         void updatePara() {
-            c_balance_ = std::pow(FloatType(10), FloatType(1) - balance_.load());
+            c_balance_ = std::pow(FloatType(10), FloatType(1) - balance_);
             c_balance_ = c_balance_ * c_balance_;
-            c_release_ = std::pow(FloatType(0.9) * cube(hold_.load()) + FloatType(5e-2), FloatType(10) / sample_rate_);
-            c_attack_ = std::pow(FloatType(1e-4), (FloatType(500) - FloatType(450) * attack_.load()) / sample_rate_);
+            c_release_ = std::pow(FloatType(0.9) * cube(hold_) + FloatType(5e-2), FloatType(10) / sample_rate_);
+            c_attack_ = std::pow(FloatType(1e-4), (FloatType(500) - FloatType(450) * attack_) / sample_rate_);
             c_attack_c_ = FloatType(1) - c_attack_;
-            const auto c_smooth = std::max(smooth_.load(), FloatType(0.01));
+            const auto c_smooth = std::max(smooth_, FloatType(0.01));
             peak_buffer_size_ = std::max<size_t>(1,
                 static_cast<size_t>(c_smooth * static_cast<FloatType>(peak_sm_buffer_.capacity())));
             peak_buffer_size_inverse_ = FloatType(1) / static_cast<FloatType>(peak_buffer_size_);

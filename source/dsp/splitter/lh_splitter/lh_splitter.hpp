@@ -11,7 +11,7 @@
 
 #include <array>
 #include <span>
-#include <atomic>
+#include <utility>
 
 #include "../../chore/smoothed_value.hpp"
 #include "../../filter/filter_design/filter_design.hpp"
@@ -29,21 +29,21 @@ namespace zldsp::splitter {
         }
 
         void setFreq(const double freq) {
-            freq_.store(freq, std::memory_order::relaxed);
-            to_update_freq_.store(true, std::memory_order::release);
+            freq_ = freq;
+            to_update_freq_ = true;
         }
 
         void setOrder(const size_t order) {
-            order_.store(order, std::memory_order::relaxed);
-            to_update_order_.store(true, std::memory_order::release);
+            order_ = order;
+            to_update_order_ = true;
         }
 
         void prepare(const double sample_rate, const size_t num_channels) {
             sample_rate_ = sample_rate;
             mix_.prepare(sample_rate, 0.1);
             c_freq_.prepare(sample_rate, 0.125);
-            c_freq_.setCurrentAndTarget(freq_.load(std::memory_order::relaxed));
-            c_order_ = order_.load(std::memory_order::relaxed);
+            c_freq_.setCurrentAndTarget(freq_);
+            c_order_ = order_;
 
             for (auto &filter: low_filters_) {
                 filter.prepare(num_channels);
@@ -54,20 +54,23 @@ namespace zldsp::splitter {
             updateFreq(c_freq_.getCurrent());
         }
 
-        void prepareBuffer() {
-            if (to_update_freq_.exchange(false, std::memory_order::acquire)) {
-                c_freq_.setTarget(freq_.load(std::memory_order::relaxed));
+        void reset() {
+            for (auto& filter : low_filters_) {
+                filter.reset();
             }
-            if (to_update_order_.exchange(false, std::memory_order::acquire)) {
-                const auto new_order = order_.load(std::memory_order::relaxed);
-                if (c_order_ != new_order) {
-                    c_order_ = new_order;
-                    for (auto &filter: low_filters_) {
-                        filter.reset();
-                    }
-                    for (auto &filter: allpass_filters_) {
-                        filter.reset();
-                    }
+            for (auto& filter : allpass_filters_) {
+                filter.reset();
+            }
+        }
+
+        void prepareBuffer() {
+            if (std::exchange(to_update_freq_, false)) {
+                c_freq_.setTarget(freq_);
+            }
+            if (std::exchange(to_update_order_, false)) {
+                if (c_order_ != order_) {
+                    c_order_ = order_;
+                    reset();
                     updateFreq(c_freq_.getCurrent());
                 }
             }
@@ -120,13 +123,13 @@ namespace zldsp::splitter {
 
         zldsp::chore::SmoothedValue<FloatType, chore::SmoothedTypes::kLin> mix_{static_cast<FloatType>(0)};
 
-        std::atomic<double> freq_{1000.0};
+        double freq_{1000.0};
         zldsp::chore::SmoothedValue<double, zldsp::chore::kFixMul> c_freq_{1000.0};
-        std::atomic<bool> to_update_freq_{false};
+        bool to_update_freq_{false};
 
-        std::atomic<size_t> order_{2};
+        size_t order_{2};
         size_t c_order_{2};
-        std::atomic<bool> to_update_order_{true};
+        bool to_update_order_{true};
 
         static constexpr double kButterworthQ = 0.7071067811865476;
 
@@ -138,7 +141,6 @@ namespace zldsp::splitter {
                 const auto &c = coeffs[i];
                 low_filters_[2 * i].updateFromBiquad(c);
                 if (c_order_ == 1) {
-                    // Reverse the first-order numerator without its zero padding.
                     low_filters_[2 * i + 1].updateFromBiquad({c[0], 0.0, c[3], c[2], 0.0});
                     allpass_filters_[i].updateFromBiquad({c[0], 0.0, c[0], 1.0, 0.0});
                 } else {

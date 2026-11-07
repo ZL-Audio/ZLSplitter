@@ -14,6 +14,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include "../chore/thread/notifier.hpp"
 #include "../dsp/splitter/splitter.hpp"
 #include "../dsp/analyzer/analyzer_base/analyzer_sender_base.hpp"
 #include "zlp_definitions.hpp"
@@ -36,46 +37,87 @@ namespace zlp {
 
         void processBypassDelay(std::array<FloatType*, 2>& in_buffer, size_t num_samples);
 
-        void setSplitType(zlp::PSplitType::SplitType split_type) {
+        void setSplitType(const zlp::PSplitType::SplitType split_type) {
             split_type_.store(split_type, std::memory_order::relaxed);
-            to_update_split_type_.store(true, std::memory_order::release);
-            to_update_.store(true, std::memory_order::release);
+            to_update_config_.signal();
+            to_update_.signal();
         }
 
-        void setMix(FloatType mix) {
+        void setMix(const FloatType mix) {
             mix_.store(mix, std::memory_order::relaxed);
-            to_update_mix_.store(true, std::memory_order::release);
+            to_update_mix_.signal();
+            to_update_.signal();
         }
 
-        void setLHOrder(size_t order) {
-            lh_splitter_.setOrder(order);
-            lh_fir_splitter_.setOrder(order);
-            to_update_.store(true, std::memory_order::release);
+        void setLHOrder(const size_t order) {
+            lh_order_.store(order, std::memory_order::relaxed);
+            to_update_lh_.signal();
+            to_update_.signal();
+        }
+
+        void setLHFreq(const double freq) {
+            lh_freq_.store(freq, std::memory_order::relaxed);
+            to_update_lh_.signal();
+            to_update_.signal();
         }
 
         void setUseFIR(const bool f) {
             use_fir_.store(f, std::memory_order::relaxed);
-            to_update_.store(true, std::memory_order::release);
+            to_update_config_.signal();
+            to_update_.signal();
         }
 
-        zldsp::splitter::LHSplitter<FloatType>& getLHSplitter() {
-            return lh_splitter_;
+        void setTSBalance(const float x) {
+            ts_balance_.store(x, std::memory_order::relaxed);
+            to_update_ts_.signal();
+            to_update_.signal();
         }
 
-        zldsp::splitter::LHFIRSplitter<FloatType>& getLHFIRSplitter() {
-            return lh_fir_splitter_;
+        void setTSSeparation(const float x) {
+            ts_separation_.store(x, std::memory_order::relaxed);
+            to_update_ts_.signal();
+            to_update_.signal();
         }
 
-        std::array<zldsp::splitter::TSSplitter<FloatType>, 2>& getTSSplitter() {
-            return ts_splitter_;
+        void setTSHold(const float x) {
+            ts_hold_.store(x, std::memory_order::relaxed);
+            to_update_ts_.signal();
+            to_update_.signal();
         }
 
-        std::array<zldsp::splitter::PSSplitter<FloatType>, 2>& getPSSplitter() {
-            return ps_splitter_;
+        void setTSSmooth(const float x) {
+            ts_smooth_.store(x, std::memory_order::relaxed);
+            to_update_ts_.signal();
+            to_update_.signal();
+        }
+
+        void setPSBalance(const FloatType x) {
+            ps_balance_.store(x, std::memory_order::relaxed);
+            to_update_ps_.signal();
+            to_update_.signal();
+        }
+
+        void setPSAttack(const FloatType x) {
+            ps_attack_.store(x, std::memory_order::relaxed);
+            to_update_ps_.signal();
+            to_update_.signal();
+        }
+
+        void setPSHold(const FloatType x) {
+            ps_hold_.store(x, std::memory_order::relaxed);
+            to_update_ps_.signal();
+            to_update_.signal();
+        }
+
+        void setPSSmooth(const FloatType x) {
+            ps_smooth_.store(x, std::memory_order::relaxed);
+            to_update_ps_.signal();
+            to_update_.signal();
         }
 
         void setAnalyzerOn(const bool f) {
             analyzer_on_.store(f, std::memory_order::relaxed);
+            to_update_.signal();
         }
 
         auto& getAnalyzerSender() {
@@ -92,24 +134,42 @@ namespace zlp {
         std::array<zldsp::splitter::TSSplitter<FloatType>, 2> ts_splitter_;
         std::array<zldsp::splitter::PSSplitter<FloatType>, 2> ps_splitter_;
 
-        std::atomic<bool> to_update_{true};
+        zlchore::thread::Notifier to_update_{true};
 
         std::atomic<zlp::PSplitType::SplitType> split_type_{PSplitType::SplitType::kLRight};
+        std::atomic<bool> use_fir_{false};
+        zlchore::thread::Notifier to_update_config_{true};
         zlp::PSplitType::SplitType c_split_type_{PSplitType::SplitType::kLRight};
-        std::atomic<bool> to_update_split_type_{false};
+        bool c_use_fir_{false};
 
         std::atomic<FloatType> mix_{};
-        std::atomic<bool> to_update_mix_{false};
+        zlchore::thread::Notifier to_update_mix_{true};
 
-        std::atomic<bool> use_fir_{false};
-        bool c_use_fir_{false};
+        std::atomic<double> lh_freq_{PLHFreq::kDefaultV};
+        std::atomic<size_t> lh_order_{PLHSlope::kOrders[PLHSlope::kDefaultI]};
+        zlchore::thread::Notifier to_update_lh_{true};
+
+        std::atomic<float> ts_balance_{PTSBalance::kDefaultV / 100.f + .5f};
+        std::atomic<float> ts_separation_{PTSStrength::kDefaultV / 100.f};
+        std::atomic<float> ts_hold_{PTSHold::kDefaultV / 100.f};
+        std::atomic<float> ts_smooth_{PTSSmooth::kDefaultV / 100.f};
+        zlchore::thread::Notifier to_update_ts_{true};
+
+        std::atomic<FloatType> ps_balance_{PPSBalance::kDefaultV / 100.f + .5f};
+        std::atomic<FloatType> ps_attack_{PPSAttack::kDefaultV / 100.f};
+        std::atomic<FloatType> ps_hold_{PPSHold::kDefaultV / 100.f};
+        std::atomic<FloatType> ps_smooth_{PPSSmooth::kDefaultV / 100.f};
+        zlchore::thread::Notifier to_update_ps_{true};
 
         std::atomic<int> latency_{0};
 
         std::atomic<bool> analyzer_on_{false};
+        bool c_analyzer_on_{false};
         zldsp::analyzer::AnalyzerSenderBase<FloatType, 2> analyzer_sender_{};
 
         zldsp::delay::IntegerDelay<FloatType> bypass_delay_;
+
+        bool updateParameters();
 
         void checkUpdateLatency();
 

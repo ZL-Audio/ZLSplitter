@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <array>
-#include <atomic>
 #include <cmath>
 #include <memory>
 
@@ -33,6 +32,29 @@ namespace zldsp::splitter {
             delay_.prepare(sample_rate, max_num_samples, 1,
                            static_cast<FloatType>(delay_num + 2) / static_cast<FloatType>(sample_rate));
             delay_.setDelayInSamples(delay_num);
+            reset();
+        }
+
+        void reset() {
+            delay_.reset();
+            pos_ = count_ = 0;
+            fft_line_pos_ = magnitude_pos_ = magnitude_count_ = 0;
+            std::fill(input_fifo_.begin(), input_fifo_.end(), 0.f);
+            std::fill(output_fifo_.begin(), output_fifo_.end(), 0.f);
+            std::fill(fft_in_.begin(), fft_in_.end(), 0.f);
+            for (auto& plane : fft_data_) {
+                std::fill(plane.begin(), plane.end(), 0.f);
+            }
+            for (auto& line : fft_lines_) {
+                for (auto& plane : line) {
+                    std::fill(plane.begin(), plane.end(), 0.f);
+                }
+            }
+            for (auto& frame : magnitude_history_) {
+                std::fill(frame.begin(), frame.end(), 0.f);
+            }
+            std::fill(mask_.begin(), mask_.end(), 0.f);
+            std::fill(smoothed_mask_.begin(), smoothed_mask_.end(), 0.f);
         }
 
         void process(FloatType *in_buffer,
@@ -50,19 +72,19 @@ namespace zldsp::splitter {
         int getTSLatency() const { return delay_.getDelayInSamples(); }
 
         void setBalance(const float x) {
-            balance_.store(std::pow(16.f, x - 0.75f), std::memory_order::relaxed);
+            balance_ = std::pow(16.f, x - 0.75f);
         }
 
         void setSmooth(const float x) {
-            smooth_.store(x, std::memory_order::relaxed);
+            smooth_ = x;
         }
 
         void setHold(const float x) {
-            hold_.store((32.f - std::pow(32.f, 1.f - x)) / 31.f * 0.75f + 0.24f, std::memory_order::relaxed);
+            hold_ = (32.f - std::pow(32.f, 1.f - x)) / 31.f * 0.75f + 0.24f;
         }
 
         void setSeparation(const float x) {
-            separation_.store(std::exp(x * 4.f) - 1.f, std::memory_order::relaxed);
+            separation_ = std::exp(x * 4.f) - 1.f;
         }
 
     private:
@@ -97,8 +119,7 @@ namespace zldsp::splitter {
         // portion holders
         zldsp::vector::aligned_vector<float> mask_, smoothed_mask_;
         // separation factor
-        std::atomic<float> balance_{5.f}, separation_{1.f}, hold_{0.9f}, smooth_{.5f};
-        float c_balance_{0.f}, c_separation_{0.f}, c_hold_{0.f}, c_smooth_{0.f};
+        float balance_{5.f}, separation_{1.f}, hold_{0.9f}, smooth_{.5f};
 
         void prepareFFT(const double sample_rate) {
             size_t order = kDefaultFFTOrder;
@@ -125,25 +146,21 @@ namespace zldsp::splitter {
             // normalize the N/2 round-trip gain on synthesis
             zldsp::fft::createPeriodicHanning<float>(synthesis_window_, 2.f * kWindowCorrection);
 
-            pos_ = count_ = 0;
-            input_fifo_.assign(fft_size_, 0.f);
-            output_fifo_.assign(fft_size_, 0.f);
-            fft_in_.assign(fft_size_, 0.f);
+            input_fifo_.resize(fft_size_);
+            output_fifo_.resize(fft_size_);
+            fft_in_.resize(fft_size_);
             for (auto& plane : fft_data_) {
                 plane.resize(num_bins_);
             }
-            // set fft data lines
-            fft_line_pos_ = 0;
             for (auto &line: fft_lines_) {
                 for (auto& plane : line) {
-                    plane.assign(num_bins_, 0.f);
+                    plane.resize(num_bins_);
                 }
             }
             for (auto& frame : magnitude_history_) {
-                frame.assign(num_bins_, 0.f);
+                frame.resize(num_bins_);
             }
-            magnitude_pos_ = magnitude_count_ = 0;
-            mask_.assign(num_bins_, 0.f);
+            mask_.resize(num_bins_);
             smoothed_mask_.resize(num_bins_);
         }
 
@@ -206,11 +223,6 @@ namespace zldsp::splitter {
                 const auto im = fft_data_[1][bin];
                 magnitude[bin] = std::sqrt(re * re + im * im);
             }
-            // load parameters
-            c_balance_ = balance_.load(std::memory_order::relaxed);
-            c_separation_ = separation_.load(std::memory_order::relaxed);
-            c_hold_ = hold_.load(std::memory_order::relaxed);
-            c_smooth_ = smooth_.load(std::memory_order::relaxed);
             // use the newest frame for lookahead detection
             magnitude_count_ = std::min(magnitude_count_ + 1, kTimeMedianWindowsSize);
             updateMask(magnitude);
@@ -219,9 +231,9 @@ namespace zldsp::splitter {
             fft_data_.swap(fft_lines_[fft_line_pos_]);
             fft_line_pos_ = (fft_line_pos_ + 1) % kDetectorLookaheadHops;
             auto mask_mean = zldsp::vector::sum(mask_.data(), mask_.size()) / static_cast<float>(mask_.size());
-            mask_mean = std::clamp((mask_mean - 0.5f) * std::sqrt(c_separation_), -.5f, .5f) + .5f;
+            mask_mean = std::clamp((mask_mean - 0.5f) * std::sqrt(separation_), -.5f, .5f) + .5f;
             // smooth the mask
-            zldsp::vector::fma(smoothed_mask_.data(), mask_.data(), 1.f - c_smooth_, mask_mean * c_smooth_, num_bins_);
+            zldsp::vector::fma(smoothed_mask_.data(), mask_.data(), 1.f - smooth_, mask_mean * smooth_, num_bins_);
             for (auto& plane : fft_data_) {
                 zldsp::vector::multiply(plane.data(), smoothed_mask_.data(), num_bins_);
             }
@@ -296,7 +308,7 @@ namespace zldsp::splitter {
                     magnitude[i >= 2 ? i - 2 : 0], magnitude[i >= 1 ? i - 1 : 0], magnitude[i],
                     magnitude[std::min(i + 1, last_bin)], magnitude[std::min(i + 2, last_bin)]);
                 const auto c_mask = calculatePortion(transient_weight, calculateTimeMedian(i));
-                mask_[i] = std::max(mask_[i] * c_hold_, c_mask);
+                mask_[i] = std::max(mask_[i] * hold_, c_mask);
             };
             size_t i = 0;
             if (magnitude_count_ == kTimeMedianWindowsSize) {
@@ -304,9 +316,9 @@ namespace zldsp::splitter {
                 for (; i < kFreqHalfMedianWindowsSize; ++i) {
                     update_mask(i);
                 }
-                const auto balance = hn::Set(d, c_balance_);
-                const auto separation = hn::Set(d, c_separation_);
-                const auto hold = hn::Set(d, c_hold_);
+                const auto balance = hn::Set(d, balance_);
+                const auto separation = hn::Set(d, separation_);
+                const auto hold = hn::Set(d, hold_);
                 const auto half = hn::Set(d, .5f);
                 const auto neg_half = hn::Set(d, -.5f);
                 const auto epsilon = hn::Set(d, .00000001f);
@@ -335,12 +347,12 @@ namespace zldsp::splitter {
         }
 
         float calculatePortion(const float transient_weight, const float steady_weight) const {
-            const auto t = transient_weight * c_balance_;
+            const auto t = transient_weight * balance_;
             const auto s = steady_weight;
             const auto tt = t * t;
             const auto ss = s * s;
             const auto p = tt / std::max(tt + ss, 0.00000001f);
-            return std::clamp((p - 0.5f) * c_separation_, -.5f, .5f) + .5f;
+            return std::clamp((p - 0.5f) * separation_, -.5f, .5f) + .5f;
         }
     };
 }

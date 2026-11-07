@@ -18,6 +18,7 @@ namespace zlp {
     template <typename FloatType>
     void Controller<FloatType>::prepare(const double sample_rate,
                                         const size_t max_num_samples) {
+        updateParameters();
         lr_splitter_.prepare(sample_rate);
         ms_splitter_.prepare(sample_rate);
         lh_splitter_.prepare(sample_rate, 2);
@@ -35,44 +36,20 @@ namespace zlp {
         const auto max_latency = std::max(lh_fir_splitter_.getMaxLatency(), ts_splitter_[0].getTSLatency());
         bypass_delay_.prepare(sample_rate, max_num_samples, 2,
                               static_cast<FloatType>(max_latency + 1) / static_cast<FloatType>(sample_rate));
-        to_update_.store(true, std::memory_order::release);
+        to_update_config_.signal();
+        to_update_.signal();
     }
 
     template <typename FloatType>
-    void Controller<FloatType>::prepareBuffer() {
-        if (to_update_.exchange(false, std::memory_order::acquire)) {
-            if (to_update_split_type_.exchange(false, std::memory_order::acquire)) {
-                c_split_type_ = split_type_.load(std::memory_order::relaxed);
-            }
+    bool Controller<FloatType>::updateParameters() {
+        c_analyzer_on_ = analyzer_on_.load(std::memory_order::relaxed);
+        bool update_latency = false;
+        if (to_update_config_.check()) {
+            c_split_type_ = split_type_.load(std::memory_order::relaxed);
             c_use_fir_ = use_fir_.load(std::memory_order::relaxed);
-            switch (c_split_type_) {
-            case zlp::PSplitType::kLRight:
-            case zlp::PSplitType::kMSide: {
-                latency_.store(0, std::memory_order::relaxed);
-                break;
-            }
-            case zlp::PSplitType::kLHigh: {
-                if (c_use_fir_) {
-                    lh_fir_splitter_.prepareBuffer();
-                    latency_.store(lh_fir_splitter_.getLatency(), std::memory_order::relaxed);
-                } else {
-                    latency_.store(0, std::memory_order::relaxed);
-                }
-                break;
-            }
-            case zlp::PSplitType::kTSteady: {
-                latency_.store(ts_splitter_[0].getTSLatency(), std::memory_order::relaxed);
-                break;
-            }
-            case zlp::PSplitType::kPSteady:
-            case zlp::PSplitType::kNone: {
-                latency_.store(0, std::memory_order::relaxed);
-                break;
-            }
-            }
-            checkUpdateLatency();
+            update_latency = true;
         }
-        if (to_update_mix_.exchange(false, std::memory_order::acquire)) {
+        if (to_update_mix_.check()) {
             const auto mix = std::clamp(mix_.load(std::memory_order::relaxed),
                                         static_cast<FloatType>(0.0), static_cast<FloatType>(0.5));
             lr_splitter_.setMix(mix);
@@ -80,6 +57,52 @@ namespace zlp {
             lh_splitter_.setMix(mix);
             lh_fir_splitter_.setMix(mix);
         }
+        if (to_update_lh_.check()) {
+            const auto freq = lh_freq_.load(std::memory_order::relaxed);
+            const auto order = lh_order_.load(std::memory_order::relaxed);
+            lh_splitter_.setFreq(freq);
+            lh_splitter_.setOrder(order);
+            lh_fir_splitter_.setFreq(freq);
+            lh_fir_splitter_.setOrder(order);
+            update_latency = true;
+        }
+        if (to_update_ts_.check()) {
+            const auto balance = ts_balance_.load(std::memory_order::relaxed);
+            const auto separation = ts_separation_.load(std::memory_order::relaxed);
+            const auto hold = ts_hold_.load(std::memory_order::relaxed);
+            const auto smooth = ts_smooth_.load(std::memory_order::relaxed);
+            for (auto& splitter : ts_splitter_) {
+                splitter.setBalance(balance);
+                splitter.setSeparation(separation);
+                splitter.setHold(hold);
+                splitter.setSmooth(smooth);
+            }
+        }
+        if (to_update_ps_.check()) {
+            const auto balance = ps_balance_.load(std::memory_order::relaxed);
+            const auto attack = ps_attack_.load(std::memory_order::relaxed);
+            const auto hold = ps_hold_.load(std::memory_order::relaxed);
+            const auto smooth = ps_smooth_.load(std::memory_order::relaxed);
+            for (auto& splitter : ps_splitter_) {
+                splitter.setBalance(balance);
+                splitter.setAttack(attack);
+                splitter.setHold(hold);
+                splitter.setSmooth(smooth);
+            }
+        }
+        return update_latency;
+    }
+
+    template <typename FloatType>
+    void Controller<FloatType>::prepareBuffer() {
+        if (!to_update_.check()) {
+            return;
+        }
+        const auto previous_split_type = c_split_type_;
+        const auto previous_use_fir = c_use_fir_;
+        const auto update_latency = updateParameters();
+        const auto splitter_changed = c_split_type_ != previous_split_type
+            || (c_split_type_ == zlp::PSplitType::kLHigh && c_use_fir_ != previous_use_fir);
         switch (c_split_type_) {
         case zlp::PSplitType::kLRight:
         case zlp::PSplitType::kMSide: {
@@ -88,22 +111,47 @@ namespace zlp {
         case zlp::PSplitType::kLHigh: {
             if (c_use_fir_) {
                 lh_fir_splitter_.prepareBuffer();
+                if (splitter_changed) {
+                    lh_fir_splitter_.reset();
+                }
             } else {
                 lh_splitter_.prepareBuffer();
+                if (splitter_changed) {
+                    lh_splitter_.reset();
+                }
             }
             break;
         }
         case zlp::PSplitType::kTSteady: {
+            if (splitter_changed) {
+                for (auto& splitter : ts_splitter_) {
+                    splitter.reset();
+                }
+            }
             break;
         }
         case zlp::PSplitType::kPSteady: {
-            ps_splitter_[0].prepareBuffer();
-            ps_splitter_[1].prepareBuffer();
+            for (auto& splitter : ps_splitter_) {
+                splitter.prepareBuffer();
+                if (splitter_changed) {
+                    splitter.reset();
+                }
+            }
             break;
         }
         case zlp::PSplitType::kNone: {
             break;
         }
+        }
+        if (update_latency) {
+            int latency = 0;
+            if (c_split_type_ == zlp::PSplitType::kLHigh && c_use_fir_) {
+                latency = lh_fir_splitter_.getLatency();
+            } else if (c_split_type_ == zlp::PSplitType::kTSteady) {
+                latency = ts_splitter_[0].getTSLatency();
+            }
+            latency_.store(latency, std::memory_order::relaxed);
+            checkUpdateLatency();
         }
     }
 
@@ -152,7 +200,7 @@ namespace zlp {
         }
         }
 
-        if (analyzer_on_.load(std::memory_order::relaxed)) {
+        if (c_analyzer_on_) {
             analyzer_sender_.process({std::span(out_buffer1_), std::span(out_buffer2_)}, num_samples);
         }
     }
