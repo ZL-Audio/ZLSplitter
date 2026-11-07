@@ -116,9 +116,11 @@ namespace zldsp::splitter {
             c_attack_ = std::pow(FloatType(1e-4), (FloatType(500) - FloatType(450) * attack_.load()) / sample_rate_);
             c_attack_c_ = FloatType(1) - c_attack_;
             const auto c_smooth = std::max(smooth_.load(), FloatType(0.01));
-            peak_buffer_size_ = static_cast<size_t>(c_smooth * static_cast<FloatType>(peak_sm_buffer_.capacity()));
+            peak_buffer_size_ = std::max<size_t>(1,
+                static_cast<size_t>(c_smooth * static_cast<FloatType>(peak_sm_buffer_.capacity())));
             peak_buffer_size_inverse_ = FloatType(1) / static_cast<FloatType>(peak_buffer_size_);
-            steady_buffer_size_ = static_cast<size_t>(c_smooth * static_cast<FloatType>(steady_sm_buffer_.capacity()));
+            steady_buffer_size_ = std::max<size_t>(1,
+                static_cast<size_t>(c_smooth * static_cast<FloatType>(steady_sm_buffer_.capacity())));
             steady_buffer_size_ = std::max(steady_buffer_size_, peak_buffer_size_);
             steady_buffer_size_inverse_ = FloatType(1) / static_cast<FloatType>(steady_buffer_size_);
         }
