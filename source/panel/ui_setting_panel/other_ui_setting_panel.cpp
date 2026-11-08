@@ -136,16 +136,15 @@ namespace zlpanel {
     void OtherUISettingPanel::resetSetting() {
         refresh_rate_box_.getBox().setSelectedItemIndex(zlstate::PTargetRefreshSpeed::kDefaultI);
         fft_quality_box_.getBox().setSelectedItemIndex(zlstate::PFFTQuality::kDefaultI);
-        fft_tilt_slider_.getSlider().setValue(zlstate::PFFTExtraTilt::kDefaultV);
-        fft_speed_slider_.getSlider().setValue(zlstate::PFFTExtraSpeed::kDefaultV);
         combobox_alignment_box_.getBox().setSelectedItemIndex(zlstate::PComboboxAlignment::kDefaultI);
-        mag_curve_slider_.getSlider().setValue(zlstate::PMagCurveThickness::kDefaultV);
-        fft_curve_slider_.getSlider().setValue(zlstate::PFFTCurveThickness::kDefaultV);
         tooltip_box_.getBox().setSelectedItemIndex(zlstate::PTooltipLang::kDefaultI);
-        font_mode_box_.getBox().setSelectedItemIndex(zlstate::PFontMode::kDefaultI);
-        font_scale_slider_.getSlider().setValue(zlstate::PFontScale::kDefaultV);
-        static_font_size_slider_.getSlider().setValue(base_.gui.getFontSize());
+        font_mode_box_.getBox().setSelectedItemIndex(zlstate::PFontMode::kDefaultI, juce::sendNotificationSync);
         window_size_fix_box_.getBox().setSelectedItemIndex(zlstate::PWindowSizeFix::kDefaultI);
+        for (auto* slider : {&fft_tilt_slider_, &fft_speed_slider_, &mag_curve_slider_, &fft_curve_slider_,
+                             &font_scale_slider_, &static_font_size_slider_}) {
+            slider->getSlider().setValue(slider->getSlider().getDoubleClickReturnValue());
+        }
+        comboBoxChanged(&font_mode_box_.getBox());
         saveSetting();
     }
 
