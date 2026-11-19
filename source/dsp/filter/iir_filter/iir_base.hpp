@@ -13,6 +13,9 @@
 #include <array>
 #include <vector>
 #include <span>
+#include <type_traits>
+
+#include "iir/iir_processor.hpp"
 
 namespace zldsp::filter {
     template<typename FloatType>
@@ -44,6 +47,10 @@ namespace zldsp::filter {
         void process(std::span<FloatType *> buffer, const size_t num_samples) noexcept {
             if (num_samples == 0) {
                 return;
+            }
+            if constexpr (std::is_same_v<FloatType, double>) {
+                if (IIRProcessor<1, IvantsovCoeff>::template processSingle<isBypass>(
+                    coeff_, s1_.data(), s2_.data(), buffer, num_samples)) { return; }
             }
             const auto coeff = coeff_;
             for (size_t channel = 0; channel < buffer.size(); ++channel) {
